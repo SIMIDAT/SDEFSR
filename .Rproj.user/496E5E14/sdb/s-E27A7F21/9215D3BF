@@ -1,0 +1,17 @@
+{
+    "contents" : "pruebas <- function(funcion){\n  dirs <- list.dirs(recursive = FALSE)\n  for(j in dirs){\n    setwd(j)\n  for(i in 1:5){\n   funcion(paste(\"PARAM\", i, \".txt\", sep = \"\")) \n  }\n    setwd(\"..\")\n  }\n}\n",
+    "created" : 1434499996649.000,
+    "dirty" : false,
+    "encoding" : "ISO8859-1",
+    "folds" : "",
+    "hash" : "149304876",
+    "id" : "9215D3BF",
+    "lastKnownWriteTime" : 1434482114,
+    "path" : "~/EJECUCIONES CAN MESDIF/pruebas.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 6,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

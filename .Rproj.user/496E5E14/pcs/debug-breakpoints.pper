@@ -1,0 +1,21 @@
+{
+    "debugBreakpointsState" : {
+        "breakpoints" : [
+            {
+                "editor_line_number" : 459,
+                "editor_state" : 1,
+                "function_name" : "findRule",
+                "function_steps" : "7",
+                "id" : 2,
+                "is_package_breakpoint" : false,
+                "is_pending_debug_completion" : true,
+                "line_number" : 459,
+                "needs_updated_steps" : false,
+                "package_name" : "",
+                "path" : "~/Desktop/PlataformaWeb/webPlatform/R/MESDIF.R",
+                "state" : 1,
+                "type" : 0
+            }
+        ]
+    }
+}

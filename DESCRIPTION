@@ -1,0 +1,18 @@
+Package: SDR
+Type: Package
+Title: Subgroup Discovery Algorithms for R
+Version: 1.0
+Date: 2015-06-14
+Author: Angel M. García-Vico <amgv0009@red.ujaen.es>
+Maintainer: Angel M. García-Vico <amgv0009@red.ujaen.es>
+Description: This package implements some algorithms for subgroup discovery tasks.
+    It also provide a Shiny App for make it easy the analysis.
+    The algorithms works with dataset in KEEL format. If you want more information about
+    this format, please refer to \url{"http://www.keel.es"}
+License: What license is it under?
+LazyData: TRUE
+Imports: 
+  GA,
+  parallel,
+  shiny,
+  graphics
