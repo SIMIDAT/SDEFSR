@@ -1073,10 +1073,10 @@ gaNMEEF <- function(type = c("binary", "real-valued", "permutation"),
       } 
    
   #Compute dominance values for performing fast sorting algorithm
-    f <- na.exclude(Fitness)[,seq_len(nObjs)]
+    f <- na.exclude(Fitness)[,seq_len(nObjs),drop=F]
     n_Ind <- NROW(f)
     for(i in seq_len(n_Ind)){
-      nd <- apply(X = f, MARGIN = 1, FUN = calculateDominance, f[i,], StrictDominance)
+      nd <- apply(X = f, MARGIN = 1, FUN = calculateDominance, f[i,,drop=F], StrictDominance)
       Dominados[i] <- length(which(nd == 1L))
       WhoIDomain[[i]] <- which(nd <= 0L)
     }

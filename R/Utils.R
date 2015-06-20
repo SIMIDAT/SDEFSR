@@ -297,6 +297,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' Change the targetVariable of a KEEL Dataset
 #' 
 #' Change the actual target variable for another one if it is categorical.
+#' 
 #' @param dataset The KEEL dataset class
 #' @param posVariable The position of the variable to set as target Variable.
 #' @return The dataset with te variables changed
@@ -524,3 +525,5 @@ normalizeDNFRule <- function(regla, max){
    
    invisible()
  }
+
+
