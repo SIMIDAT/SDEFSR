@@ -13,8 +13,8 @@
 
 .mutate <- function(cromosoma, variable, max_valor_variables, DNF_Rule){
                                             
-  # Estos pesos hay que quitarlos una vez SDIGA funcione correctamente.
-  mutation_type <- sample(x = 1:2, size = 1, prob = c(6/11, 5/11))   # Tipo 1 - tipo 2 aleatoriamente
+ 
+  mutation_type <- sample(x = 1:2, size = 1)   # Tipo 1 - tipo 2 aleatoriamente
   
   
   if(! DNF_Rule){  #Reglas can-nicas

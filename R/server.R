@@ -6,7 +6,7 @@
 #
 
 library(shiny)
-library(graphics)
+# library(graphics)
 #library(GA)
 
 #Sources-----------------

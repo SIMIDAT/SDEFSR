@@ -1,3 +1,11 @@
+#
+#
+#   THIS FILE CONTAINS SOME FUNCTIONS FOR DOING SOME STUFF INSIDE THE PACKAGE.
+#   THIS MEANS THAT THE FUNCTIONS USED HERE MUST NOT BE EXPORTED. (EXCEPT ONE)
+#
+#
+
+
 # Utils relative to obtain the fuzzy belonging degree
 
 #--------------------------------------------------------------------
@@ -468,18 +476,6 @@ changeTargetVariable <- function(dataset, posVariable){
   }
   
 }
-
-
-
-
-
-parseQualityMeasures <- function(){
-  contents <- readChar("testQualityMeasures.txt", file.info("testQualityMeasures.txt")$size)
-  
-  grep("-" ,contents, fixed = TRUE)
-}
-
-
 
 
 

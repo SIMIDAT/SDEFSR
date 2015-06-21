@@ -1,1 +1,0 @@
-Error in SDIGA(training = dataTra, test = dataTst, seed = seed, nLabels = nLabels, : Sum of weigths must be a value greater than zero.
