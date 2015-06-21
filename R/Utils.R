@@ -287,7 +287,19 @@ qsort <- function(v, left, right, index) {
 
 
 
-
+#' Modifiy the number of Fuzzy Labels of the dataset.
+#' 
+#' This function change the number of fuzzy labels defined in the current dataset.
+#' 
+#' @details The fuzzy definitions used in the \code{keel} class are triangular.
+#'     Because you can only specify the number of fuzzy definitions. All those definitions
+#'     has the same width.
+#' 
+#' @param dataset The dataset to modify their fuzzy labels definitions
+#' @param nLabels The new number of fuzzy labels.
+#' 
+#' @return  This function returns the same dataset with their fuzzy definitions modified.
+#'
 modifyFuzzyCrispIntervals <- function(dataset, nLabels){
  
     dataset[["fuzzySets"]] <- .create_fuzzyIntervals(min = dataset$min, max = dataset$max, num_sets = nLabels, types = dataset$atributeTypes)
@@ -295,6 +307,8 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
   
     dataset
 }
+
+
 
 
 

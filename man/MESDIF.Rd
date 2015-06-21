@@ -26,8 +26,10 @@ This function search for interesting subgroups by executing the MESDIF algorithm
 }
 \details{
 
+}
+\section{How does this algorithm work?}{
 
-This algorithm performs a multi-objective genetic algorithm based on elitism (following the SPEA2 approach). The elite population has
+  This algorithm performs a multi-objective genetic algorithm based on elitism (following the SPEA2 approach). The elite population has
   a fixed size and it is filled by non-dominated individuals.
 
   An individual is non-dominated when \code{(! all(ObjI1 <= ObjI2) & any(ObjI1 < ObjI2))} where ObjI1
@@ -41,6 +43,7 @@ This algorithm performs a multi-objective genetic algorithm based on elitism (fo
 
   At the final of the evolutive process it returns the rules stored in elite population.
 }
+
 \section{Parameters file structure}{
 
   The \code{paramFile} argument points to a file which has the necesary parameters for MESDIF works.

@@ -6,7 +6,7 @@
 #
 
 library(shiny)
-library(graphics)
+# library(graphics)
 #library(GA)
 
 #Sources-----------------
@@ -47,6 +47,15 @@ colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176",
 lastValue <- 0
 
 shinyServer(function(input, output, session) {
+  
+  
+  #on exit clean temporal file
+  on.exit({ 
+    if(file.exists(paste(getwd(), "/rulesFile.txt",  sep = ""))) file.remove(paste(getwd(), "/rulesFile.txt",  sep = ""))
+    if(file.exists(paste(getwd(), "/optionsFile.txt",  sep = ""))) file.remove(paste(getwd(), "/optionsFile.txt",  sep = ""))
+    if(file.exists(paste(getwd(), "/testQualityMeasures.txt",  sep = ""))) file.remove(paste(getwd(), "/testQualityMeasures.txt",  sep = ""))
+  })
+  
   
   
   
@@ -156,7 +165,7 @@ shinyServer(function(input, output, session) {
     if(rutaTra != paste(input$traFile[,1],input$traFile[,4])){
       file <- input$traFile
       rutaTra <<- paste(input$traFile[,1],input$traFile[,4])
-      dataTra <<- SDR::read.keel(file$datapath, nLabels = input$nLabels)
+      dataTra <<- read.keel(file$datapath, nLabels = input$nLabels)
       updateSelectInput(session = session, 
                         inputId = "targetClassSelect", 
                         label = "Select the target variable", 
@@ -191,7 +200,7 @@ shinyServer(function(input, output, session) {
       if(rutaTst != paste(input$tstFile[,1], input$tstFile[,4])){
         file <- input$tstFile
         rutaTst <<- paste(input$tstFile[,1], input$tstFile[,4])
-        dataTst <<- SDR::read.keel(file$datapath,nLabels = input$nLabels)
+        dataTst <<- read.keel(file$datapath,nLabels = input$nLabels)
         updateSelectInput(session = session, 
                           inputId = "targetClassSelect", 
                           label = "Select the target variable", 
@@ -222,11 +231,11 @@ shinyServer(function(input, output, session) {
     nLabels <- input$nLabels
     
     if(! is.null(dataTra)){
-      dataTra <<- SDR::modifyFuzzyCrispIntervals(dataTra, nLabels)
+      dataTra <<- modifyFuzzyCrispIntervals(dataTra, nLabels)
     }
     
     if(! is.null(dataTst)){
-      dataTst <<- SDR::modifyFuzzyCrispIntervals(dataTst, nLabels)
+      dataTst <<- modifyFuzzyCrispIntervals(dataTst, nLabels)
     }
   })
   
@@ -324,8 +333,8 @@ shinyServer(function(input, output, session) {
     
     #Set target Variable.
 
-      dataTst <<- SDR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
-      dataTra <<- SDR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
+      dataTst <<- changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
+      dataTra <<- changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
     
       
     targetClass <- isolate(input$targetClassSelect)
@@ -356,7 +365,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             SDR::SDIGA(training = dataTra, 
+             SDIGA(training = dataTra, 
                    test = dataTst, 
                    seed = seed, 
                    nLabels = nLabels, 
@@ -389,7 +398,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             SDR::MESDIF(training = dataTra,
+             MESDIF(training = dataTra,
                     test = dataTst,
                     seed = seed,
                     nLabels = nLabels,
@@ -417,7 +426,7 @@ shinyServer(function(input, output, session) {
              porcCob <- isolate(input$porcCob)
              
              #Execute te algorithm
-             SDR::NMEEF_SD(training = dataTra,
+             NMEEF_SD(training = dataTra,
                       test = dataTst,
                       seed = seed,
                       nLabels = nLabels,
@@ -464,21 +473,31 @@ shinyServer(function(input, output, session) {
     
     input$ejecutar
       if(file.exists("rulesFile.txt")){
-      #get and process results
+      #get and parse the results
       contents <- readChar("rulesFile.txt", file.info("rulesFile.txt")$size)
-      rules <- strsplit(contents, "GENERATED RULE", fixed = TRUE )
+      rules <- strsplit(contents, "GENERATED RULE ", fixed = TRUE )
       if(length(rules[[1]]) > 1){
         rules <- substr(rules[[1]][2:length(rules[[1]])] , 3, stop = nchar(rules[[1]][2:length(rules[[1]])]))
+        
+        invalid <- grep(" # Invalid (Low confidence or support)", rules, fixed = T) 
+        if(length(invalid) > 0) rules <- rules[ - invalid ]
+        
+        rules <- gsub(" - Target value: .*", "", rules, perl = T)
+        rules <- sub(":", "", rules, fixed = FALSE)
         rules <- gsub(pattern = "\n", x = rules, replacement = "<br/>", fixed = T)
       }
       file.remove("rulesFile.txt")
+      
+      # Show the results
       rules <- matrix(c(seq_len(length(rules)), rules), ncol = 2)
       colnames(rules) <- c("Num Rule", "Rule")
-      #Show results as html
-      #strong( HTML(contents), style = "font-family: 'consolas'" )
+     
       as.data.frame(rules)
     }
 }, escape = FALSE, options = list(pageLength = 10))
+  
+  
+  
   
   output$execInfo <- renderUI({
     input$ejecutar
@@ -490,6 +509,7 @@ shinyServer(function(input, output, session) {
       
       #Show results as html
       strong( HTML(contents), style = "font-family: 'consolas'" )
+         
     }
   })
   

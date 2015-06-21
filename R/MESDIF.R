@@ -160,7 +160,8 @@ truncOperator <- function(NonDominatedPop, elitePopSize, FitnessND ){
 #' @title Multiobjective Evolutionary Subgroup DIscovery Fuzzy rules (MESDIF) Algorithm
 #' @description This function search for interesting subgroups by executing the MESDIF algorithm. 
 #' @param paramFile The path of the parameters file.
-#' @details This algorithm performs a multi-objective genetic algorithm based on elitism (following the SPEA2 approach). The elite population has 
+#' @section How does this algorithm work?:
+#'   This algorithm performs a multi-objective genetic algorithm based on elitism (following the SPEA2 approach). The elite population has 
 #'   a fixed size and it is filled by non-dominated individuals.
 #'   
 #'   An individual is non-dominated when \code{(! all(ObjI1 <= ObjI2) & any(ObjI1 < ObjI2))} where ObjI1
@@ -303,6 +304,7 @@ MESDIF <- function(paramFile = NULL,
   
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
+  if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")
   
   if(tolower(parametros$RulesRep) == "can"){
     DNF = FALSE

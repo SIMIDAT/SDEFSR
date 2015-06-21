@@ -216,6 +216,7 @@ SDIGA <- function(parameters_file = NULL,
   }
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
+  if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")
   
   if(tolower(parametros$RulesRep) == "can"){
     DNF = FALSE

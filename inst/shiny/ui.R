@@ -35,10 +35,10 @@ shinyUI(fluidPage(
       conditionalPanel("input.algoritmo == 'SDIGA'",
                        
                        sliderInput("minConf", "Minimum Confidence", value = 0.6, min = 0, max = 1, step = 0.01),
-                       selectInput("Obj1","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
-                       sliderInput("w1", "Weigth 1: ", value = 0, min = 0, max = 1, step = 0.01),
-                       selectInput("Obj2","Objetive 2", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
-                       sliderInput("w2", "Weigth 2: ", value = 0, min = 0, max = 1, step = 0.01),
+                       selectInput("Obj1","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Crisp Support"),
+                       sliderInput("w1", "Weigth 1: ", value = 0.7, min = 0, max = 1, step = 0.01 ),
+                       selectInput("Obj2","Objetive 2", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Crisp Confidence"),
+                       sliderInput("w2", "Weigth 2: ", value = 0.3, min = 0, max = 1, step = 0.01),
                        selectInput("Obj3","Objetive 3", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
                        sliderInput("w3", "Weigth 3: ", value = 0, min = 0, max = 1, step = 0.01),
                        checkboxInput("lSearch", "Perfom Local Search", value = TRUE)
@@ -50,16 +50,16 @@ shinyUI(fluidPage(
                        conditionalPanel("input.reInitPob",
                                         sliderInput("porcCob", "Maximum percentage of variables to use when re-initialize:", min = 0, max = 1, value = 0.5, step = 0.01)
                                         ),
-                       selectInput("Obj1N","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
-                       selectInput("Obj2N","Objetive 2", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
+                       selectInput("Obj1N","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Unusualness"),
+                       selectInput("Obj2N","Objetive 2", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Significance"),
                        selectInput("Obj3N","Objetive 3", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
                        checkboxInput("strictDominance", "Comparison using strict dominance", value = TRUE)
                        ),
       conditionalPanel("input.algoritmo == 'MESDIF'", 
                        sliderInput("crossProb", label = "Crossover Probability: ", min = 0, max = 1, value = 0.6, step = 0.01),
                        sliderInput("elitePop", "Size of elite population: ", min = 1, max = 30, value = 3, step = 1),
-                       selectInput("Obj1M","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
-                       selectInput("Obj2M","Objetive 2", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
+                       selectInput("Obj1M","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Crisp Support"),
+                       selectInput("Obj2M","Objetive 2", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Crisp Confidence"),
                        selectInput("Obj3M","Objetive 3", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
                        selectInput("Obj4M","Objetive 4", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"))
                        
