@@ -12,7 +12,43 @@ SDIGA(parameters_file = NULL, training = NULL, test = NULL,
   targetClass = "null")
 }
 \arguments{
-\item{parameters_file}{The path of the parameters file}
+\item{parameters_file}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}
+
+\item{training}{A \code{keel} class variable with training data.}
+
+\item{test}{A \code{keel} class variable with training data.}
+
+\item{output}{character vector with the paths of where store information file, rules file and test quality measures file, respectively.}
+
+\item{seed}{An integer to set the seed used for generate random numbers.}
+
+\item{nLabels}{Number of fuzzy labels defined in the datasets.}
+
+\item{nEval}{An integer for set the maximum number of evaluations in the evolutive process.}
+
+\item{popLength}{An integer to set the number of individuals in the population.}
+
+\item{mutProb}{Sets the mutation probability. A number in [0,1].}
+
+\item{RulesRep}{Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.}
+
+\item{Obj1}{Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.}
+
+\item{w1}{Sets the weight of \code{Obj1}.}
+
+\item{Obj2}{Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.}
+
+\item{w2}{Sets the weight of \code{Obj2}.}
+
+\item{Obj3}{Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.}
+
+\item{w3}{Sets the weight of \code{Obj3}.}
+
+\item{minConf}{Sets the minimum confidence that must have the rule returned by the genetic algorithm after the local optimitation phase. A number in [0,1].}
+
+\item{lSearch}{Sets if the local optimitation phase must be performed. A string with "yes" or "no".}
+
+\item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }
 \value{
 The algorithm shows in the console the following results:
@@ -21,12 +57,25 @@ The algorithm shows in the console the following results:
  \item The rules generated.
  \item The quality measures for test of every rule and the global results.
 }
+
+    Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or
+    in the \code{outputData} parameter in the parameters file.
 }
 \description{
 Perfoms a subgroup discovery task executing the algorithm SDIGA
 }
 \details{
-This algorithm has a genetic algorithm in his core. This algorithm genetic return only the best
+This function sets as target variable the last one that appear in the KEEL file. If you want
+    to change the target variable, you can use \link{changeTargetVariable} for this objective.
+    The target variable MUST be categorical, if it´s not, throws an error.
+
+    If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+    ignored and the algorithm tries to read the file specified. See "Parameters file structure" below
+    if you want to use a parameters file.
+}
+\section{How does this algorithm work?}{
+
+    This algorithm has a genetic algorithm in his core. This genetic algorithm returns only the best
     rule of the population and it is executed so many times until a stop condition is reached. The stop condition is
     that the rule returned must cover at least one new example (not covered by previous rules) and must have a confidence
     greater than a minimum.
@@ -34,9 +83,10 @@ This algorithm has a genetic algorithm in his core. This algorithm genetic retur
    After returning the rule, a local improvement could be applied for make the rule more general. This local improve is done
    by means of a hill-climbing local search.
 
-   The genetic algorithm cross only the two best individuals. But the mutation operated is applied over all the population,
+   The genetic algorithm cross only the two best individuals. But the mutation operator is applied over all the population,
    individuals from cross too.
 }
+
 \section{Parameters file structure}{
 
   The \code{parameters_file} argument points to a file which has the necesary parameters for SDIGA works.
@@ -65,6 +115,7 @@ This algorithm has a genetic algorithm in his core. This algorithm genetic retur
  \preformatted{
 algorithm = SDIGA
 inputData = "irisD-10-1tra.dat" "irisD-10-1tst.dat"
+outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
 seed = 0
 nLabels = 3
 nEval = 10000
@@ -96,6 +147,27 @@ lSearch = yes
       }
 
     If you don´t want to use a objetive value you must specify \code{null}
+}
+\examples{
+SDIGA(parameters_file = NULL,
+      training = habermanTra,
+      test = habermanTst,
+      output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+      seed = 0,
+      nLabels = 3,
+      nEval = 10000,
+      popLength = 100,
+      mutProb = 0.01,
+      RulesRep = "can",
+      Obj1 = "CSUP",
+      w1 = 0.7,
+      Obj2 = "CCNF",
+      w2 = 0.3,
+      Obj3 = "null",
+      w3 = 0,
+      minConf = 0.6,
+      lSearch = "yes",
+      targetClass = "null")
 }
 \references{
 M. J. del Jesus, P. Gonzalez, F. Herrera, and M. Mesonero, "Evolutionary ´

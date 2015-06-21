@@ -11,7 +11,39 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
   Obj2 = "CCNF", Obj3 = "null", Obj4 = "null", targetClass = "null")
 }
 \arguments{
-\item{paramFile}{The path of the parameters file.}
+\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}
+
+\item{training}{A \code{keel} class variable with training data.}
+
+\item{test}{A \code{keel} class variable with training data.}
+
+\item{output}{character vector with the paths of where store information file, rules file and test quality measures file, respectively.}
+
+\item{seed}{An integer to set the seed used for generate random numbers.}
+
+\item{nLabels}{Number of fuzzy labels defined in the datasets.}
+
+\item{nEval}{An integer for set the maximum number of evaluations in the evolutive process.}
+
+\item{popLength}{An integer to set the number of individuals in the population.}
+
+\item{eliteLength}{An integer to set the number of individuals in the elite population.}
+
+\item{crossProb}{Sets the crossover probability. A number in [0,1].}
+
+\item{mutProb}{Sets the mutation probability. A number in [0,1].}
+
+\item{RulesRep}{Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.}
+
+\item{Obj1}{Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.}
+
+\item{Obj2}{Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.}
+
+\item{Obj3}{Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.}
+
+\item{Obj4}{Sets the Objective nº 4. See \code{Objective values} for more information about the possible values.}
+
+\item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }
 \value{
 The algorithm shows in the console the following results:
@@ -20,12 +52,23 @@ The algorithm shows in the console the following results:
  \item The rules generated.
  \item The quality measures for test of every rule and the global results.
 }
+
+    Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or
+    in the \code{outputData} parameter in the parameters file.
 }
 \description{
 This function search for interesting subgroups by executing the MESDIF algorithm.
 }
 \details{
 
+
+This function sets as target variable the last one that appear in the KEEL file. If you want
+    to change the target variable, you can use \link{changeTargetVariable} for this objective.
+    The target variable MUST be categorical, if it´s not, throws an error.
+
+    If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+    ignored and the algorithm tries to read the file specified. See "Parameters file structure" below
+    if you want to use a parameters file.
 }
 \section{How does this algorithm work?}{
 
@@ -70,6 +113,7 @@ This function search for interesting subgroups by executing the MESDIF algorithm
  \preformatted{
  algorithm = MESDIF
  inputData = "irisd-10-1tra.dat" "irisd-10-1tst.dat"
+ outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
  seed = 0
  nLabels = 3
  nEval = 10000
@@ -99,6 +143,26 @@ This function search for interesting subgroups by executing the MESDIF algorithm
       }
 
     If you don´t want to use a objetive value you must specify \code{null}
+}
+\examples{
+MESDIF( paramFile = NULL,
+        training = habermanTra,
+        test = habermanTst,
+        output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+        seed = 0,
+        nLabels = 3,
+        nEval = 10000,
+        popLength = 100,
+        eliteLength = 3,
+        crossProb = 0.6,
+        mutProb = 0.01,
+        RulesRep = "can",
+        Obj1 = "CSUP",
+        Obj2 = "CCNF",
+        Obj3 = "null",
+        Obj4 = "null",
+        targetClass = "null"
+        )
 }
 \references{
 \itemize{

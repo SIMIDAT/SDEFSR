@@ -2,15 +2,24 @@
 #' Reads a KEEL format file
 #' 
 #' This function reads a KEEL dataset file and store the information
-#'   in a keel class. This function also create triangular fuzzy sets definitions
+#'   in a \code{keel} class. This function also create fuzzy sets definitions
 #'   for execute in SDIGA, MESDIF or NMEEF-SD algorithms
 #'   
 #' @param file The path of the file in KEEL format
 #' @param nLabels The number of fuzzy labels to create on numerical variables.
 #' 
+#' @details  A KEEL data file must have the following structure:
+#'  \itemize{
+#'    \item{ @@relation: Name of the data set }
+#'    \item{ @@attribute: Description of an attribute (one for each attribute)}
+#'    \item{ @@inputs: List with the names of the input attributes }
+#'    \item{ @@output: Name of the output attribute (Not used in this algorithms implementation) }
+#'    \item{ @@data: Starting tag of the data}
+#' }
+#'    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
+#' 
 #' @author Ángel M. García-Vico <amgv0009@@red.ujaen.es>
-#' @details The KEEL format file has a fixed format, if the file hasn´t got that format, it launch an error
-#' @seealso KEEL Software Tool: \url{http://www.keel.es}
+#' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #'
 read.keel <- function(file, nLabels = 3){
   
@@ -102,8 +111,11 @@ read.keel <- function(file, nLabels = 3){
 
 
 
-
-
+#
+#
+#  Reads a parameter file for an implemented algorithm
+# 
+#
 .read.parametersFile2 <- function(file){
   
   data <- .readFile(file)
@@ -319,13 +331,12 @@ read.keel <- function(file, nLabels = 3){
 }
 
 
-#'
-#'@name .dameConjuntos
-#'@description Devuelve el numero de conjuntos (difusos o no) en funci?n del tipo de par?metro. 
-#'   Si son datos continuos da como resultado el numero de conjuntos difusos. 
-#'   En caso de ser categoricos devolvera el numero de categorias
-#'
-
+#
+#@name .dameConjuntos
+#@description Devuelve el numero de conjuntos (difusos o no) en funci?n del tipo de par?metro. 
+#   Si son datos continuos da como resultado el numero de conjuntos difusos. 
+#   En caso de ser categoricos devolvera el numero de categorias
+#
 
 
 .dameConjuntos <- function(data_types, max, n_labels) {
@@ -527,13 +538,12 @@ read.keel <- function(file, nLabels = 3){
 }
 
 
-#' Devuelve una lista con los siguientes valores:
-#' - Nombre del atributo
-#' - tipo 
-#' - minimo
-#' - maximo
-#' - valores categoricos si los tuviera, NA en caso contrario
-
+# Devuelve una lista con los siguientes valores:
+# - Nombre del atributo
+# - tipo 
+# - minimo
+# - maximo
+# - valores categoricos si los tuviera, NA en caso contrario
 .processLine <- function(line){
   returnList <- vector(mode = "list", length = 5)
   returnList[[1]] <- line[2] # Attribute name
@@ -560,7 +570,7 @@ read.keel <- function(file, nLabels = 3){
 #
 #
 # This function reads an entire file in a block and the it is splitted by the \n character.
-# It´s a 50 % faster than using scan
+# It´s a 50 % faster than using scan()
 #
 #
 .readFile <- function(file){

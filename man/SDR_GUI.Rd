@@ -2,12 +2,31 @@
 % Please edit documentation in R/Utils.R
 \name{SDR_GUI}
 \alias{SDR_GUI}
-\title{Launch a web interface for use the algorithms easily}
+\title{Launch a web interface for use the algorithms easily.}
 \usage{
 SDR_GUI()
 }
 \description{
-This functions launch a Shiny app for using the algorithms
-    easily
+Launches a Shiny-based interface for the package in your browser.
+}
+\details{
+The package \code{SDR} provide simple, shiny-based web interface for performs the taks
+    easily. The interface only work with new datasets loaded directly in the platform.
+
+    The web application is structured as follows:
+\itemize{
+    \item{ The first you have to do is load your training and test files. This files must be valids KEEL format files.}
+    \item{ After chose your datasets, you can view information about the dataset or execute the algorithm}
+    \item{ You can choose the target variable or the variable to visualize and choose the target value or execute the algorithm for all the values.}
+    \item{ Choosed the target variable, you can  choose the algorithm to execute and change his parameters with the controls provided.}
+    \item{ After you can execute the algorithm. The results are exposed in three tabs that are at the top of the page, just at the right of the "Exploratory Analysis" tab.}
+}
+    The tables can be sorted for each value and also you can search and filter values.
+}
+\examples{
+\dontrun{
+library(SDR)
+SDR_GUI()
+}
 }
 

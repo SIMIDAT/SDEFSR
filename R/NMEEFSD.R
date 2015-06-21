@@ -372,8 +372,37 @@
 
 #' @title Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery (NMEEF-SD)
 #' @description Perfoms a subgroup discovery task executing the algorithm NMEEF-SD
-#' @param paramFile The path of the parameters file
-#' @details NMEEF-SD is a multiobjetctive genetic algorithm based on a NSGA-II approach. The algorithm
+#'
+#' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
+#' @param training A \code{keel} class variable with training data.
+#' @param test A \code{keel} class variable with training data.
+#' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
+#' @param seed An integer to set the seed used for generate random numbers.
+#' @param nLabels Number of fuzzy labels defined in the datasets.
+#' @param nEval An integer for set the maximum number of evaluations in the evolutive process.
+#' @param popLength An integer to set the number of individuals in the population.
+#' @param crossProb Sets the crossover probability. A number in [0,1].
+#' @param mutProb Sets the mutation probability. A number in [0,1].
+#' @param RulesRep Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.
+#' @param Obj1 Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.
+#' @param Obj2 Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.
+#' @param Obj3 Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.
+#' @param minCnf Sets the minimum confidence that must have a rule in the Pareto front for being returned. A number in [0,1].
+#' @param reInitCoverage. Sets if the algorithm must perform the reinitialitation based on coverage when it is needed. A string with "yes" or "no".
+#' @param porcCob. Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]
+#' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
+#' 
+#' 
+#' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
+#'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
+#'     The target variable MUST be categorical, if it´s not, throws an error.
+#'     
+#'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+#'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
+#'     if you want to use a parameters file.
+#' 
+#' @section How does this algorithm work?:
+#'     NMEEF-SD is a multiobjetctive genetic algorithm based on a NSGA-II approach. The algorithm
 #'     first makes a selection based on binary tournament and save the individuals in a offspring population.
 #'     Then, NMEEF-SD apply the genetic operators over individuals in offspring population
 #'     
@@ -403,9 +432,9 @@
 #'     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
 #'     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
 #'     \item \code{porcCob}  Sets the maximum percentage of variables participe in a rule when doing the reinitialization based on coverage. Value in [0,1]
-#'     \item \code{Obj1} Sets the objetive nº 1. 
-#'     \item \code{Obj2} Sets the objetive nº 2. 
-#'     \item \code{Obj3} Sets the objetive nº 3. 
+#'     \item \code{Obj1} Sets the objective nº 1. 
+#'     \item \code{Obj2} Sets the objective nº 2. 
+#'     \item \code{Obj3} Sets the objective nº 3. 
 #'     \item \code{minCnf} Minimum confidence for returning a rule of the Pareto. Value in [0,1] 
 #'     \item \code{StrictDominance} Sets if the comparison of individuals when calculating dominance must be using strict dominance or not. Values: "yes" or "no"
 #'     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.}. Use \code{null} to search for every value of the target variable
@@ -415,6 +444,7 @@
 #'  \preformatted{
 #' algorithm = NMEEFSD
 #' inputData = "irisd-10-1tra.dat" "irisd-10-1tra.dat" "irisD-10-1tst.dat"
+#' outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
 #' seed = 1
 #' RulesRep = can
 #' nLabels = 3
@@ -454,8 +484,32 @@
 #'  \item The quality measures for test of every rule and the global results.
 #' }
 #' 
+#'     Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or 
+#'     in the \code{outputData} parameter in the parameters file.
+#' 
 #' @references Carmona, C., González, P., del Jesús, M., & Herrera, F. (2010). NMEEF-SD: Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery. 
-#'       
+#' @examples    
+#'       NMEEF_SD(paramFile = NULL, 
+#'                training = habermanTra, 
+#'                test = habermanTst, 
+#'                output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+#'                seed = 0, 
+#'                nLabels = 3,
+#'                nEval = 10000, 
+#'                popLength = 100, 
+#'                mutProb = 0.1,
+#'                crossProb = 0.6,
+#'                RulesRep = "can",
+#'                Obj1 = "CSUP",
+#'                Obj2 = "CCNF",
+#'                Obj3 = "null",
+#'                minCnf = 0.6,
+#'                reInitCoverage = "yes",
+#'                porcCob = 0.5,
+#'                StrictDominance = "yes",
+#'                targetClass = "null"
+#'                )
+#'               
 NMEEF_SD <- function(paramFile = NULL, 
                      training = NULL, 
                      test = NULL, 
@@ -489,6 +543,8 @@ NMEEF_SD <- function(paramFile = NULL,
     if(training[[1]] != test[[1]] )
       stop("datasets does not have the same relation name.")
     
+    if(length(output) != 3 )
+      stop("You must specify three files to save the results.")
     
     parametros <- list(seed = seed, 
                        algorithm = "NMEEFSD",
@@ -518,6 +574,11 @@ NMEEF_SD <- function(paramFile = NULL,
     test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
    
   }
+  
+  #Check if the last variable is categorical.
+  if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
+    stop("Target variable is not categorical.")
+  
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
   if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")

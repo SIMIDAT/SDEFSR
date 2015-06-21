@@ -159,7 +159,34 @@
 #' 
 #' @title Multiobjective Evolutionary Subgroup DIscovery Fuzzy rules (MESDIF) Algorithm
 #' @description This function search for interesting subgroups by executing the MESDIF algorithm. 
-#' @param paramFile The path of the parameters file.
+#' 
+#' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
+#' @param training A \code{keel} class variable with training data.
+#' @param test A \code{keel} class variable with training data.
+#' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
+#' @param seed An integer to set the seed used for generate random numbers.
+#' @param nLabels Number of fuzzy labels defined in the datasets.
+#' @param nEval An integer for set the maximum number of evaluations in the evolutive process.
+#' @param popLength An integer to set the number of individuals in the population.
+#' @param eliteLength An integer to set the number of individuals in the elite population.
+#' @param crossProb Sets the crossover probability. A number in [0,1].
+#' @param mutProb Sets the mutation probability. A number in [0,1].
+#' @param RulesRep Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.
+#' @param Obj1 Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.
+#' @param Obj2 Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.
+#' @param Obj3 Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.
+#' @param Obj4 Sets the Objective nº 4. See \code{Objective values} for more information about the possible values.
+#' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
+#' 
+#' 
+#' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
+#'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
+#'     The target variable MUST be categorical, if it´s not, throws an error.
+#'     
+#'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+#'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
+#'     if you want to use a parameters file.
+#' 
 #' @section How does this algorithm work?:
 #'   This algorithm performs a multi-objective genetic algorithm based on elitism (following the SPEA2 approach). The elite population has 
 #'   a fixed size and it is filled by non-dominated individuals.
@@ -200,6 +227,7 @@
 #'  \preformatted{
 #'  algorithm = MESDIF
 #'  inputData = "irisd-10-1tra.dat" "irisd-10-1tst.dat"
+#'  outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
 #'  seed = 0
 #'  nLabels = 3
 #'  nEval = 10000
@@ -236,6 +264,10 @@
 #'  \item The quality measures for test of every rule and the global results.
 #' }
 #' 
+#'     Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or 
+#'     in the \code{outputData} parameter in the parameters file.
+#'     
+#' 
 #' 
 #' 
 #' @references 
@@ -243,6 +275,26 @@
 #'  \item Berlanga, F., Del Jesus, M., González, P., Herrera, F., & Mesonero, M. (2006). Multiobjective Evolutionary Induction of Subgroup Discovery Fuzzy Rules: A Case Study in Marketing.
 #'  \item Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. 
 #' }
+#' 
+#' @examples 
+#' MESDIF( paramFile = NULL,
+#'         training = habermanTra, 
+#'         test = habermanTst, 
+#'         output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+#'         seed = 0, 
+#'         nLabels = 3,
+#'         nEval = 10000, 
+#'         popLength = 100, 
+#'         eliteLength = 3,
+#'         crossProb = 0.6,
+#'         mutProb = 0.01, 
+#'         RulesRep = "can",
+#'         Obj1 = "CSUP", 
+#'         Obj2 = "CCNF",
+#'         Obj3 = "null",
+#'         Obj4 = "null",
+#'         targetClass = "null"
+#'         )
 #' 
 MESDIF <- function(paramFile = NULL,
                    training = NULL, 
@@ -275,6 +327,8 @@ MESDIF <- function(paramFile = NULL,
     if(training[[1]] != test[[1]] )
       stop("datasets does not have the same relation name.")
     
+    if(length(output) != 3 )
+      stop("You must specify three files to save the results.")
     
     parametros <- list(seed = seed, 
                        algorithm = "MESDIF",
@@ -302,6 +356,9 @@ MESDIF <- function(paramFile = NULL,
     training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data
   }
   
+  #Check if the last variable is categorical.
+  if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
+    stop("Target variable is not categorical.")
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
   if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")

@@ -1140,8 +1140,8 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
         
         #re-initialize population
     
-        #sel <- .reInitPob(elitePop = frentes[[1]], fitnessElite = fitnessFrentes[[1]], coveredElite = coveredByIndividual[,enElFrente], .calculateDominance = CrowdingDistance, pctVariables = 0.5, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
-        sel <- .reInitPob(elitePop = Pop, fitnessElite = Fitness[seq_len(popSize), ], coveredElite = coveredByIndividual[, seq_len(popSize)], .calculateDominance = CrowdingDistance, pctVariables = porcCob, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
+        #sel <- .reInitPob(elitePop = frentes[[1]], fitnessElite = fitnessFrentes[[1]], coveredElite = coveredByIndividual[,enElFrente], calculateDominance = CrowdingDistance, pctVariables = 0.5, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
+        sel <- .reInitPob(elitePop = Pop, fitnessElite = Fitness[seq_len(popSize), ], coveredElite = coveredByIndividual[, seq_len(popSize)], crowdingDistance = CrowdingDistance, pctVariables = porcCob, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
         Pop <- sel[[1]]
         Fitness <- sel[[2]]
         CrowdingDistance <- sel[[3]]
@@ -1256,176 +1256,176 @@ setClass(Class = "ga",
          package = "SDR" 
 ) 
 
-# setMethod("print", "ga", function(x, ...) str(x))
-# 
-# setMethod("show", "ga",
-#           function(object)
-#           { cat("An object of class \"ga\"\n")
-#             cat("\nCall:\n", deparse(object@call), "\n\n",sep="")
-#             cat("Available slots:\n")
-#             print(slotNames(object))
-#           }) 
-# 
-# summary.ga <- function(object, ...)
-# {
-#   nvars <- ncol(object@population)
-#   varnames <- parNames(object)
-#   domain <- NULL
-#   if(object@type == "real-valued")
-#   { domain <- rbind(object@min, object@max)
-#     rownames(domain) <- c("Min", "Max")
-#     if(ncol(domain) == nvars) 
-#       colnames(domain) <- varnames
-#   }
-#   suggestions <- NULL
-#   if(nrow(object@suggestions) > 0) 
-#   { suggestions <- object@suggestions
-#     dimnames(suggestions) <- list(1:nrow(suggestions), varnames) 
-#   }
-#   
-#   out <- list(type = object@type,
-#               popSize = object@popSize,
-#               maxiter = object@maxiter,
-#               elitism = object@elitism,
-#               pcrossover = object@pcrossover,
-#               pmutation = object@pmutation,
-#               domain = domain,
-#               suggestions = suggestions,
-#               iter = object@iter,
-#               fitness = object@fitnessValue,
-#               solution = object@solution)  
-#   class(out) <- "summary.ga"
-#   return(out)
-# }
-# 
-# setMethod("summary", "ga", summary.ga)
-# 
-# print.summary.ga <- function(x, digits = getOption("digits"), ...)
-# {
-#   dotargs <- list(...)
-#   if(is.null(dotargs$head)) dotargs$head <- 10
-#   if(is.null(dotargs$tail)) dotargs$tail <- 1
-#   if(is.null(dotargs$chead)) dotargs$chead <- 20
-#   if(is.null(dotargs$ctail)) dotargs$ctail <- 1
-#   
-#   cat("+-----------------------------------+\n")
-#   cat("|         Genetic Algorithm         |\n")
-#   cat("+-----------------------------------+\n\n")
-#   cat("GA settings: \n")
-#   cat(paste("Type                  = ", x$type, "\n"))
-#   cat(paste("Population size       = ", x$popSize, "\n"))
-#   cat(paste("Number of generations = ", x$maxiter, "\n"))
-#   cat(paste("Elitism               = ", x$elitism, "\n"))
-#   cat(paste("Crossover probability = ", format(x$pcrossover, digits = digits), "\n"))
-#   cat(paste("Mutation probability  = ", format(x$pmutation, digits = digits), "\n"))
-#   
-#   if(x$type == "real-valued")
-#   { cat(paste("Search domain \n"))
-#     print(x$domain, digits = digits)
-#   }
-#   
-#   if(!is.null(x$suggestions))
-#   { cat(paste("Suggestions", "\n"))
-#     do.call(".printShortMatrix", 
-#             c(list(x$suggestions, digits = digits), 
-#               dotargs[c("head", "tail", "chead", "ctail")]))
-#     # print(x$suggestions, digits = digits, ...)
-#   }
-#   
-#   cat("\nGA results: \n")
-#   cat(paste("Iterations             =", format(x$iter, digits = digits), "\n"))
-#   cat(paste("Fitness function value =", format(x$fitness, digits = digits), "\n"))
-#   if(nrow(x$solution) > 1) 
-#   { cat(paste("Solutions              = \n")) }
-#   else
-#   { cat(paste("Solution               = \n")) }
-#   do.call(".printShortMatrix", 
-#           c(list(x$solution, digits = digits), 
-#             dotargs[c("head", "tail", "chead", "ctail")]))
-#   # print(x$solution, digits = digits, ...)
-#   
-#   invisible()
-# }
-# 
-# 
-# plot.ga <- function(x, y, ylim, cex.points = 0.7,
-#                     col = c("green3", "dodgerblue3", adjustcolor("green3", alpha.f = 0.1)),
-#                     pch = c(16, 1), lty = c(1,2),
-#                     grid = graphics:::grid, ...)
-# {
-#   object <- x  # Argh.  Really want to use 'object' anyway
-#   is.final <- !(any(is.na(object@summary[,1])))
-#   iters <- if(is.final) 1:object@iter else 1:object@maxiter
-#   summary <- object@summary
-#   if(missing(ylim)) 
-#   { ylim <- c(max(apply(summary[,c(2,4)], 2, 
-#                         function(x) min(range(x, na.rm = TRUE, finite = TRUE)))),
-#               max(range(summary[,1], na.rm = TRUE, finite = TRUE))) 
-#   }
-#   
-#   plot(iters, summary[,1], type = "n", ylim = ylim, 
-#        xlab = "Generation", ylab = "Fitness value", ...)
-#   if(is.final & is.function(grid)) 
-#   { grid() }
-#   points(iters, summary[,1], type = ifelse(is.final, "o", "p"),
-#          pch = pch[1], lty = lty[1], col = col[1], cex = cex.points)
-#   points(iters, summary[,2], type = ifelse(is.final, "o", "p"),
-#          pch = pch[2], lty = lty[2], col = col[2], cex = cex.points)
-#   if(is.final)
-#   { polygon(c(iters, rev(iters)), 
-#             c(summary[,4], rev(summary[,1])), 
-#             border = FALSE, col = col[3])
-#     legend("bottomright", legend = c("Best", "Mean"), 
-#            col = col, pch = pch, lty = lty, pt.cex = cex.points, 
-#            inset = 0.01) }
-#   else
-#   { title(paste("Iteration", object@iter), font.main = 1) }
-#   
-#   out <- cbind(iter = iters, summary)
-#   invisible(out)
-# }
-# 
-# setMethod("plot", "ga", plot.ga)
-# 
-# # questa non funziona quando installa il pacchetto con NAMESPACE
-# setGeneric(name = "parNames", 
-#            def = function(object, ...) { standardGeneric("parNames") }
-# )
-# 
-# setMethod("parNames", "ga",
-#           function(object, ...)
-#           { 
-#             names <- object@names
-#             nvars <- ncol(object@population)
-#             if(length(names) == 0)
-#             { names <- paste("x", 1:nvars, sep = "") }
-#             return(names)
-#           })
-# # per ora uso questo ma si dovrebbe ripristinare il metodo sopra:
-# # gaParNames <- function(object, ...)
-# # { 
-# #   names <- object@names
-# #   nvars <- ncol(object@population)
-# #   if(length(names) == 0)
-# #     { names <- paste("x", 1:nvars, sep = "") }
-# #   return(names)
-# # }
-# 
-# gaMonitor <- function(object, digits = getOption("digits"), ...)
+setMethod("print", "ga", function(x, ...) str(x))
+
+setMethod("show", "ga",
+          function(object)
+          { cat("An object of class \"ga\"\n")
+            cat("\nCall:\n", deparse(object@call), "\n\n",sep="")
+            cat("Available slots:\n")
+            print(slotNames(object))
+          }) 
+
+summary.ga <- function(object, ...)
+{
+  nvars <- ncol(object@population)
+  varnames <- parNames(object)
+  domain <- NULL
+  if(object@type == "real-valued")
+  { domain <- rbind(object@min, object@max)
+    rownames(domain) <- c("Min", "Max")
+    if(ncol(domain) == nvars) 
+      colnames(domain) <- varnames
+  }
+  suggestions <- NULL
+  if(nrow(object@suggestions) > 0) 
+  { suggestions <- object@suggestions
+    dimnames(suggestions) <- list(1:nrow(suggestions), varnames) 
+  }
+  
+  out <- list(type = object@type,
+              popSize = object@popSize,
+              maxiter = object@maxiter,
+              elitism = object@elitism,
+              pcrossover = object@pcrossover,
+              pmutation = object@pmutation,
+              domain = domain,
+              suggestions = suggestions,
+              iter = object@iter,
+              fitness = object@fitnessValue,
+              solution = object@solution)  
+  class(out) <- "summary.ga"
+  return(out)
+}
+
+setMethod("summary", "ga", summary.ga)
+
+print.summary.ga <- function(x, digits = getOption("digits"), ...)
+{
+  dotargs <- list(...)
+  if(is.null(dotargs$head)) dotargs$head <- 10
+  if(is.null(dotargs$tail)) dotargs$tail <- 1
+  if(is.null(dotargs$chead)) dotargs$chead <- 20
+  if(is.null(dotargs$ctail)) dotargs$ctail <- 1
+  
+  cat("+-----------------------------------+\n")
+  cat("|         Genetic Algorithm         |\n")
+  cat("+-----------------------------------+\n\n")
+  cat("GA settings: \n")
+  cat(paste("Type                  = ", x$type, "\n"))
+  cat(paste("Population size       = ", x$popSize, "\n"))
+  cat(paste("Number of generations = ", x$maxiter, "\n"))
+  cat(paste("Elitism               = ", x$elitism, "\n"))
+  cat(paste("Crossover probability = ", format(x$pcrossover, digits = digits), "\n"))
+  cat(paste("Mutation probability  = ", format(x$pmutation, digits = digits), "\n"))
+  
+  if(x$type == "real-valued")
+  { cat(paste("Search domain \n"))
+    print(x$domain, digits = digits)
+  }
+  
+  if(!is.null(x$suggestions))
+  { cat(paste("Suggestions", "\n"))
+    do.call(".printShortMatrix", 
+            c(list(x$suggestions, digits = digits), 
+              dotargs[c("head", "tail", "chead", "ctail")]))
+    # print(x$suggestions, digits = digits, ...)
+  }
+  
+  cat("\nGA results: \n")
+  cat(paste("Iterations             =", format(x$iter, digits = digits), "\n"))
+  cat(paste("Fitness function value =", format(x$fitness, digits = digits), "\n"))
+  if(nrow(x$solution) > 1) 
+  { cat(paste("Solutions              = \n")) }
+  else
+  { cat(paste("Solution               = \n")) }
+  do.call(".printShortMatrix", 
+          c(list(x$solution, digits = digits), 
+            dotargs[c("head", "tail", "chead", "ctail")]))
+  # print(x$solution, digits = digits, ...)
+  
+  invisible()
+}
+
+
+plot.ga <- function(x, y, ylim, cex.points = 0.7,
+                    col = c("green3", "dodgerblue3", adjustcolor("green3", alpha.f = 0.1)),
+                    pch = c(16, 1), lty = c(1,2),
+                    grid = graphics:::grid, ...)
+{
+  object <- x  # Argh.  Really want to use 'object' anyway
+  is.final <- !(any(is.na(object@summary[,1])))
+  iters <- if(is.final) 1:object@iter else 1:object@maxiter
+  summary <- object@summary
+  if(missing(ylim)) 
+  { ylim <- c(max(apply(summary[,c(2,4)], 2, 
+                        function(x) min(range(x, na.rm = TRUE, finite = TRUE)))),
+              max(range(summary[,1], na.rm = TRUE, finite = TRUE))) 
+  }
+  
+  plot(iters, summary[,1], type = "n", ylim = ylim, 
+       xlab = "Generation", ylab = "Fitness value", ...)
+  if(is.final & is.function(grid)) 
+  { grid() }
+  points(iters, summary[,1], type = ifelse(is.final, "o", "p"),
+         pch = pch[1], lty = lty[1], col = col[1], cex = cex.points)
+  points(iters, summary[,2], type = ifelse(is.final, "o", "p"),
+         pch = pch[2], lty = lty[2], col = col[2], cex = cex.points)
+  if(is.final)
+  { polygon(c(iters, rev(iters)), 
+            c(summary[,4], rev(summary[,1])), 
+            border = FALSE, col = col[3])
+    legend("bottomright", legend = c("Best", "Mean"), 
+           col = col, pch = pch, lty = lty, pt.cex = cex.points, 
+           inset = 0.01) }
+  else
+  { title(paste("Iteration", object@iter), font.main = 1) }
+  
+  out <- cbind(iter = iters, summary)
+  invisible(out)
+}
+
+setMethod("plot", "ga", plot.ga)
+
+# questa non funziona quando installa il pacchetto con NAMESPACE
+setGeneric(name = "parNames", 
+           def = function(object, ...) { standardGeneric("parNames") }
+)
+
+setMethod("parNames", "ga",
+          function(object, ...)
+          { 
+            names <- object@names
+            nvars <- ncol(object@population)
+            if(length(names) == 0)
+            { names <- paste("x", 1:nvars, sep = "") }
+            return(names)
+          })
+# per ora uso questo ma si dovrebbe ripristinare il metodo sopra:
+# gaParNames <- function(object, ...)
 # { 
-#   fitness <- na.exclude(object@fitness)
-#   cat(paste("Iter =", object@iter, 
-#             " | Mean =", format(mean(fitness), digits = digits), 
-#             " | Best =", format(max(fitness), digits = digits), "\n"))
+#   names <- object@names
+#   nvars <- ncol(object@population)
+#   if(length(names) == 0)
+#     { names <- paste("x", 1:nvars, sep = "") }
+#   return(names)
 # }
-# 
-# gaSummary <- function(x, ...)
-# {
-#   # compute summary for each step
-#   x <- na.exclude(as.vector(x))
-#   q <- fivenum(x)
-#   c(max = q[5], mean = mean(x), q3 = q[4], median = q[3], q1 = q[2], min = q[1])
-# }
+
+gaMonitor <- function(object, digits = getOption("digits"), ...)
+{ 
+  fitness <- na.exclude(object@fitness)
+  cat(paste("Iter =", object@iter, 
+            " | Mean =", format(mean(fitness), digits = digits), 
+            " | Best =", format(max(fitness), digits = digits), "\n"))
+}
+
+gaSummary <- function(x, ...)
+{
+  # compute summary for each step
+  x <- na.exclude(as.vector(x))
+  q <- fivenum(x)
+  c(max = q[5], mean = mean(x), q3 = q[4], median = q[3], q1 = q[2], min = q[1])
+}
 
 
 

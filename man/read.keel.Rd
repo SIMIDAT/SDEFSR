@@ -13,16 +13,24 @@ read.keel(file, nLabels = 3)
 }
 \description{
 This function reads a KEEL dataset file and store the information
-  in a keel class. This function also create triangular fuzzy sets definitions
+  in a \code{keel} class. This function also create fuzzy sets definitions
   for execute in SDIGA, MESDIF or NMEEF-SD algorithms
 }
 \details{
-The KEEL format file has a fixed format, if the file hasn´t got that format, it launch an error
+A KEEL data file must have the following structure:
+ \itemize{
+   \item{ @relation: Name of the data set }
+   \item{ @attribute: Description of an attribute (one for each attribute)}
+   \item{ @inputs: List with the names of the input attributes }
+   \item{ @output: Name of the output attribute (Not used in this algorithms implementation) }
+   \item{ @data: Starting tag of the data}
+}
+   The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
 }
 \author{
 Ángel M. García-Vico <amgv0009@red.ujaen.es>
 }
 \seealso{
-KEEL Software Tool: \url{http://www.keel.es}
+KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 }
 

@@ -324,6 +324,14 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' @param posVariable The position of the variable to set as target Variable.
 #' @return The dataset with te variables changed
 #' 
+#' 
+#' @examples 
+#' changeTargetVariable(carTra, 3)
+#' \donotrun{
+#' #Throws an error because the variable selected is numeric
+#' changeTargetVariable(habermanTra, 1)
+#' }
+#' 
 changeTargetVariable <- function(dataset, posVariable){
   if(class(dataset) != "keel") stop("The provided dataset is not a keel class")
   #if(posVariable >= dataset$nVars + 1) stop("posVariable is the same of the actual variable or is out of range")
@@ -526,9 +534,29 @@ changeTargetVariable <- function(dataset, posVariable){
 
 
 
-#' Launch a web interface for use the algorithms easily
-#' @description This functions launch a Shiny app for using the algorithms
-#'     easily
+#' Launch a web interface for use the algorithms easily.
+#' @description Launches a Shiny-based interface for the package in your browser.
+#'     
+#' @details The package \code{SDR} provide simple, shiny-based web interface for performs the taks 
+#'     easily. The interface only work with new datasets loaded directly in the platform.
+#'   
+#'     The web application is structured as follows:
+#' \itemize{
+#'     \item{ The first you have to do is load your training and test files. This files must be valids KEEL format files.}
+#'     \item{ After chose your datasets, you can view information about the dataset or execute the algorithm}
+#'     \item{ You can choose the target variable or the variable to visualize and choose the target value or execute the algorithm for all the values.}
+#'     \item{ Choosed the target variable, you can  choose the algorithm to execute and change his parameters with the controls provided.}
+#'     \item{ After you can execute the algorithm. The results are exposed in three tabs that are at the top of the page, just at the right of the "Exploratory Analysis" tab.}
+#' }
+#'     The tables can be sorted for each value and also you can search and filter values.
+#'     
+#'     
+#' @examples
+#'\dontrun{
+#' library(SDR)
+#' SDR_GUI()
+#'}
+#'     
 #' @export
  SDR_GUI <- function(){
    shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)

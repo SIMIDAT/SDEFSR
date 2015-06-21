@@ -1,6 +1,6 @@
 name: shiny
 account: sdrinterface
 server: shinyapps.io
-bundleId: 206383
+bundleId: 208939
 url: https://sdrinterface.shinyapps.io/shiny
-when: 1434768289.32532
+when: 1434914824.40594
