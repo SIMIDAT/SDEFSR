@@ -1,0 +1,17 @@
+-------------------------------- 
+ Algorithm: SDIGA 
+ Relation: haberman 
+ Training file: 
+ Test file: 
+ Rules Representation:  CAN 
+ Number of evaluations: 10000 
+ Number of fuzzy partitions: 3 
+ Population Length: 100 
+ Mutation Probability: 0.01 
+ Obj1: CSUP   (Weigth: 0.7 ) 
+ Obj2: CCNF   (Weigth: 0.3 ) 
+ Obj3: null   (Weigth: 0 ) 
+ Local Search optimization?: yes 
+ Number of examples in training: 244 
+ Number of examples in test: 62 
+ --------------------------------

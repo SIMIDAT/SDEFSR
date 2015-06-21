@@ -104,7 +104,7 @@ read.keel <- function(file, nLabels = 3){
 
 
 
-read.parametersFile2 <- function(file){
+.read.parametersFile2 <- function(file){
   
   data <- .readFile(file)
   data <- gsub(pattern = "\r", replacement = "", x = data, fixed = TRUE) #Eliminar caracteres extraños.
@@ -350,7 +350,7 @@ read.parametersFile2 <- function(file){
 # This function prints a rule for show to the user
 #
 #
-print.rule <- function(rule, max, names, consecuente, types, fuzzySets, categoricalValues, DNFRules = FALSE, rulesFile = "rulesFile.txt"){
+.print.rule <- function(rule, max, names, consecuente, types, fuzzySets, categoricalValues, DNFRules = FALSE, rulesFile = "rulesFile.txt"){
   if(! DNFRules){
     participantes <- which(rule < max)
     nombre <- names[participantes]

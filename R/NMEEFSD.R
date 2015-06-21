@@ -1,4 +1,4 @@
-reInitPob <- function(elitePop, fitnessElite, coveredElite, crowdingDistance, pctVariables, cubiertoActual, dataset, maxRegla, cate, num, crispSets, targetClass, popSize){
+.reInitPob <- function(elitePop, fitnessElite, coveredElite, crowdingDistance, pctVariables, cubiertoActual, dataset, maxRegla, cate, num, crispSets, targetClass, popSize){
   salida <- matrix(ncol = NCOL(elitePop), nrow = popSize)
   fitnessSalida <- matrix(ncol = 4, nrow = popSize*2)
   crowding <- numeric(popSize * 2)
@@ -167,7 +167,7 @@ reInitPob <- function(elitePop, fitnessElite, coveredElite, crowdingDistance, pc
 
 
 
-calculateDominance <- function(q, p, strictDominance){
+.calculateDominance <- function(q, p, strictDominance){
   #We calculate if p domain q only.
   
   dominaP <- F
@@ -197,7 +197,7 @@ calculateDominance <- function(q, p, strictDominance){
 
 
 
-crowdingDistance <- function(pop){
+.crowdingDistance <- function(pop){
   if(is.vector(pop)) 
     size <- 1
   else
@@ -218,7 +218,7 @@ crowdingDistance <- function(pop){
       #indices <- order(measures, decreasing = FALSE)
       
       #/**/ REMOVE THIS AND USE ORDER
-      indices <- qsort(measures, 1, length(measures), seq_len(length(measures)))
+      indices <- .qsort(measures, 1, length(measures), seq_len(length(measures)))
       indices <- indices$indices
       #/**/
       
@@ -245,7 +245,7 @@ crowdingDistance <- function(pop){
 
 
 
-fillPopulation <- function(fronts, numFronts, fitness, coveredFrentes, popSize, nObjs){
+.fillPopulation <- function(fronts, numFronts, fitness, coveredFrentes, popSize, nObjs){
   suma <- 0
   if(is.vector(fronts[[1]]))
     cols <- length(fronts[[1]])
@@ -273,7 +273,7 @@ fillPopulation <- function(fronts, numFronts, fitness, coveredFrentes, popSize, 
     if( rows + suma <= popSize ){
       
       #Calculate crowding Distance
-      distance[(suma+1):(rows + suma)] <- crowdingDistance(fitness[[i]][, seq_len(nObjs)])
+      distance[(suma+1):(rows + suma)] <- .crowdingDistance(fitness[[i]][, seq_len(nObjs)])
       #Add front in the new population, and update the rest of parameters.
       newPop[(suma+1):(rows + suma), ] <- fronts[[i]]
       newRank[(suma+1):(rows + suma)] <- i - 1
@@ -290,11 +290,11 @@ fillPopulation <- function(fronts, numFronts, fitness, coveredFrentes, popSize, 
       FitPerfectly <- FALSE
       porRellenar <- popSize - suma
       #Calculate crowding distance
-      distancia <- crowdingDistance(fitness[[frente]])
+      distancia <- .crowdingDistance(fitness[[frente]])
       
       #Order by crowding distance and get the best individuals till the population is filled
       #orden <- order(distancia, decreasing = TRUE)[seq_len(porRellenar)]
-      orden <- qsort(distancia, 1, length(distancia), index = seq_len(length(distancia)))
+      orden <- .qsort(distancia, 1, length(distancia), index = seq_len(length(distancia)))
       orden <- orden$indices[length(orden$vector):(length(orden$vector) - porRellenar + 1) ]
       
       #Fill the population and update parameters
@@ -510,7 +510,7 @@ NMEEF_SD <- function(paramFile = NULL,
   } else {
 
     # Parametros --------------------------
-    parametros <- read.parametersFile2(file = paramFile)  # parametros del algoritmo
+    parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
     
     if(parametros[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for NMEEF-SD")
    
@@ -547,7 +547,7 @@ NMEEF_SD <- function(paramFile = NULL,
   #----- OBTENCION DE LAS REGLAS -------------------
   if(parametros$targetClass != "null"){ # Ejecuci-n para una clase
     cat("\n", "\n", "Searching rules for only one value of the target class...", "\n", "\n", file ="", fill = TRUE) 
-    reglas <- findRule(parametros$targetClass, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes")
+    reglas <- .findRule(parametros$targetClass, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes")
     
     if(! is.null(unlist(reglas)) ){
       if(! DNF) 
@@ -565,9 +565,9 @@ NMEEF_SD <- function(paramFile = NULL,
     cat("\n", "\n", "Searching rules for all values of the target class...", "\n", "\n", file ="", fill = TRUE)  
     
     if(Sys.info()[1] == "Windows")
-      reglas <- lapply(X = training$class_names, FUN = findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"  )
+      reglas <- lapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"  )
     else
-      reglas <- mclapply(X = training$class_names, FUN = findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"   , mc.cores = detectCores() )
+      reglas <- mclapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"   , mc.cores = detectCores() )
     
     if(! is.null(unlist(reglas)) ){
       if(! DNF) 
@@ -575,12 +575,12 @@ NMEEF_SD <- function(paramFile = NULL,
       else 
         reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
       
-      #Print Rules (In windows, mclapply doesn´t work, so the rules are printed by "findRule" function)
+      #Print Rules (In windows, mclapply doesn´t work, so the rules are printed by ".findRule" function)
     if(Sys.info()[1] != "Windows")
       for(i in seq_len(NROW(reglas))){
         cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
         #cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
-        print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+        .print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
         cat("\n","\n",  file = "", sep = "",fill = TRUE)
         #cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
       }

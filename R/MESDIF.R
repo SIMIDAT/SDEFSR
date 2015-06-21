@@ -83,7 +83,7 @@
 # This is called when the number of non-dominated individuals are greater than elite population size.
 #
 #
-truncOperator <- function(NonDominatedPop, elitePopSize, FitnessND ){
+.truncOperator <- function(NonDominatedPop, elitePopSize, FitnessND ){
   #Calculate distance between individuals
   distancia <- as.matrix( dist(x = FitnessND, method = "euclidean") ) ^2
  
@@ -293,7 +293,7 @@ MESDIF <- function(paramFile = NULL,
                        targetClass = targetClass)
   } else {
   # Parametros --------------------------
-    parametros <- read.parametersFile2(file = paramFile)  # parametros del algoritmo
+    parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
     if(parametros$algorithm != "MESDIF") 
       stop(paste("The algorithm specificied (", parametros$algorithm, ") in parameters file is not MESDIF. Check parameters file. Aborting program..."))
     
@@ -331,7 +331,7 @@ MESDIF <- function(paramFile = NULL,
   #----- OBTENCION DE LAS REGLAS -------------------
   if(parametros$targetClass != "null"){ # Ejecuci?n para una clase
     cat("\n", "\n", "Searching rules for only one value of the target class...", "\n", "\n", file ="", fill = TRUE) 
-    reglas <- findRule(parametros$targetClass, "MESDIF", training, parametros, DNF, cate, num, Objetivos)
+    reglas <- .findRule(parametros$targetClass, "MESDIF", training, parametros, DNF, cate, num, Objetivos)
     if(! DNF) 
       reglas <-  matrix(unlist(reglas), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
     else 
@@ -343,9 +343,9 @@ MESDIF <- function(paramFile = NULL,
     
     #If we are on Windowns, we can´t use mclapply because it use FORK() for parallelism
     if(Sys.info()[1] == "Windows")
-      reglas <- lapply(X = training$class_names, FUN = findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos)
+      reglas <- lapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos)
     else
-      reglas <- mclapply(X = training$class_names, FUN = findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos   , mc.cores = detectCores() )
+      reglas <- mclapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos   , mc.cores = detectCores() )
   
     
     if(! DNF) 
@@ -358,7 +358,7 @@ MESDIF <- function(paramFile = NULL,
   for(i in seq_len(NROW(reglas))){
     cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
     #cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
-    print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+    .print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
     cat("\n","\n",  file = "", sep = "",fill = TRUE)
     #cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
   }
@@ -448,7 +448,7 @@ MESDIF <- function(paramFile = NULL,
 
 
 
-findRule <- function(targetClass, algorithm, training, parametros, DNF, cate, num, Objetivos, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE){
+.findRule <- function(targetClass, algorithm, training, parametros, DNF, cate, num, Objetivos, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE){
   #Check if target class is valid
   if(! any(training$class_names == targetClass)) stop("Invalid target class value provided.")
   cat(" ? Target value:", targetClass ,"\n", file = "", sep = " ", fill = TRUE)
@@ -463,7 +463,7 @@ findRule <- function(targetClass, algorithm, training, parametros, DNF, cate, nu
     reglas[[i]] <- rule[i,]
     cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
     cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
-    print.rule(rule = as.numeric( rule[i, - NCOL(rule)] ), max = training$conjuntos, names = training$atributeNames, consecuente = targetClass, types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+    .print.rule(rule = as.numeric( rule[i, - NCOL(rule)] ), max = training$conjuntos, names = training$atributeNames, consecuente = targetClass, types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
     cat("\n","\n",  file = "", sep = "",fill = TRUE)
     cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
   }

@@ -17,4 +17,9 @@ This function returns the same dataset with their fuzzy definitions modified.
 \description{
 This function change the number of fuzzy labels defined in the current dataset.
 }
+\details{
+The fuzzy definitions used in the \code{keel} class are triangular.
+    Because you can only specify the number of fuzzy definitions. All those definitions
+    has the same width.
+}
 

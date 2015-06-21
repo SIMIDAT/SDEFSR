@@ -246,7 +246,7 @@
 # @param index Index vector
 # @return A list with two fields, vector which is the ordered vector and indices which is the sorted indexes of the original vector 
 # 
-qsort <- function(v, left, right, index) {
+.qsort <- function(v, left, right, index) {
  
   
   i = left
@@ -269,12 +269,12 @@ qsort <- function(v, left, right, index) {
     }
 }
   if (left<j){
-   a <- qsort(v,left,j,index)
+   a <- .qsort(v,left,j,index)
     v[left:j] <- a$vector
     index[left:j] <- a$indices
   }
   if (i<right){
-   b <- qsort(v,i,right,index);
+   b <- .qsort(v,i,right,index);
    v[i:right] <- b$vector
    index[i:right] <- b$indices
   }
@@ -498,7 +498,7 @@ changeTargetVariable <- function(dataset, posVariable){
 
 
 
-normalizeDNFRule <- function(regla, max){
+.normalizeDNFRule <- function(regla, max){
   if(!anyNA(regla)){
     for(i in seq_len(length(max) - 1)){ 
       if(all(regla[(max[i] + 1):max[i+1]] == 1)){

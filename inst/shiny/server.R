@@ -186,7 +186,7 @@ shinyServer(function(input, output, session) {
       data <<- dataTra
       datosTra <<- matrix(unlist(dataTra$data), nrow = dataTra$nVars + 1)
       datos <<- datosTra
-      updateAttributes(session, dataTra[[2]][length(dataTra[[2]])])
+      .updateAttributes(session, dataTra[[2]][length(dataTra[[2]])])
     }
      } , error = function(e) print(e)) 
    }
@@ -220,7 +220,7 @@ shinyServer(function(input, output, session) {
         data <<- dataTst
         datosTst <<- matrix(unlist(dataTst$data), nrow = dataTst$nVars + 1)
         datos <<- datosTst
-        updateAttributes(session, dataTst[[2]][length(dataTst[[2]])])
+        .updateAttributes(session, dataTst[[2]][length(dataTst[[2]])])
         
       }
     }
@@ -263,7 +263,7 @@ shinyServer(function(input, output, session) {
                           "This is not a categorical variable!"
       )
       
-      updateAttributes(session, data[[2]][length(data[[2]])])
+      .updateAttributes(session, data[[2]][length(data[[2]])])
       
     } else if(file == "Test File" & fileAnterios == "Tra") {
       fileAnterios <<- "Tst"
@@ -281,7 +281,7 @@ shinyServer(function(input, output, session) {
                         else
                           "This is not a categorical variable!"
       )
-      updateAttributes(session, data[[2]][length(data[[2]])])
+      .updateAttributes(session, data[[2]][length(data[[2]])])
    
       }
   })
@@ -300,7 +300,7 @@ shinyServer(function(input, output, session) {
                           "This is not a categorical variable!"
       )
     }
-    updateAttributes(session, input$targetClassSelect)
+    .updateAttributes(session, input$targetClassSelect)
  
   })
   
@@ -355,11 +355,11 @@ shinyServer(function(input, output, session) {
     switch(algorithm,
            "SDIGA"= {
              minConf <- isolate(input$minConf)
-             Obj1 <- getObjetives(isolate(input$Obj1))
+             Obj1 <- .getObjetives(isolate(input$Obj1))
              w1 <- isolate(input$w1)
-             Obj2 <- getObjetives(isolate(input$Obj2))
+             Obj2 <- .getObjetives(isolate(input$Obj2))
              w2 <- isolate(input$w2)
-             Obj3 <- getObjetives(isolate(input$Obj3))
+             Obj3 <- .getObjetives(isolate(input$Obj3))
              w3 <- isolate(input$w3)
              lSearch = if(isolate(input$lSearch)) "yes" else "no"
             
@@ -390,10 +390,10 @@ shinyServer(function(input, output, session) {
              
              elitePop <- isolate(input$elitePop)
              if(elitePop > popSize) stop("Elite population must be smaller than population size")
-             Obj1 <- getObjetives(isolate(input$Obj1M))
-             Obj2 <- getObjetives(isolate(input$Obj2M))
-             Obj3 <- getObjetives(isolate(input$Obj3M))
-             Obj4 <- getObjetives(isolate(input$Obj3M))
+             Obj1 <- .getObjetives(isolate(input$Obj1M))
+             Obj2 <- .getObjetives(isolate(input$Obj2M))
+             Obj3 <- .getObjetives(isolate(input$Obj3M))
+             Obj4 <- .getObjetives(isolate(input$Obj3M))
              
             
              # Execute the algorithm
@@ -418,9 +418,9 @@ shinyServer(function(input, output, session) {
            },
            "NMEEF-SD" = {
              minCnf <- isolate(input$minConf)
-             Obj1 <- getObjetives(isolate(input$Obj1N))
-             Obj2 <- getObjetives(isolate(input$Obj2N))
-             Obj3 <- getObjetives(isolate(input$Obj3N))
+             Obj1 <- .getObjetives(isolate(input$Obj1N))
+             Obj2 <- .getObjetives(isolate(input$Obj2N))
+             Obj3 <- .getObjetives(isolate(input$Obj3N))
              strictDominance <- if(isolate(input$strictDominance)) "yes" else "no"
              reInit <- if(isolate(input$reInitPob)) "yes" else "no"
              porcCob <- isolate(input$porcCob)
@@ -538,7 +538,7 @@ shinyServer(function(input, output, session) {
 
 })
 
-getObjetives <- function(obj){
+.getObjetives <- function(obj){
   switch(obj,
          "null" = {"null"},
           "Crisp Support" = {"CSUP"},
@@ -552,7 +552,7 @@ getObjetives <- function(obj){
 }
 
 
-updateAttributes <- function(session, attribute){
+.updateAttributes <- function(session, attribute){
   if(attribute == "NA" || length(attribute) == 0 || is.null(attribute))
     return(NULL)
   

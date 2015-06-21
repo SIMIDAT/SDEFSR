@@ -10,7 +10,7 @@
 #
 #
 
-gaSDIGA <- function(type = c("binary", "real-valued", "permutation"), 
+.gaSDIGA <- function(type = c("binary", "real-valued", "permutation"), 
                fitness, ...,
                min, max, nBits,
                population = gaControl(type)$population,
@@ -325,7 +325,7 @@ return(object)
 #
 #
 
-gaMESDIF <- function(type = c("binary", "real-valued", "permutation"), 
+.gaMESDIF <- function(type = c("binary", "real-valued", "permutation"), 
                fitness, ...,
                min, max, nBits,
                population = gaControl(type)$population,
@@ -507,7 +507,7 @@ gaMESDIF <- function(type = c("binary", "real-valued", "permutation"),
     
     #normalize DNF RULES
 #     if(DNFRules){
-#       UnionPop <- matrix(unlist(apply(X = UnionPop, MARGIN = 1, FUN = normalizeDNFRule, max)), ncol = nBits, byrow = TRUE)
+#       UnionPop <- matrix(unlist(apply(X = UnionPop, MARGIN = 1, FUN = .normalizeDNFRule, max)), ncol = nBits, byrow = TRUE)
 #     }
     
     #Remove duplicated individuals in the UnionPop
@@ -592,7 +592,7 @@ if( cantidadNoDominados <= elitism){
  
 } else {
   #Truncation operator
-  lista <- truncOperator(NonDominatedPop = UnionPop[which(NonDominated), , drop = F], elitePopSize = elitism, FitnessND = Fitness[which(NonDominated), , drop =  F])
+  lista <- .truncOperator(NonDominatedPop = UnionPop[which(NonDominated), , drop = F], elitePopSize = elitism, FitnessND = Fitness[which(NonDominated), , drop =  F])
   elitePop <- lista[[1]]
   eliteIndividuals <- which(NonDominated)[lista[[2]]]
   
@@ -710,7 +710,7 @@ if(is.function(mutation) & pm > 0)
 #Replace the worst individuals in the population with the genereted in crossovers and mutations
 
 #orden <- order(AdaptationValue)
-orden <- qsort(AdaptationValue, left = 1, right = length(AdaptationValue), index = seq_len(length(AdaptationValue)))
+orden <- .qsort(AdaptationValue, left = 1, right = length(AdaptationValue), index = seq_len(length(AdaptationValue)))
 orden <- orden$indices
 Pop <- interPop#[orden, , drop = F]
 orden <- c(orden, (popSize+1):NROW(Fitness))
@@ -726,7 +726,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 
 # Return Non-duplicated individuals in elite pop
   if(DNFRules){
-    elitePop <- matrix(unlist(apply(X = elitePop, MARGIN = 1, FUN = normalizeDNFRule, max)), ncol = nBits, byrow = TRUE)
+    elitePop <- matrix(unlist(apply(X = elitePop, MARGIN = 1, FUN = .normalizeDNFRule, max)), ncol = nBits, byrow = TRUE)
     } 
     elitePop[which(!duplicated(elitePop)), , drop = F]
   
@@ -761,7 +761,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 #
 #
 
-gaNMEEF <- function(type = c("binary", "real-valued", "permutation"), 
+.gaNMEEF <- function(type = c("binary", "real-valued", "permutation"), 
                      fitness, ...,
                      min, max, nBits,
                      population = gaControl(type)$population,
@@ -1076,7 +1076,7 @@ gaNMEEF <- function(type = c("binary", "real-valued", "permutation"),
     f <- na.exclude(Fitness)[,seq_len(nObjs),drop=F]
     n_Ind <- NROW(f)
     for(i in seq_len(n_Ind)){
-      nd <- apply(X = f, MARGIN = 1, FUN = calculateDominance, f[i,,drop=F], StrictDominance)
+      nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,,drop=F], StrictDominance)
       Dominados[i] <- length(which(nd == 1L))
       WhoIDomain[[i]] <- which(nd <= 0L)
     }
@@ -1126,7 +1126,7 @@ gaNMEEF <- function(type = c("binary", "real-valued", "permutation"),
     cubiertoAnterior <- cubiertoActual
     
       # fill the next population 
-      aux <- fillPopulation(frentes, p - 1, fitnessFrentes, coveredByIndividualFrentes, popSize, nObjs)
+      aux <- .fillPopulation(frentes, p - 1, fitnessFrentes, coveredByIndividualFrentes, popSize, nObjs)
       Pop <- aux[[1]]
       CrowdingDistance[seq_len(popSize)] <- aux[[2]]
       Fitness[seq_len(popSize), ] <- aux[[3]]
@@ -1140,8 +1140,8 @@ gaNMEEF <- function(type = c("binary", "real-valued", "permutation"),
         
         #re-initialize population
     
-        #sel <- reInitPob(elitePop = frentes[[1]], fitnessElite = fitnessFrentes[[1]], coveredElite = coveredByIndividual[,enElFrente], crowdingDistance = CrowdingDistance, pctVariables = 0.5, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
-        sel <- reInitPob(elitePop = Pop, fitnessElite = Fitness[seq_len(popSize), ], coveredElite = coveredByIndividual[, seq_len(popSize)], crowdingDistance = CrowdingDistance, pctVariables = porcCob, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
+        #sel <- .reInitPob(elitePop = frentes[[1]], fitnessElite = fitnessFrentes[[1]], coveredElite = coveredByIndividual[,enElFrente], .calculateDominance = CrowdingDistance, pctVariables = 0.5, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
+        sel <- .reInitPob(elitePop = Pop, fitnessElite = Fitness[seq_len(popSize), ], coveredElite = coveredByIndividual[, seq_len(popSize)], .calculateDominance = CrowdingDistance, pctVariables = porcCob, cubiertoActual = cubiertoActual, dataset = dataset, maxRegla = dots[[1]][["conjuntos"]], cate = dots[[14]], num = dots[[15]], crispSets = dots[[1]][["crispSets"]], targetClass = targetClass, popSize = popSize )
         Pop <- sel[[1]]
         Fitness <- sel[[2]]
         CrowdingDistance <- sel[[3]]
@@ -1188,7 +1188,7 @@ gaNMEEF <- function(type = c("binary", "real-valued", "permutation"),
   f <- na.exclude(Fitness)[1:popSize,seq_len(nObjs), drop = F]
   n_Ind <- NROW(f)
   for(i in seq_len(n_Ind)){
-    nd <- apply(X = f, MARGIN = 1, FUN = calculateDominance, f[i,], TRUE)
+    nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,], TRUE)
     Dominados[i] <- length(which(nd == 1L))
     WhoIDomain[[i]] <- which(nd <= 0L)
   }
@@ -1256,176 +1256,176 @@ setClass(Class = "ga",
          package = "SDR" 
 ) 
 
-setMethod("print", "ga", function(x, ...) str(x))
-
-setMethod("show", "ga",
-          function(object)
-          { cat("An object of class \"ga\"\n")
-            cat("\nCall:\n", deparse(object@call), "\n\n",sep="")
-            cat("Available slots:\n")
-            print(slotNames(object))
-          }) 
-
-summary.ga <- function(object, ...)
-{
-  nvars <- ncol(object@population)
-  varnames <- parNames(object)
-  domain <- NULL
-  if(object@type == "real-valued")
-  { domain <- rbind(object@min, object@max)
-    rownames(domain) <- c("Min", "Max")
-    if(ncol(domain) == nvars) 
-      colnames(domain) <- varnames
-  }
-  suggestions <- NULL
-  if(nrow(object@suggestions) > 0) 
-  { suggestions <- object@suggestions
-    dimnames(suggestions) <- list(1:nrow(suggestions), varnames) 
-  }
-  
-  out <- list(type = object@type,
-              popSize = object@popSize,
-              maxiter = object@maxiter,
-              elitism = object@elitism,
-              pcrossover = object@pcrossover,
-              pmutation = object@pmutation,
-              domain = domain,
-              suggestions = suggestions,
-              iter = object@iter,
-              fitness = object@fitnessValue,
-              solution = object@solution)  
-  class(out) <- "summary.ga"
-  return(out)
-}
-
-setMethod("summary", "ga", summary.ga)
-
-print.summary.ga <- function(x, digits = getOption("digits"), ...)
-{
-  dotargs <- list(...)
-  if(is.null(dotargs$head)) dotargs$head <- 10
-  if(is.null(dotargs$tail)) dotargs$tail <- 1
-  if(is.null(dotargs$chead)) dotargs$chead <- 20
-  if(is.null(dotargs$ctail)) dotargs$ctail <- 1
-  
-  cat("+-----------------------------------+\n")
-  cat("|         Genetic Algorithm         |\n")
-  cat("+-----------------------------------+\n\n")
-  cat("GA settings: \n")
-  cat(paste("Type                  = ", x$type, "\n"))
-  cat(paste("Population size       = ", x$popSize, "\n"))
-  cat(paste("Number of generations = ", x$maxiter, "\n"))
-  cat(paste("Elitism               = ", x$elitism, "\n"))
-  cat(paste("Crossover probability = ", format(x$pcrossover, digits = digits), "\n"))
-  cat(paste("Mutation probability  = ", format(x$pmutation, digits = digits), "\n"))
-  
-  if(x$type == "real-valued")
-  { cat(paste("Search domain \n"))
-    print(x$domain, digits = digits)
-  }
-  
-  if(!is.null(x$suggestions))
-  { cat(paste("Suggestions", "\n"))
-    do.call(".printShortMatrix", 
-            c(list(x$suggestions, digits = digits), 
-              dotargs[c("head", "tail", "chead", "ctail")]))
-    # print(x$suggestions, digits = digits, ...)
-  }
-  
-  cat("\nGA results: \n")
-  cat(paste("Iterations             =", format(x$iter, digits = digits), "\n"))
-  cat(paste("Fitness function value =", format(x$fitness, digits = digits), "\n"))
-  if(nrow(x$solution) > 1) 
-  { cat(paste("Solutions              = \n")) }
-  else
-  { cat(paste("Solution               = \n")) }
-  do.call(".printShortMatrix", 
-          c(list(x$solution, digits = digits), 
-            dotargs[c("head", "tail", "chead", "ctail")]))
-  # print(x$solution, digits = digits, ...)
-  
-  invisible()
-}
-
-
-plot.ga <- function(x, y, ylim, cex.points = 0.7,
-                    col = c("green3", "dodgerblue3", adjustcolor("green3", alpha.f = 0.1)),
-                    pch = c(16, 1), lty = c(1,2),
-                    grid = graphics:::grid, ...)
-{
-  object <- x  # Argh.  Really want to use 'object' anyway
-  is.final <- !(any(is.na(object@summary[,1])))
-  iters <- if(is.final) 1:object@iter else 1:object@maxiter
-  summary <- object@summary
-  if(missing(ylim)) 
-  { ylim <- c(max(apply(summary[,c(2,4)], 2, 
-                        function(x) min(range(x, na.rm = TRUE, finite = TRUE)))),
-              max(range(summary[,1], na.rm = TRUE, finite = TRUE))) 
-  }
-  
-  plot(iters, summary[,1], type = "n", ylim = ylim, 
-       xlab = "Generation", ylab = "Fitness value", ...)
-  if(is.final & is.function(grid)) 
-  { grid() }
-  points(iters, summary[,1], type = ifelse(is.final, "o", "p"),
-         pch = pch[1], lty = lty[1], col = col[1], cex = cex.points)
-  points(iters, summary[,2], type = ifelse(is.final, "o", "p"),
-         pch = pch[2], lty = lty[2], col = col[2], cex = cex.points)
-  if(is.final)
-  { polygon(c(iters, rev(iters)), 
-            c(summary[,4], rev(summary[,1])), 
-            border = FALSE, col = col[3])
-    legend("bottomright", legend = c("Best", "Mean"), 
-           col = col, pch = pch, lty = lty, pt.cex = cex.points, 
-           inset = 0.01) }
-  else
-  { title(paste("Iteration", object@iter), font.main = 1) }
-  
-  out <- cbind(iter = iters, summary)
-  invisible(out)
-}
-
-setMethod("plot", "ga", plot.ga)
-
-# questa non funziona quando installa il pacchetto con NAMESPACE
-setGeneric(name = "parNames", 
-           def = function(object, ...) { standardGeneric("parNames") }
-)
-
-setMethod("parNames", "ga",
-          function(object, ...)
-          { 
-            names <- object@names
-            nvars <- ncol(object@population)
-            if(length(names) == 0)
-            { names <- paste("x", 1:nvars, sep = "") }
-            return(names)
-          })
-# per ora uso questo ma si dovrebbe ripristinare il metodo sopra:
-# gaParNames <- function(object, ...)
-# { 
-#   names <- object@names
+# setMethod("print", "ga", function(x, ...) str(x))
+# 
+# setMethod("show", "ga",
+#           function(object)
+#           { cat("An object of class \"ga\"\n")
+#             cat("\nCall:\n", deparse(object@call), "\n\n",sep="")
+#             cat("Available slots:\n")
+#             print(slotNames(object))
+#           }) 
+# 
+# summary.ga <- function(object, ...)
+# {
 #   nvars <- ncol(object@population)
-#   if(length(names) == 0)
-#     { names <- paste("x", 1:nvars, sep = "") }
-#   return(names)
+#   varnames <- parNames(object)
+#   domain <- NULL
+#   if(object@type == "real-valued")
+#   { domain <- rbind(object@min, object@max)
+#     rownames(domain) <- c("Min", "Max")
+#     if(ncol(domain) == nvars) 
+#       colnames(domain) <- varnames
+#   }
+#   suggestions <- NULL
+#   if(nrow(object@suggestions) > 0) 
+#   { suggestions <- object@suggestions
+#     dimnames(suggestions) <- list(1:nrow(suggestions), varnames) 
+#   }
+#   
+#   out <- list(type = object@type,
+#               popSize = object@popSize,
+#               maxiter = object@maxiter,
+#               elitism = object@elitism,
+#               pcrossover = object@pcrossover,
+#               pmutation = object@pmutation,
+#               domain = domain,
+#               suggestions = suggestions,
+#               iter = object@iter,
+#               fitness = object@fitnessValue,
+#               solution = object@solution)  
+#   class(out) <- "summary.ga"
+#   return(out)
 # }
-
-gaMonitor <- function(object, digits = getOption("digits"), ...)
-{ 
-  fitness <- na.exclude(object@fitness)
-  cat(paste("Iter =", object@iter, 
-            " | Mean =", format(mean(fitness), digits = digits), 
-            " | Best =", format(max(fitness), digits = digits), "\n"))
-}
-
-gaSummary <- function(x, ...)
-{
-  # compute summary for each step
-  x <- na.exclude(as.vector(x))
-  q <- fivenum(x)
-  c(max = q[5], mean = mean(x), q3 = q[4], median = q[3], q1 = q[2], min = q[1])
-}
+# 
+# setMethod("summary", "ga", summary.ga)
+# 
+# print.summary.ga <- function(x, digits = getOption("digits"), ...)
+# {
+#   dotargs <- list(...)
+#   if(is.null(dotargs$head)) dotargs$head <- 10
+#   if(is.null(dotargs$tail)) dotargs$tail <- 1
+#   if(is.null(dotargs$chead)) dotargs$chead <- 20
+#   if(is.null(dotargs$ctail)) dotargs$ctail <- 1
+#   
+#   cat("+-----------------------------------+\n")
+#   cat("|         Genetic Algorithm         |\n")
+#   cat("+-----------------------------------+\n\n")
+#   cat("GA settings: \n")
+#   cat(paste("Type                  = ", x$type, "\n"))
+#   cat(paste("Population size       = ", x$popSize, "\n"))
+#   cat(paste("Number of generations = ", x$maxiter, "\n"))
+#   cat(paste("Elitism               = ", x$elitism, "\n"))
+#   cat(paste("Crossover probability = ", format(x$pcrossover, digits = digits), "\n"))
+#   cat(paste("Mutation probability  = ", format(x$pmutation, digits = digits), "\n"))
+#   
+#   if(x$type == "real-valued")
+#   { cat(paste("Search domain \n"))
+#     print(x$domain, digits = digits)
+#   }
+#   
+#   if(!is.null(x$suggestions))
+#   { cat(paste("Suggestions", "\n"))
+#     do.call(".printShortMatrix", 
+#             c(list(x$suggestions, digits = digits), 
+#               dotargs[c("head", "tail", "chead", "ctail")]))
+#     # print(x$suggestions, digits = digits, ...)
+#   }
+#   
+#   cat("\nGA results: \n")
+#   cat(paste("Iterations             =", format(x$iter, digits = digits), "\n"))
+#   cat(paste("Fitness function value =", format(x$fitness, digits = digits), "\n"))
+#   if(nrow(x$solution) > 1) 
+#   { cat(paste("Solutions              = \n")) }
+#   else
+#   { cat(paste("Solution               = \n")) }
+#   do.call(".printShortMatrix", 
+#           c(list(x$solution, digits = digits), 
+#             dotargs[c("head", "tail", "chead", "ctail")]))
+#   # print(x$solution, digits = digits, ...)
+#   
+#   invisible()
+# }
+# 
+# 
+# plot.ga <- function(x, y, ylim, cex.points = 0.7,
+#                     col = c("green3", "dodgerblue3", adjustcolor("green3", alpha.f = 0.1)),
+#                     pch = c(16, 1), lty = c(1,2),
+#                     grid = graphics:::grid, ...)
+# {
+#   object <- x  # Argh.  Really want to use 'object' anyway
+#   is.final <- !(any(is.na(object@summary[,1])))
+#   iters <- if(is.final) 1:object@iter else 1:object@maxiter
+#   summary <- object@summary
+#   if(missing(ylim)) 
+#   { ylim <- c(max(apply(summary[,c(2,4)], 2, 
+#                         function(x) min(range(x, na.rm = TRUE, finite = TRUE)))),
+#               max(range(summary[,1], na.rm = TRUE, finite = TRUE))) 
+#   }
+#   
+#   plot(iters, summary[,1], type = "n", ylim = ylim, 
+#        xlab = "Generation", ylab = "Fitness value", ...)
+#   if(is.final & is.function(grid)) 
+#   { grid() }
+#   points(iters, summary[,1], type = ifelse(is.final, "o", "p"),
+#          pch = pch[1], lty = lty[1], col = col[1], cex = cex.points)
+#   points(iters, summary[,2], type = ifelse(is.final, "o", "p"),
+#          pch = pch[2], lty = lty[2], col = col[2], cex = cex.points)
+#   if(is.final)
+#   { polygon(c(iters, rev(iters)), 
+#             c(summary[,4], rev(summary[,1])), 
+#             border = FALSE, col = col[3])
+#     legend("bottomright", legend = c("Best", "Mean"), 
+#            col = col, pch = pch, lty = lty, pt.cex = cex.points, 
+#            inset = 0.01) }
+#   else
+#   { title(paste("Iteration", object@iter), font.main = 1) }
+#   
+#   out <- cbind(iter = iters, summary)
+#   invisible(out)
+# }
+# 
+# setMethod("plot", "ga", plot.ga)
+# 
+# # questa non funziona quando installa il pacchetto con NAMESPACE
+# setGeneric(name = "parNames", 
+#            def = function(object, ...) { standardGeneric("parNames") }
+# )
+# 
+# setMethod("parNames", "ga",
+#           function(object, ...)
+#           { 
+#             names <- object@names
+#             nvars <- ncol(object@population)
+#             if(length(names) == 0)
+#             { names <- paste("x", 1:nvars, sep = "") }
+#             return(names)
+#           })
+# # per ora uso questo ma si dovrebbe ripristinare il metodo sopra:
+# # gaParNames <- function(object, ...)
+# # { 
+# #   names <- object@names
+# #   nvars <- ncol(object@population)
+# #   if(length(names) == 0)
+# #     { names <- paste("x", 1:nvars, sep = "") }
+# #   return(names)
+# # }
+# 
+# gaMonitor <- function(object, digits = getOption("digits"), ...)
+# { 
+#   fitness <- na.exclude(object@fitness)
+#   cat(paste("Iter =", object@iter, 
+#             " | Mean =", format(mean(fitness), digits = digits), 
+#             " | Best =", format(max(fitness), digits = digits), "\n"))
+# }
+# 
+# gaSummary <- function(x, ...)
+# {
+#   # compute summary for each step
+#   x <- na.exclude(as.vector(x))
+#   q <- fivenum(x)
+#   c(max = q[5], mean = mean(x), q3 = q[4], median = q[3], q1 = q[2], min = q[1])
+# }
 
 
 
@@ -1534,7 +1534,7 @@ gaSummary <- function(x, ...)
     for(i in (reglas + 1):size){
       varia <- sample(length(max) - 1, size = nReglasABorrar, replace = FALSE)
       for(j in seq_len(nReglasABorrar)){
-        population[i, ] <- borrar_gen(regla = population[i,], variable = varia[j], max_valor_variables = max, DNF_Rules = TRUE)
+        population[i, ] <- .borrar_gen(regla = population[i,], variable = varia[j], max_valor_variables = max, DNF_Rules = TRUE)
       }
     }
   }
@@ -1601,7 +1601,7 @@ gaSummary <- function(x, ...)
     for(i in (reglas + 1):size){
       varia <- sample(length(max) - 1, size = nReglasABorrar, replace = FALSE)
       for(j in seq_len(nReglasABorrar)){
-        population[i, ] <- borrar_gen(regla = population[i,], variable = varia[j], max_valor_variables = max, DNF_Rules = TRUE)
+        population[i, ] <- .borrar_gen(regla = population[i,], variable = varia[j], max_valor_variables = max, DNF_Rules = TRUE)
       }
     }
   }
@@ -1716,7 +1716,7 @@ gaSummary <- function(x, ...)
 
 # MESDIF Mutation operatos
 
-.gaMESDIF_Mutation <- function(object, parent, ...)
+..gaMESDIF_Mutation <- function(object, parent, ...)
 {
   
   mutar <- parent <- as.vector(object@population[parent,]) 
@@ -1733,7 +1733,7 @@ gaSummary <- function(x, ...)
 
 #NMEEF-SD Mutation operator
 
-.gaNMEEF_Mutation <- function(object, parent, ...)
+..gaNMEEF_Mutation <- function(object, parent, ...)
 {
   
   mutar <- parent <- as.vector(object@population[parent,]) 
@@ -1828,7 +1828,7 @@ if(DNFRules) {
   #Para reglas DNF, hay que utilizar como type el valor "binary", en vez de usar min y max, hay que usar el valor nBits, que indica la cantidad de genes que tiene cada cromosoma.
   #Tambien hay que utilizar el valor 'max' para saber cu?ntos genes pertenecen a cada variable.
   switch(algorithm, 
-  "SDIGA" = { resultado <- gaSDIGA(type = if(!DNFRules) "real-valued" else "binary", 
+  "SDIGA" = { resultado <- .gaSDIGA(type = if(!DNFRules) "real-valued" else "binary", 
                               #Fit12 es para reglas DNF hasta que no se solucione la optimización de DNF para que sea igual que la CAN
                   #fitness = .fit12, dataset, .separar(dataset = dataset), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, Pesos, DNFRules, Objetivos[[4]], FALSE,  cate, num,# Parametros de .fit12
                   fitness = .fit13, dataset, matrix(unlist(.separar(dataset)), nrow = length(dataset[[2]]) - 1, ncol = length(dataset[[7]])), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, Pesos, DNFRules, Objetivos[[4]], FALSE,  cate, num,
@@ -1853,7 +1853,7 @@ if(DNFRules) {
                   DNFRules = DNFRules,
                   seed = seed) 
   }, 
-  "MESDIF" =  { resultado <- gaMESDIF(type = if(!DNFRules) "real-valued" else "binary", 
+  "MESDIF" =  { resultado <- .gaMESDIF(type = if(!DNFRules) "real-valued" else "binary", 
                                 #fitness = .fit12, dataset, .separar(dataset = dataset), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, Pesos, DNFRules, Objetivos[[4]], FALSE,  cate, num,# Parametros de .fit12
                                 fitness = .fitnessMESDIF, dataset, matrix(unlist(.separar(dataset)), nrow = length(dataset[[2]]) - 1, ncol = length(dataset[[7]])), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, c(0.7, 0.3, 0), DNFRules, Objetivos[[4]], FALSE,  cate, num,
                                 min = dataset[[4]][-length(dataset[[4]])],
@@ -1862,7 +1862,7 @@ if(DNFRules) {
                                 population = .generarPoblacionMESDIF,
                                 selection = .ga_MESDIFBinTournamentSelection,
                                 crossover = .ga_dpCrossover,
-                                mutation = .gaMESDIF_Mutation,  
+                                mutation = ..gaMESDIF_Mutation,  
                                 popSize = tam_pob,
                                 pcrossover = p_cross, 
                                 pmutation = p_mut / length(ma),
@@ -1877,7 +1877,7 @@ if(DNFRules) {
                                 seed = seed) 
                 return(resultado)
   }, 
-  "NMEEFSD" =  { resultado <- gaNMEEF(type = if(!DNFRules) "real-valued" else "binary", 
+  "NMEEFSD" =  { resultado <- .gaNMEEF(type = if(!DNFRules) "real-valued" else "binary", 
                                       #fitness = .fit12, dataset, .separar(dataset = dataset), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, Pesos, DNFRules, Objetivos[[4]], FALSE,  cate, num,# Parametros de .fit12
                                       fitness = .fitnessMESDIF, dataset, matrix(unlist(.separar(dataset)), nrow = length(dataset[[2]]) - 1, ncol = length(dataset[[7]])), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, c(0.7,0.3,0), DNFRules, Objetivos[[4]], FALSE,  cate, num, TRUE, 
                                       min = dataset[[4]][-length(dataset[[4]])],
@@ -1886,7 +1886,7 @@ if(DNFRules) {
                                       population = .generarPoblacionNMEEF,
                                       selection = .selectionNMEEF,
                                       crossover = .ga_dpCrossover,
-                                      mutation = .gaNMEEF_Mutation,  
+                                      mutation = ..gaNMEEF_Mutation,  
                                       popSize = tam_pob,
                                       pcrossover = p_cross, 
                                       pmutation = p_mut,

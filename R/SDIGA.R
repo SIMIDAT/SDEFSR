@@ -206,7 +206,7 @@ SDIGA <- function(parameters_file = NULL,
       
   } else {
   # Parametros --------------------------
-  parametros <- read.parametersFile2(file = parameters_file)  # parametros del algoritmo
+  parametros <- .read.parametersFile2(file = parameters_file)  # parametros del algoritmo
     if(parametros$algorithm != "SDIGA")
       stop("Parameters file is not for SDIGA")
   
@@ -265,7 +265,7 @@ SDIGA <- function(parameters_file = NULL,
       maxRule <-  if(!DNF) training$conjuntos else c(0, Reduce(f = '+', x = training[["conjuntos"]], accumulate = TRUE))
       values <- .fit13(regla = rule, dataset = training, noClass = matrix(unlist(.separar(training)), nrow = length(training[[2]]) - 1, ncol = length(training[[7]])), targetClass = targetClass, por_cubrir = por_cubrir, n_Vars = training$nVars, nLabels = parametros$nLabels, max_regla = maxRule, marcar = TRUE, Objetivos = Objetivos, Pesos = Pesos, DNFRules = DNF, difuso = Objetivos[[4]], test = TRUE, cate = cate, num = num)[[2]]
       
-      if(tolower(parametros$lSearch) == "yes") rule <- Busqueda_Local(att_obj = targetClass, regla = rule, DNF_Rules = DNF, dataset = training , confianza_minima = parametros$minConf, x = values, max_regla = maxRule, por_cubrir = por_cubrir, nLabels = parametros$nLabels, Objetivos = Objetivos, cate = cate, num = num)
+      if(tolower(parametros$lSearch) == "yes") rule <- .Busqueda_Local(att_obj = targetClass, regla = rule, DNF_Rules = DNF, dataset = training , confianza_minima = parametros$minConf, x = values, max_regla = maxRule, por_cubrir = por_cubrir, nLabels = parametros$nLabels, Objetivos = Objetivos, cate = cate, num = num)
       x <- .marcar_ejemplos(regla = rule, dataset = training, targetClass = targetClass, nVars = training$nVars, maxRegla = maxRule, por_cubrir = por_cubrir, nLabels = parametros$nLabels, Objetivos = Objetivos, Pesos = Pesos, DNFRules = DNF, cate = cate, num = num)
       
       if(x$cubreNuevos && x$confidence > parametros$minConf || primera_regla){
@@ -275,7 +275,7 @@ SDIGA <- function(parameters_file = NULL,
         training$covered <- x$covered[[1]]
         cat("\n"," GENERATED RULE", contador, ":",file = "", sep = " ", fill = TRUE)
         cat("\n"," GENERATED RULE", contador, ":",file = parametros$outputData, sep = " ", fill = TRUE, append = TRUE)
-        print.rule(rule = rule, max = training$conjuntos, names = training$atributeNames, consecuente = targetClass, types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+        .print.rule(rule = rule, max = training$conjuntos, names = training$atributeNames, consecuente = targetClass, types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
         cat("\n", file = "")
         rule[length(rule) + 1] <- targetClass
         reglas[[contador]] <- rule
@@ -315,7 +315,7 @@ SDIGA <- function(parameters_file = NULL,
         values <- .fit13(regla = rule, dataset = training, noClass = matrix(unlist(.separar(training)), nrow = length(training[[2]]) - 1, ncol = length(training[[7]])), targetClass = targetClass, por_cubrir = por_cubrir, n_Vars = training$nVars, nLabels = parametros$nLabels, max_regla = maxRule, marcar = TRUE, Objetivos = Objetivos, Pesos = Pesos, DNFRules = DNF, difuso = Objetivos[[4]], test = TRUE, cate = cate, num = num)[[2]]
         
         if(tolower(parametros$lSearch) == "yes"){
-          rule <- Busqueda_Local(att_obj = targetClass, regla = rule, DNF_Rules = DNF, dataset = training , confianza_minima = parametros$minConf, x = values, max_regla = maxRule, por_cubrir = por_cubrir, nLabels = parametros$nLabels, Objetivos = Objetivos, cate = cate, num = num)
+          rule <- .Busqueda_Local(att_obj = targetClass, regla = rule, DNF_Rules = DNF, dataset = training , confianza_minima = parametros$minConf, x = values, max_regla = maxRule, por_cubrir = por_cubrir, nLabels = parametros$nLabels, Objetivos = Objetivos, cate = cate, num = num)
         }
        
           x <- .marcar_ejemplos(regla = rule, dataset = training, targetClass = targetClass, nVars = training$nVars, maxRegla = maxRule, por_cubrir = por_cubrir, nLabels = parametros$nLabels, Objetivos = Objetivos, Pesos = Pesos, DNFRules = DNF, cate = cate, num = num)
@@ -327,7 +327,7 @@ SDIGA <- function(parameters_file = NULL,
           training$covered <- x$covered[[1]]
           cat("\n"," GENERATED RULE", contador, ":",file = "", sep = " ", fill = TRUE)
           cat("\n"," GENERATED RULE", contador, ":",file = parametros$outputData[2], sep = " ", fill = TRUE, append = TRUE)
-          print.rule(rule = rule, max = training$conjuntos, names = training$atributeNames, consecuente = targetClass, types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+          .print.rule(rule = rule, max = training$conjuntos, names = training$atributeNames, consecuente = targetClass, types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
           cat("\n", file = "")
           rule[length(rule) + 1] <- targetClass
           reglas[[contador]] <- rule
@@ -534,7 +534,7 @@ SDIGA <- function(parameters_file = NULL,
 #
 #--------------------------------------------------------------------------------------------------
 
-borrar_gen <- function(regla, variable, max_valor_variables, DNF_Rules){
+.borrar_gen <- function(regla, variable, max_valor_variables, DNF_Rules){
   
   if(!DNF_Rules){ # Reglas canonicas
     
@@ -568,7 +568,7 @@ borrar_gen <- function(regla, variable, max_valor_variables, DNF_Rules){
 #--------------------------------------------------------------------------------------------------
 
 
-Busqueda_Local <- function(att_obj, regla, DNF_Rules, dataset, confianza_minima, x, max_regla, por_cubrir, nLabels, Objetivos, cate, num){
+.Busqueda_Local <- function(att_obj, regla, DNF_Rules, dataset, confianza_minima, x, max_regla, por_cubrir, nLabels, Objetivos, cate, num){
   mejor_regla <- regla
    soporte_regla <- .significance(x)
   participantes <- .getParticipantes(regla = regla, max_regla = max_regla, DNFRules = DNF_Rules)
@@ -586,7 +586,7 @@ Busqueda_Local <- function(att_obj, regla, DNF_Rules, dataset, confianza_minima,
       for(i in seq_len(longitud) ){ # Para cada gen de la regla
      
         if(participantes[i]){
-          regla_m <- borrar_gen(regla = mejor_regla, variable = i, max_valor_variables = max_regla, DNF_Rules = DNF_Rules)
+          regla_m <- .borrar_gen(regla = mejor_regla, variable = i, max_valor_variables = max_regla, DNF_Rules = DNF_Rules)
           x1 <- .fit13(regla = regla_m, dataset = dataset, noClass = matrix(unlist(.separar(dataset)), nrow = length(dataset[[2]]) - 1, ncol = length(dataset[[7]])), targetClass = att_obj, por_cubrir = por_cubrir, n_Vars = dataset$nVars, nLabels = nLabels, max_regla = max_regla, marcar = TRUE, Objetivos = Objetivos, DNFRules = DNF_Rules, difuso = Objetivos[[4]], test = TRUE, cate = cate, num = num)
           if(length(x1) > 1){
             x1 <- x1[[2]]
