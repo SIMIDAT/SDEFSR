@@ -165,7 +165,7 @@ shinyServer(function(input, output, session) {
     if(rutaTra != paste(input$traFile[,1],input$traFile[,4])){
       file <- input$traFile
       rutaTra <<- paste(input$traFile[,1],input$traFile[,4])
-      dataTra <<- read.keel(file$datapath, nLabels = input$nLabels)
+      dataTra <<- SDR::read.keel(file$datapath, nLabels = input$nLabels)
       updateSelectInput(session = session, 
                         inputId = "targetClassSelect", 
                         label = "Select the target variable", 
@@ -200,7 +200,7 @@ shinyServer(function(input, output, session) {
       if(rutaTst != paste(input$tstFile[,1], input$tstFile[,4])){
         file <- input$tstFile
         rutaTst <<- paste(input$tstFile[,1], input$tstFile[,4])
-        dataTst <<- read.keel(file$datapath,nLabels = input$nLabels)
+        dataTst <<- SDR::read.keel(file$datapath,nLabels = input$nLabels)
         updateSelectInput(session = session, 
                           inputId = "targetClassSelect", 
                           label = "Select the target variable", 
@@ -231,11 +231,11 @@ shinyServer(function(input, output, session) {
     nLabels <- input$nLabels
     
     if(! is.null(dataTra)){
-      dataTra <<- modifyFuzzyCrispIntervals(dataTra, nLabels)
+      dataTra <<- SDR::modifyFuzzyCrispIntervals(dataTra, nLabels)
     }
     
     if(! is.null(dataTst)){
-      dataTst <<- modifyFuzzyCrispIntervals(dataTst, nLabels)
+      dataTst <<- SDR::modifyFuzzyCrispIntervals(dataTst, nLabels)
     }
   })
   
@@ -333,8 +333,8 @@ shinyServer(function(input, output, session) {
     
     #Set target Variable.
 
-      dataTst <<- changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
-      dataTra <<- changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
+      dataTst <<- SDR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
+      dataTra <<- SDR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
     
       
     targetClass <- isolate(input$targetClassSelect)
@@ -365,7 +365,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             SDIGA(training = dataTra, 
+             SDR::SDIGA(training = dataTra, 
                    test = dataTst, 
                    seed = seed, 
                    nLabels = nLabels, 
@@ -398,7 +398,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             MESDIF(training = dataTra,
+             SDR::MESDIF(training = dataTra,
                     test = dataTst,
                     seed = seed,
                     nLabels = nLabels,
@@ -426,7 +426,7 @@ shinyServer(function(input, output, session) {
              porcCob <- isolate(input$porcCob)
              
              #Execute te algorithm
-             NMEEF_SD(training = dataTra,
+             SDR::NMEEF_SD(training = dataTra,
                       test = dataTst,
                       seed = seed,
                       nLabels = nLabels,
