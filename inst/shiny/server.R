@@ -314,7 +314,7 @@ shinyServer(function(input, output, session) {
 
   
     if(input$ejecutar <= lastValue) return(NULL)
-    
+   
     tryCatch({
     # Read parameters and check errors
     # ----------------------------------------------

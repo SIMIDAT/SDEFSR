@@ -66,7 +66,7 @@ shinyUI(fluidPage(
                        ),
       numericInput("seed", "Specify a seed:", value = 0, min = 0, max = Inf, step = 1),
       br(),
-      div( actionButton("ejecutar", HTML("<a href='#textoPrincipal'> Execute ! </a>")),
+      div( actionButton("ejecutar", label = HTML("Ejecutar!"), onClick = "goOnTop()"),
            conditionalPanel(
              condition="($('html').hasClass('shiny-busy'))",
              br(),
@@ -75,6 +75,8 @@ shinyUI(fluidPage(
        ),
     
     mainPanel( 
+      tags$head(tags$script(src="load.js")),
+      
       tabsetPanel(
           tabPanel( "Exploratory Analisis",
                     conditionalPanel(
