@@ -23,7 +23,7 @@ shinyUI(fluidPage(
        br(), br(),
       # ---- Algorithm Selection -----
       p(h4("2.- Select a method: ")),
-      selectInput("algoritmo", label = "Choose an algorithm", choices = c("SDIGA", "NMEEF-SD","MESDIF") ),
+      selectInput("algoritmo", label = "Choose an algorithm", choices = c("SDIGA", "MESDIF", "NMEEF-SD") ),
       helpText(h6("Note: This algorithms may take a lot of time (hours) executing on large datasets, please, be patient. ")),
       sliderInput("nLabels", "Number of fuzzy labels: ", value = 3, min = 1, max = 10, step = 1),
       selectInput("rulesRep", "Type of rules: ", choices = c("Canonical", "DNF (Disyuntive Normal Form)")),
