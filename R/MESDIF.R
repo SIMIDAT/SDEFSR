@@ -411,13 +411,13 @@ MESDIF <- function(paramFile = NULL,
       reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
     
   #Print Rules if we are not in Windows because mclapply doesn´t show any output.
-  if(Sys.info()[1] != "Windows")
+  #if(Sys.info()[1] != "Windows")
   for(i in seq_len(NROW(reglas))){
     cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
-    #cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
+    cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
     .print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
     cat("\n","\n",  file = "", sep = "",fill = TRUE)
-    #cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
+    cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
   }
     
     
@@ -508,7 +508,7 @@ MESDIF <- function(paramFile = NULL,
 .findRule <- function(targetClass, algorithm, training, parametros, DNF, cate, num, Objetivos, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE){
   #Check if target class is valid
   if(! any(training$class_names == targetClass)) stop("Invalid target class value provided.")
-  cat(" ? Target value:", targetClass ,"\n", file = "", sep = " ", fill = TRUE)
+  #cat(" ? Target value:", targetClass ,"\n", file = "", sep = " ", fill = TRUE)
   
   por_cubrir = training$examplesPerClass[[targetClass]]
   rule <- .ejecutarga(algorithm = algorithm, dataset = training, targetClass = targetClass, n_vars = training$nVars, por_cubrir = por_cubrir, nLabels = parametros$nLabels, N_evals = parametros$nEval,  tam_pob = parametros$popLength, p_cross = parametros$crossProb, p_mut = parametros$mutProb, seed = parametros$seed, Objetivos = Objetivos, Pesos = Pesos, DNFRules = DNF, cate = cate, num = num, elitism = parametros[["elitePop"]], porcCob = porcCob, strictDominance = strictDominance, reInit = reInit)     
@@ -518,11 +518,6 @@ MESDIF <- function(paramFile = NULL,
   rule <- cbind(rule, targetClass)
   for(i in seq_len(length(reglas))){
     reglas[[i]] <- rule[i,]
-    cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
-    cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
-    .print.rule(rule = as.numeric( rule[i, - NCOL(rule)] ), max = training$conjuntos, names = training$atributeNames, consecuente = targetClass, types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
-    cat("\n","\n",  file = "", sep = "",fill = TRUE)
-    cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
   }
   reglas
 }

@@ -1,0 +1,110 @@
+Rule 1 :
+	 - N_vars: 2
+	 - Coverage: 0.78
+	 - Significance: 1.06848
+	 - Unusualness: 0.0596
+	 - Accuracy: 0.753165
+	 - CSupport: 0.59
+	 - FSupport: 0.494821
+	 - CConfidence: 0.75641
+	 - FConfidence: 0.744153 
+
+Rule 2 :
+	 - N_vars: 2
+	 - Coverage: 0.96
+	 - Significance: 0.061563
+	 - Unusualness: 0.0264
+	 - Accuracy: 0.685567
+	 - CSupport: 0.66
+	 - FSupport: 0.66
+	 - CConfidence: 0.6875
+	 - FConfidence: 0.6875 
+
+Rule 3 :
+	 - N_vars: 3
+	 - Coverage: 0.635
+	 - Significance: 2.143342
+	 - Unusualness: 0.141225
+	 - Accuracy: 0.782946
+	 - CSupport: 0.5
+	 - FSupport: 0.417666
+	 - CConfidence: 0.787402
+	 - FConfidence: 0.77531 
+
+Rule 4 :
+	 - N_vars: 1
+	 - Coverage: 0.19
+	 - Significance: 0.008767
+	 - Unusualness: 0.10935
+	 - Accuracy: 0.7
+	 - CSupport: 0.135
+	 - FSupport: 0.135
+	 - CConfidence: 0.710526
+	 - FConfidence: 0.710526 
+
+Rule 5 :
+	 - N_vars: 3
+	 - Coverage: 0.355
+	 - Significance: 0.157495
+	 - Unusualness: 0.05055
+	 - Accuracy: 0.726027
+	 - CSupport: 0.26
+	 - FSupport: 0.272321
+	 - CConfidence: 0.732394
+	 - FConfidence: 0.700505 
+
+Rule 6 :
+	 - N_vars: 2
+	 - Coverage: 0.8
+	 - Significance: 0.330015
+	 - Unusualness: 0.117
+	 - Accuracy: 0.728395
+	 - CSupport: 0.585
+	 - FSupport: 0.585
+	 - CConfidence: 0.73125
+	 - FConfidence: 0.73125 
+
+Rule 7 :
+	 - N_vars: 2
+	 - Coverage: 0.22
+	 - Significance: 1.480292
+	 - Unusualness: 0.0975
+	 - Accuracy: 0.565217
+	 - CSupport: 0.125
+	 - FSupport: 0.125
+	 - CConfidence: 0.568182
+	 - FConfidence: 0.568182 
+
+Rule 8 :
+	 - N_vars: 2
+	 - Coverage: 0.04
+	 - Significance: 0.605766
+	 - Unusualness: 0.0192
+	 - Accuracy: 0.5
+	 - CSupport: 0.02
+	 - FSupport: 0.02
+	 - CConfidence: 0.5
+	 - FConfidence: 0.5 
+
+Rule 9 :
+	 - N_vars: 3
+	 - Coverage: 0.015
+	 - Significance: 0.929412
+	 - Unusualness: 0
+	 - Accuracy: 0.2
+	 - CSupport: 0
+	 - FSupport: 0
+	 - CConfidence: 0
+	 - FConfidence: 0 
+
+Global:
+	 - N_rules: 9
+	 - N_vars: 2.222222
+	 - Coverage: 0.443889
+	 - Significance: 0.753904
+	 - Unusualness: 0.068981
+	 - Accuracy: 0.626813
+	 - CSupport: 0.72
+	 - FSupport: 0.30109
+	 - FConfidence: 0.601936
+	 - CConfidence: 0.608185
