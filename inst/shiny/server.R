@@ -24,7 +24,11 @@ library(shiny)
 MAX_SIZE_MB = 10
 options(shiny.maxRequestSize= MAX_SIZE_MB * 1024^2)
 
+# The colors for the graphs (obtened from Material Design: http://www.google.ch/design/spec/style/color.html#color-color-palette)
+colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176", 
+            "#FFEB3B", "#FDD835", "#F9A825")
 
+# All this must be session variables instead of global ones.
 dataTra <- NULL
 datosTra <- NULL
 
@@ -38,11 +42,6 @@ data <- NULL
 datos <- NULL
 graficoSectores <- T
 fileAnterios <- "Tra"
-
-# The colors for the graphs (obtened from Material Design: http://www.google.ch/design/spec/style/color.html#color-color-palette)
-colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176", 
-            "#FFEB3B", "#FDD835", "#F9A825")
-
 
 lastValue <- 0
 
@@ -559,7 +558,7 @@ shinyServer(function(input, output, session) {
     if( data[[3]][which(data[[2]] == attribute)] == 'c' )
       updateCheckboxGroupInput(session, inputId = "classNames", label = "Select attributes", choices = data[[15]][[which(data[[2]] == attribute)]], selected = data[[15]][[which(data[[2]] == attribute)]], inline = T)
     else
-      updateCheckboxGroupInput(session, "classNames", label = "Select attributes", choices = list(), inline = T)
+      updateCheckboxGroupInput(session, "classNames", label = "Select attributes", choices = NA, inline = T)
   
 }
 
