@@ -3,12 +3,11 @@ Type: Package
 Title: Subgroup Discovery Algorithms for R
 Version: 1.0.0.1
 Date: 2015-06-14
-Authors@R: 
-    person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role = c("aut", "cre")),
-    person("Pedro", "González", email = "pglez@ujaen.es", role = c("aut", cph")),
+Authors@R:c(person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role = c("aut", "cre")),
+    person("Pedro", "Gonzalez", email = "pglez@ujaen.es", role = c("aut", "cph")),
     person("Cristóbal J.", "Carmona", email = "ccarmona@ujaen.es", role = c("aut", "cph")),
-    person("Francisco", "Charte", email = "francisco@fcharte.com", role = "ctb"),
-    
+    person("Francisco", "Charte", email = "francisco@fcharte.com", role = "ctb")
+    )
 Maintainer: Angel M. García <amgv0009@red.ujaen.es>
 Description: This package implements some algorithms for the data mining task called "subgroup discovery".
     It also provide a Shiny App for make the analysis easier.
