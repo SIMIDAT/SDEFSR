@@ -28,24 +28,28 @@ options(shiny.maxRequestSize= MAX_SIZE_MB * 1024^2)
 colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176", 
             "#FFEB3B", "#FDD835", "#F9A825")
 
-# All this must be session variables instead of global ones.
-dataTra <- NULL
-datosTra <- NULL
 
-dataTst <- NULL
-datosTst <- NULL
-
-rutaTra <- ""
-rutaTst <- ""
-
-data <- NULL
-datos <- NULL
-graficoSectores <- T
-fileAnterios <- "Tra"
-
-lastValue <- 0
 
 shinyServer(function(input, output, session) {
+  
+  
+  # All this must be session variables instead of global ones.
+  dataTra <- NULL
+  datosTra <- NULL
+  
+  dataTst <- NULL
+  datosTst <- NULL
+  
+  rutaTra <- ""
+  rutaTst <- ""
+  
+  data <- NULL
+  datos <- NULL
+  graficoSectores <- T
+  fileAnterios <- "Tra"
+  
+  lastValue <- 0
+  
   
   
   #on exit clean temporal file
@@ -74,23 +78,23 @@ shinyServer(function(input, output, session) {
     if(data[[3]][pos] != 'c'){
       resu <- summary(datos[which(data[[2]] == input$targetClassSelect), ])
       as.matrix(resu)
+      
     }else{
       
       posiciones <- NULL
       for(i in input$classNames){
         p <- which(data[[15]][[pos]][datos[pos,] + 1] == i)
-        if(length(p) > 0 )
+        if(length(p) > 0)
           posiciones <- c(posiciones, p)
       }
-      
       
       resu <- summary(data[[2]][datos[which(data[[2]] == input$targetClassSelect), posiciones] + 1])
       as.matrix(resu)
     }
      }
   })
-  
-  
+
+
   output$datasetInfo <- renderPlot({
     
     #----Inputs de los que escucha ------
@@ -185,7 +189,7 @@ shinyServer(function(input, output, session) {
       data <<- dataTra
       datosTra <<- matrix(unlist(dataTra$data), nrow = dataTra$nVars + 1)
       datos <<- datosTra
-      .updateAttributes(session, dataTra[[2]][length(dataTra[[2]])])
+      .updateAttributes(session, dataTra[[2]][length(dataTra[[2]])], data)
     }
      } , error = function(e) print(e)) 
    }
@@ -219,7 +223,7 @@ shinyServer(function(input, output, session) {
         data <<- dataTst
         datosTst <<- matrix(unlist(dataTst$data), nrow = dataTst$nVars + 1)
         datos <<- datosTst
-        .updateAttributes(session, dataTst[[2]][length(dataTst[[2]])])
+        .updateAttributes(session, dataTst[[2]][length(dataTst[[2]])], data)
         
       }
     }
@@ -262,7 +266,7 @@ shinyServer(function(input, output, session) {
                           "This is not a categorical variable!"
       )
       
-      .updateAttributes(session, data[[2]][length(data[[2]])])
+      .updateAttributes(session, data[[2]][length(data[[2]])], data)
       
     } else if(file == "Test File" & fileAnterios == "Tra") {
       fileAnterios <<- "Tst"
@@ -280,7 +284,7 @@ shinyServer(function(input, output, session) {
                         else
                           "This is not a categorical variable!"
       )
-      .updateAttributes(session, data[[2]][length(data[[2]])])
+      .updateAttributes(session, data[[2]][length(data[[2]])], data)
    
       }
   })
@@ -298,9 +302,8 @@ shinyServer(function(input, output, session) {
                         else
                           "This is not a categorical variable!"
       )
+      .updateAttributes(session, input$targetClassSelect, data)
     }
-    .updateAttributes(session, input$targetClassSelect)
- 
   })
   
   
@@ -551,7 +554,7 @@ shinyServer(function(input, output, session) {
 }
 
 
-.updateAttributes <- function(session, attribute){
+.updateAttributes <- function(session, attribute, data){
   if(attribute == "NA" || length(attribute) == 0 || is.null(attribute))
     return(NULL)
   

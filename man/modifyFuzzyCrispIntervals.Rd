@@ -7,19 +7,23 @@
 modifyFuzzyCrispIntervals(dataset, nLabels)
 }
 \arguments{
-\item{dataset}{The dataset to modify their fuzzy labels definitions}
+\item{dataset}{The dataset to modify their fuzzy labels definitions. Must be a \code{keel} class.}
 
-\item{nLabels}{The new number of fuzzy labels.}
+\item{nLabels}{The new number of fuzzy labels. An integer greater than zero.}
 }
 \value{
 This function returns the same dataset with their fuzzy definitions modified.
 }
 \description{
-This function change the number of fuzzy labels defined in the current dataset.
+This function change the number of fuzzy labels defined in the current KEEL dataset.
 }
 \details{
 The fuzzy definitions used in the \code{keel} class are triangular.
-    Because you can only specify the number of fuzzy definitions. All those definitions
-    has the same width.
+    Because you can only specify the number of fuzzy definitions, all those definitions
+    has the same width. With this function you can re-calculate this triangular fuzzy sets.
+}
+\examples{
+modifyFuzzyCrispIntervals(habermanTra, 2)
+    modifyFuzzyCrispIntervals(habermanTra, 15)
 }
 

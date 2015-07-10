@@ -27,8 +27,16 @@ A KEEL data file must have the following structure:
 }
    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
 }
+\examples{
+\dontrun{
+
+    }
+}
 \author{
-Ángel M. García-Vico <amgv0009@red.ujaen.es>
+Angel M. Garcia <amgv0009@red.ujaen.es>
+}
+\references{
+J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
 }
 \seealso{
 KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}

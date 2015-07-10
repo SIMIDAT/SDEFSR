@@ -19,8 +19,9 @@ Change the actual target variable for another one if it is categorical.
 }
 \examples{
 changeTargetVariable(carTra, 3)
-\\donotrun{
-#Throws an error because the variable selected is numeric
+\dontrun{
+Throws an error because the variable selected is numerical:
+
 changeTargetVariable(habermanTra, 1)
 }
 }

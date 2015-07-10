@@ -172,16 +172,16 @@
 #' @param crossProb Sets the crossover probability. A number in [0,1].
 #' @param mutProb Sets the mutation probability. A number in [0,1].
 #' @param RulesRep Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.
-#' @param Obj1 Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.
-#' @param Obj2 Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.
-#' @param Obj3 Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.
-#' @param Obj4 Sets the Objective nº 4. See \code{Objective values} for more information about the possible values.
+#' @param Obj1 Sets the Objective number 1. See \code{Objective values} for more information about the possible values.
+#' @param Obj2 Sets the Objective number 2. See \code{Objective values} for more information about the possible values.
+#' @param Obj3 Sets the Objective number 3. See \code{Objective values} for more information about the possible values.
+#' @param Obj4 Sets the Objective number 4. See \code{Objective values} for more information about the possible values.
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 
 #' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
 #'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-#'     The target variable MUST be categorical, if it´s not, throws an error.
+#'     The target variable MUST be categorical, if it is not, throws an error.
 #'     
 #'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
 #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
@@ -215,10 +215,10 @@
 #'     \item \code{eliteLength}  Sets number of individuals of the elite population. Must be less than \code{popLength}  
 #'     \item \code{crossProb}  Crossover probability of the genetic algorithm. Value in [0,1]
 #'     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
-#'     \item \code{Obj1} Sets the objetive nº 1. 
-#'     \item \code{Obj2} Sets the objetive nº 2. 
-#'     \item \code{Obj3} Sets the objetive nº 3. 
-#'     \item \code{Obj4} Sets the objetive nº 4.
+#'     \item \code{Obj1} Sets the objetive number 1. 
+#'     \item \code{Obj2} Sets the objetive number 2. 
+#'     \item \code{Obj3} Sets the objetive number 3. 
+#'     \item \code{Obj4} Sets the objetive number 4.
 #'     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
 #'     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.} Use \code{null} to search for every value of the target variable
 #'   }
@@ -230,7 +230,7 @@
 #'  outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
 #'  seed = 0
 #'  nLabels = 3
-#'  nEval = 10000
+#'  nEval = 500
 #'  popLength = 100
 #'  eliteLength = 3
 #'  crossProb = 0.6
@@ -254,7 +254,7 @@
 #'         \item Significance -> \code{sign}
 #'       }
 #'     
-#'     If you don´t want to use a objetive value you must specify \code{null}
+#'     If you dont want to use a objetive value you must specify \code{null}
 #' 
 #' 
 #' @return The algorithm shows in the console the following results:
@@ -272,7 +272,7 @@
 #' 
 #' @references 
 #' \itemize{
-#'  \item Berlanga, F., Del Jesus, M., González, P., Herrera, F., & Mesonero, M. (2006). Multiobjective Evolutionary Induction of Subgroup Discovery Fuzzy Rules: A Case Study in Marketing.
+#'  \item Berlanga, F., Del Jesus, M., Gonzalez, P., Herrera, F., & Mesonero, M. (2006). Multiobjective Evolutionary Induction of Subgroup Discovery Fuzzy Rules: A Case Study in Marketing.
 #'  \item Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm. 
 #' }
 #' 
@@ -283,7 +283,7 @@
 #'         output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
 #'         seed = 0, 
 #'         nLabels = 3,
-#'         nEval = 10000, 
+#'         nEval = 300, 
 #'         popLength = 100, 
 #'         eliteLength = 3,
 #'         crossProb = 0.6,
@@ -319,13 +319,13 @@ MESDIF <- function(paramFile = NULL,
   if(is.null(paramFile)){
     #Generate our "parameters file"
     if(class(training) != "keel" | class(test) != "keel")
-      stop("Training or test parameters is not a KEEL class")
+      stop("'training' or 'test' parameters is not a KEEL class")
     
     if(is.null(training) | is.null(test)) 
-      stop("Not provided a test or training file and neither a parameter file. Aborting...")
+      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
     
     if(training[[1]] != test[[1]] )
-      stop("datasets does not have the same relation name.")
+      stop("datasets ('training' and 'test') does not have the same relation name.")
     
     if(length(output) != 3 )
       stop("You must specify three files to save the results.")
@@ -349,7 +349,7 @@ MESDIF <- function(paramFile = NULL,
   # Parametros --------------------------
     parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
     if(parametros$algorithm != "MESDIF") 
-      stop(paste("The algorithm specificied (", parametros$algorithm, ") in parameters file is not MESDIF. Check parameters file. Aborting program..."))
+      stop(paste("The algorithm specificied (", parametros$algorithm, ") in parameters file is not \"MESDIF\". Check parameters file. Aborting program..."))
     
     test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
     
@@ -376,7 +376,7 @@ MESDIF <- function(paramFile = NULL,
   
   Objetivos <- .parseObjetives(parametros = parametros, "MESDIF", DNF)
   
-  if(all(is.na(Objetivos[1:3]))) stop("No objetive values selected. You must select, at least, one objective value. Aborting...")
+  if(all(is.na(Objetivos[1:3]))) stop("No objective values selected. You must select, at least, one objective value. Aborting...")
   
   cate <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'c'
   num <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'r' | training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'e'
@@ -398,7 +398,7 @@ MESDIF <- function(paramFile = NULL,
     
     cat("\n", "\n", "Searching rules for all values of the target class...", "\n", "\n", file ="", fill = TRUE)  
     
-    #If we are on Windowns, we can´t use mclapply because it use FORK() for parallelism
+    #If we are on Windowns, we cant use mclapply because it use FORK() for parallelism
     if(Sys.info()[1] == "Windows")
       reglas <- lapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos)
     else
@@ -410,7 +410,7 @@ MESDIF <- function(paramFile = NULL,
     else 
       reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
     
-  #Print Rules if we are not in Windows because mclapply doesn´t show any output.
+  #Print Rules if we are not in Windows because mclapply doesnt show any output.
   #if(Sys.info()[1] != "Windows")
   for(i in seq_len(NROW(reglas))){
     cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)

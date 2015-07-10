@@ -1,3 +1,11 @@
+
+#
+#
+#    Re-initialization operator based on coverage.
+#  
+#
+#
+
 .reInitPob <- function(elitePop, fitnessElite, coveredElite, crowdingDistance, pctVariables, cubiertoActual, dataset, maxRegla, cate, num, crispSets, targetClass, popSize){
   salida <- matrix(ncol = NCOL(elitePop), nrow = popSize)
   fitnessSalida <- matrix(ncol = 4, nrow = popSize*2)
@@ -22,40 +30,7 @@
   restantes <- popSize - numIndividuos
   # Initialization based on coverage of the rest of the population 
   # Find an example not covered and has the target class
-  
-#   noCubiertos <- which(! cubiertoActual)
-#   noCubiertos <- which( dataset[NROW(dataset), noCubiertos] == targetClass )
-#   
-#   #If there arenÂ´t examples that satisfies this condition, we take an arbitrary one
-#   if(length(noCubiertos) > 0)
-#     if(length(noCubiertos > 1))
-#       ejemplo <- dataset[seq_len(NROW(dataset) - 1), sample(noCubiertos, size = 1)]
-#     else
-#       ejemplo <- dataset[seq_len(NROW(dataset) - 1), noCubiertos]
-#   else
-#     ejemplo <- dataset[seq_len(NROW(dataset) - 1), sample(NCOL(dataset), size = 1)]
-#   
-#   #Get the values of all variable that cover the example
-#   valores <- numeric(length(ejemplo))
-#   for(i in seq_len(length(valores))){
-#     if(cate[i])
-#       valores[i] <- ejemplo[i] + 1
-#     
-#     if(num[i]){ # Numerical variable
-#       #Get the interval the variable belongs to
-#       valores[i] <- which( ejemplo[i] > crispSets[,1,i] & ejemplo[i] <= crispSets[,2,i]) - 1
-#     }
-#   }
-#   
-#   #Fill the population based on coverage
-#   if(restantes > 0){
-#     cantidadVariables <- sample(numVariables, size = restantes, replace = TRUE)
-#     variables <- lapply(X = cantidadVariables, FUN = function(x, numVars) sample(numVars, size = x, replace = FALSE), length(valores) )
-#     
-#     individuos <- lapply(X = variables, FUN = function(x, valores, numVariables, maxRegla){ cromosoma <- numeric(numVariables) + maxRegla; cromosoma[x] <- valores[x]; cromosoma }, valores, length(valores), maxRegla)
-#     salida[(numIndividuos + 1):popSize, ] <- matrix(unlist(individuos), ncol = length(valores), byrow = TRUE)
-#   }
-  
+
   regla <- numeric(length(maxRegla))
   
   for(i in seq_len(restantes)){
@@ -102,7 +77,11 @@
 
 
 
-
+#
+#
+# Selection operator for NMEEF-SD
+#
+#
 
 .selectionNMEEF <- function(pop, popSize, rank, crowding, fitness, covered) {
   salida <- matrix(nrow = popSize, ncol = ncol(pop))
@@ -110,7 +89,7 @@
   coveredSalida <- matrix(nrow = NROW(covered), ncol = popSize)
   mating <- matrix(NA, nrow = 2, ncol = popSize)
   
-  equals <- seq_len(popSize) # Tournaments among the same individual isn´t allowed
+  equals <- seq_len(popSize) # Tournaments among the same individual isnt allowed
  while(length(equals > 0)){
     mating[,equals] <- matrix(sample(seq_len(popSize), size = length(equals) * 2, replace = TRUE) , nrow = 2)
     equals <- which(mating[1,] == mating[2,])
@@ -165,7 +144,11 @@
 
 
 
-
+#
+#
+#  Function to calculate dominance between individuals.
+#
+#
 
 .calculateDominance <- function(q, p, strictDominance){
   #We calculate if p domain q only.
@@ -195,7 +178,11 @@
 
 
 
-
+#
+#
+#  This function calculate the crowding distance of an individual in a front
+#
+#
 
 .crowdingDistance <- function(pop){
   if(is.vector(pop)) 
@@ -243,7 +230,11 @@
 
 
 
-
+#
+#
+# This function fills the population that participate in the next generation of the evolutionary process
+#
+#
 
 .fillPopulation <- function(fronts, numFronts, fitness, coveredFrentes, popSize, nObjs){
   suma <- 0
@@ -253,7 +244,7 @@
     cols <- NCOL(fronts[[1]])
   
   newPop <- matrix(nrow = popSize, ncol = cols)
-  newRank <- numeric(popSize * 2) + Inf  #No ranked indivudals canÂ´t be selected
+  newRank <- numeric(popSize * 2) + Inf  #No ranked indivudals cant be selected
   distance <- numeric(popSize)
   fit <- matrix(ncol = 4, nrow = popSize)
   frente <- 1
@@ -315,7 +306,11 @@
 
 
 
-
+#
+#
+# Mutation operator for NMEEF-SD
+#
+#
 
 .mutateNMEEF <- function(cromosoma, variable, max_valor_variables, DNF_Rule){
   
@@ -384,18 +379,19 @@
 #' @param crossProb Sets the crossover probability. A number in [0,1].
 #' @param mutProb Sets the mutation probability. A number in [0,1].
 #' @param RulesRep Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.
-#' @param Obj1 Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.
-#' @param Obj2 Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.
-#' @param Obj3 Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.
+#' @param Obj1 Sets the Objective number 1. See \code{Objective values} for more information about the possible values.
+#' @param Obj2 Sets the Objective number 2. See \code{Objective values} for more information about the possible values.
+#' @param Obj3 Sets the Objective number 3. See \code{Objective values} for more information about the possible values.
 #' @param minCnf Sets the minimum confidence that must have a rule in the Pareto front for being returned. A number in [0,1].
-#' @param reInitCoverage. Sets if the algorithm must perform the reinitialitation based on coverage when it is needed. A string with "yes" or "no".
-#' @param porcCob. Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]
+#' @param reInitCoverage Sets if the algorithm must perform the reinitialitation based on coverage when it is needed. A string with "yes" or "no".
+#' @param porcCob Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]
+#' @param StrictDominance Sets if the comparison between individuals must be done by strict dominance or not. A string with "yes" or "no".
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 
 #' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
 #'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-#'     The target variable MUST be categorical, if it´s not, throws an error.
+#'     The target variable MUST be categorical, if it is not, throws an error.
 #'     
 #'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
 #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
@@ -412,7 +408,7 @@
 #'     where the individuals dominated by one individual are, the thirt front dominated by two and so on.
 #'     
 #'     To promove diversity NMEEF-SD has a mechanism of reinitialization of the population based on coverage
-#'     if the Pareto doesn´t evolve during a 5%% of the total of evaluations.
+#'     if the Pareto doesnt evolve during a 5%% of the total of evaluations.
 #'     
 #'     At the final of the evolutionary process, the algorithm returns only the individuals in the Pareto front
 #'     which has a confidence greater than a minimum confidence level.
@@ -432,9 +428,9 @@
 #'     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
 #'     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
 #'     \item \code{porcCob}  Sets the maximum percentage of variables participe in a rule when doing the reinitialization based on coverage. Value in [0,1]
-#'     \item \code{Obj1} Sets the objective nº 1. 
-#'     \item \code{Obj2} Sets the objective nº 2. 
-#'     \item \code{Obj3} Sets the objective nº 3. 
+#'     \item \code{Obj1} Sets the objective number 1. 
+#'     \item \code{Obj2} Sets the objective number 2. 
+#'     \item \code{Obj3} Sets the objective number 3. 
 #'     \item \code{minCnf} Minimum confidence for returning a rule of the Pareto. Value in [0,1] 
 #'     \item \code{StrictDominance} Sets if the comparison of individuals when calculating dominance must be using strict dominance or not. Values: "yes" or "no"
 #'     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.}. Use \code{null} to search for every value of the target variable
@@ -448,7 +444,7 @@
 #' seed = 1
 #' RulesRep = can
 #' nLabels = 3
-#' nEval = 10000
+#' nEval = 500
 #' popLength = 51
 #' crossProb = 0.6
 #' mutProb = 0.1
@@ -474,7 +470,7 @@
 #'         \item Significance -> \code{sign}
 #'       }
 #'     
-#'     If you don´t want to use a objetive value you must specify \code{null}
+#'     If you dont want to use a objetive value you must specify \code{null}
 #'  
 #'   
 #' @return The algorithm shows in the console the following results:
@@ -482,12 +478,12 @@
 #'  \item The parameters used in the algorithm
 #'  \item The rules generated.
 #'  \item The quality measures for test of every rule and the global results.
-#' }
 #' 
 #'     Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or 
 #'     in the \code{outputData} parameter in the parameters file.
+#' }
 #' 
-#' @references Carmona, C., González, P., del Jesús, M., & Herrera, F. (2010). NMEEF-SD: Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery. 
+#' @references Carmona, C., Gonzalez, P., del Jesus, M., & Herrera, F. (2010). NMEEF-SD: Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery. 
 #' @examples    
 #'       NMEEF_SD(paramFile = NULL, 
 #'                training = habermanTra, 
@@ -495,7 +491,7 @@
 #'                output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
 #'                seed = 0, 
 #'                nLabels = 3,
-#'                nEval = 10000, 
+#'                nEval = 300, 
 #'                popLength = 100, 
 #'                mutProb = 0.1,
 #'                crossProb = 0.6,
@@ -535,13 +531,13 @@ NMEEF_SD <- function(paramFile = NULL,
   if(is.null(paramFile)){
     #Generate our "parameters file"
     if(class(training) != "keel" | class(test) != "keel")
-      stop("Training or test parameters is not a KEEL class")
+      stop("'training' or 'test' parameters is not a KEEL class")
     
     if(is.null(training) | is.null(test)) 
-      stop("Not provided a test or training file and neither a parameter file. Aborting...")
+      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
     
     if(training[[1]] != test[[1]] )
-      stop("datasets does not have the same relation name.")
+      stop("datasets ('training' and 'test') does not have the same relation name.")
     
     if(length(output) != 3 )
       stop("You must specify three files to save the results.")
@@ -568,7 +564,7 @@ NMEEF_SD <- function(paramFile = NULL,
     # Parametros --------------------------
     parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
     
-    if(parametros[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for NMEEF-SD")
+    if(parametros[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for \"NMEEF-SD\"")
    
     training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data 
     test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
@@ -596,7 +592,7 @@ NMEEF_SD <- function(paramFile = NULL,
   
   Objetivos <- .parseObjetives(parametros = parametros, "NMEEFSD", DNF)
   
-  if(all(is.na(Objetivos[1:3]))) stop("No objetive values selected. You must select, at least, one objective value. Aborting...")
+  if(all(is.na(Objetivos[1:3]))) stop("No objective values selected. You must select, at least, one objective value. Aborting...")
  
    cate <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'c'
   num <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'r' | training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'e'
@@ -636,7 +632,7 @@ NMEEF_SD <- function(paramFile = NULL,
       else 
         reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
       
-      #Print Rules (In windows, mclapply doesn´t work, so the rules are printed by ".findRule" function)
+      #Print Rules (In windows, mclapply doesnt work, so the rules are printed by ".findRule" function)
     #if(Sys.info()[1] != "Windows")
       for(i in seq_len(NROW(reglas))){
         cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)

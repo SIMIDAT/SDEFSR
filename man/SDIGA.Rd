@@ -32,15 +32,15 @@ SDIGA(parameters_file = NULL, training = NULL, test = NULL,
 
 \item{RulesRep}{Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.}
 
-\item{Obj1}{Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.}
+\item{Obj1}{Sets the Objective number 1. See \code{Objective values} for more information about the possible values.}
 
 \item{w1}{Sets the weight of \code{Obj1}.}
 
-\item{Obj2}{Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.}
+\item{Obj2}{Sets the Objective number 2. See \code{Objective values} for more information about the possible values.}
 
 \item{w2}{Sets the weight of \code{Obj2}.}
 
-\item{Obj3}{Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.}
+\item{Obj3}{Sets the Objective number 3. See \code{Objective values} for more information about the possible values.}
 
 \item{w3}{Sets the weight of \code{Obj3}.}
 
@@ -67,7 +67,7 @@ Perfoms a subgroup discovery task executing the algorithm SDIGA
 \details{
 This function sets as target variable the last one that appear in the KEEL file. If you want
     to change the target variable, you can use \link{changeTargetVariable} for this objective.
-    The target variable MUST be categorical, if it´s not, throws an error.
+    The target variable MUST be categorical, if it is not, throws an error.
 
     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below
@@ -100,12 +100,12 @@ This function sets as target variable the last one that appear in the KEEL file.
     \item \code{popLength}  Sets number of individuals of the main population
     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
-    \item \code{Obj1} Sets the objective nº 1.
-    \item \code{w1} Sets the weigth assigned to the objective nº 1. Value in [0,1]
-    \item \code{Obj2} Sets the objective nº 2.
-    \item \code{w2} Sets the weigth assigned to the objective nº 2. Value in [0,1]
-    \item \code{Obj3} Sets the objective nº 3.
-    \item \code{w3} Sets the weigth assigned to the objective nº 3. Value in [0,1]
+    \item \code{Obj1} Sets the objective number 1.
+    \item \code{w1} Sets the weigth assigned to the objective number 1. Value in [0,1]
+    \item \code{Obj2} Sets the objective number 2.
+    \item \code{w2} Sets the weigth assigned to the objective number 2. Value in [0,1]
+    \item \code{Obj3} Sets the objective number 3.
+    \item \code{w3} Sets the weigth assigned to the objective number 3. Value in [0,1]
     \item \code{minConf} Sets the minimum confidence of the rule for checking the stopping criteria of the iterative process
     \item \code{lSearch} Perform the local search algorithm after the execution of the genetic algorithm? Values: "yes" or "no"
     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.}. Use \code{null} to search for every value of the target variable
@@ -118,7 +118,7 @@ inputData = "irisD-10-1tra.dat" "irisD-10-1tst.dat"
 outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
 seed = 0
 nLabels = 3
-nEval = 10000
+nEval = 500
 popLength = 100
 mutProb = 0.01
 minConf = 0.6
@@ -146,7 +146,7 @@ lSearch = yes
         \item Significance -> \code{sign}
       }
 
-    If you don´t want to use a objetive value you must specify \code{null}
+    If you dont want to use a objetive value you must specify \code{null}
 }
 \examples{
 SDIGA(parameters_file = NULL,
@@ -155,7 +155,7 @@ SDIGA(parameters_file = NULL,
       output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
       seed = 0,
       nLabels = 3,
-      nEval = 10000,
+      nEval = 300,
       popLength = 100,
       mutProb = 0.01,
       RulesRep = "can",
@@ -170,7 +170,7 @@ SDIGA(parameters_file = NULL,
       targetClass = "null")
 }
 \references{
-M. J. del Jesus, P. Gonzalez, F. Herrera, and M. Mesonero, "Evolutionary ´
+M. J. del Jesus, P. Gonzalez, F. Herrera, and M. Mesonero, "Evolutionary
 Fuzzy Rule Induction Process for Subgroup Discovery: A case study in
 marketing," IEEE Transactions on Fuzzy Systems, vol. 15, no. 4, pp.
 578-592, 2007.

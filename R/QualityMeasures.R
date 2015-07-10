@@ -1,13 +1,13 @@
 
 
 #------------------------------------------------------------------------
-#' 
-#'        Devuelve el .coverage ( N(Cond) / Ns )  de la regla
-#'        
-#'        Donde:
-#'        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente
-#'        ? Ns es el n?mero de ejemplos del dataset
-#'        
+# 
+#        Devuelve el .coverage ( N(Cond) / Ns )  de la regla
+#        
+#        Donde:
+#        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente
+#        ? Ns es el n?mero de ejemplos del dataset
+#        
 #------------------------------------------------------------------------
 
 .coverage <- function(x){
@@ -16,13 +16,13 @@
 
 
 #------------------------------------------------------------------------
-#' 
-#'        Devuelve el soporte ( N(TargetValue ? Cond) / Ns )  de la regla
-#'        
-#'        Donde:
-#'        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo
-#'        ? Ns es el n?mero de ejemplos del dataset
-#'        
+# 
+#        Devuelve el soporte ( N(TargetValue ? Cond) / Ns )  de la regla
+#        
+#        Donde:
+#        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo
+#        ? Ns es el n?mero de ejemplos del dataset
+#        
 #------------------------------------------------------------------------
 
 
@@ -54,13 +54,13 @@
 }
 
 #------------------------------------------------------------------------
-#' 
-#'        Devuelve la confianza ( N(TargetValue ? Cond) / N(Cond) )  de la regla
-#'        
-#'        Donde:
-#'        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo
-#'        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente
-#'        
+# 
+#        Devuelve la confianza ( N(TargetValue ? Cond) / N(Cond) )  de la regla
+#        
+#        Donde:
+#        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo
+#        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente
+#        
 #------------------------------------------------------------------------
 
 .confianza <- function(x){

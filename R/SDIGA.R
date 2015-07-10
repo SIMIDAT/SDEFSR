@@ -76,11 +76,11 @@
 #' @param popLength An integer to set the number of individuals in the population.
 #' @param mutProb Sets the mutation probability. A number in [0,1].
 #' @param RulesRep Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.
-#' @param Obj1 Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.
+#' @param Obj1 Sets the Objective number 1. See \code{Objective values} for more information about the possible values.
 #' @param w1 Sets the weight of \code{Obj1}.
-#' @param Obj2 Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.
+#' @param Obj2 Sets the Objective number 2. See \code{Objective values} for more information about the possible values.
 #' @param w2 Sets the weight of \code{Obj2}.
-#' @param Obj3 Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.
+#' @param Obj3 Sets the Objective number 3. See \code{Objective values} for more information about the possible values.
 #' @param w3 Sets the weight of \code{Obj3}.
 #' @param minConf Sets the minimum confidence that must have the rule returned by the genetic algorithm after the local optimitation phase. A number in [0,1].
 #' @param lSearch Sets if the local optimitation phase must be performed. A string with "yes" or "no".
@@ -89,7 +89,7 @@
 #' 
 #' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
 #'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-#'     The target variable MUST be categorical, if it´s not, throws an error.
+#'     The target variable MUST be categorical, if it is not, throws an error.
 #'     
 #'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
 #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
@@ -119,12 +119,12 @@
 #'     \item \code{popLength}  Sets number of individuals of the main population
 #'     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
 #'     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
-#'     \item \code{Obj1} Sets the objective nº 1. 
-#'     \item \code{w1} Sets the weigth assigned to the objective nº 1. Value in [0,1]
-#'     \item \code{Obj2} Sets the objective nº 2. 
-#'     \item \code{w2} Sets the weigth assigned to the objective nº 2. Value in [0,1]
-#'     \item \code{Obj3} Sets the objective nº 3. 
-#'     \item \code{w3} Sets the weigth assigned to the objective nº 3. Value in [0,1]
+#'     \item \code{Obj1} Sets the objective number 1. 
+#'     \item \code{w1} Sets the weigth assigned to the objective number 1. Value in [0,1]
+#'     \item \code{Obj2} Sets the objective number 2. 
+#'     \item \code{w2} Sets the weigth assigned to the objective number 2. Value in [0,1]
+#'     \item \code{Obj3} Sets the objective number 3. 
+#'     \item \code{w3} Sets the weigth assigned to the objective number 3. Value in [0,1]
 #'     \item \code{minConf} Sets the minimum confidence of the rule for checking the stopping criteria of the iterative process
 #'     \item \code{lSearch} Perform the local search algorithm after the execution of the genetic algorithm? Values: "yes" or "no"
 #'     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.}. Use \code{null} to search for every value of the target variable
@@ -137,7 +137,7 @@
 #' outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
 #' seed = 0
 #' nLabels = 3
-#' nEval = 10000
+#' nEval = 500
 #' popLength = 100
 #' mutProb = 0.01
 #' minConf = 0.6
@@ -164,7 +164,7 @@
 #'         \item Significance -> \code{sign}
 #'       }
 #'     
-#'     If you don´t want to use a objetive value you must specify \code{null}
+#'     If you dont want to use a objetive value you must specify \code{null}
 #' 
 #' 
 #' @return The algorithm shows in the console the following results:
@@ -180,7 +180,7 @@
 #' 
 #' 
 #' @references 
-#' M. J. del Jesus, P. Gonzalez, F. Herrera, and M. Mesonero, "Evolutionary ´
+#' M. J. del Jesus, P. Gonzalez, F. Herrera, and M. Mesonero, "Evolutionary
 #' Fuzzy Rule Induction Process for Subgroup Discovery: A case study in
 #' marketing," IEEE Transactions on Fuzzy Systems, vol. 15, no. 4, pp.
 #' 578-592, 2007.
@@ -192,7 +192,7 @@
 #'       output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
 #'       seed = 0, 
 #'       nLabels = 3,
-#'       nEval = 10000, 
+#'       nEval = 300, 
 #'       popLength = 100, 
 #'       mutProb = 0.01, 
 #'       RulesRep = "can",
@@ -232,13 +232,13 @@ SDIGA <- function(parameters_file = NULL,
   if(is.null(parameters_file)){
     #Generate our "parameters file"
     if(class(training) != "keel" | class(test) != "keel")
-      stop("Training or test parameters is not a KEEL class")
+      stop("'training' or 'test' parameters is not a KEEL class")
     
     if(is.null(training) | is.null(test)) 
-      stop("Not provided a test or training file and neither a parameter file. Aborting...")
+      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
     
     if(training[[1]] != test[[1]] )
-      stop("datasets does not have the same relation name.")
+      stop("datasets ('training' and 'test') does not have the same relation name.")
     
     if(length(output) != 3 )
       stop("You must specify three files to save the results.")
@@ -266,7 +266,7 @@ SDIGA <- function(parameters_file = NULL,
   # Parametros --------------------------
   parametros <- .read.parametersFile2(file = parameters_file)  # parametros del algoritmo
     if(parametros$algorithm != "SDIGA")
-      stop("Parameters file is not for SDIGA")
+      stop("Parameters file is not for \"SDIGA\"")
   
   test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
   
@@ -637,7 +637,7 @@ SDIGA <- function(parameters_file = NULL,
   participantes <- .getParticipantes(regla = regla, max_regla = max_regla, DNFRules = DNF_Rules)
   
   if(soporte_regla == 1 || sum(participantes) == 1 ){
-    return(regla) # If local support itÂ´s 1 or rule has only one attribute, we can not improve the rule
+    return(regla) # If local support it is 1 or rule has only one attribute, we can not improve the rule
   }
   
     mejor_soporte <-  soporte_regla

@@ -13,10 +13,10 @@
 .gaSDIGA <- function(type = c("binary", "real-valued", "permutation"), 
                fitness, ...,
                min, max, nBits,
-               population = gaControl(type)$population,
-               selection = gaControl(type)$selection,
-               crossover = gaControl(type)$crossover, 
-               mutation = gaControl(type)$mutation,
+               population ,
+               selection,
+               crossover, 
+               mutation,
                popSize = 50, 
                pcrossover = 0.8, 
                pmutation = 0.1, 
@@ -28,7 +28,7 @@
                suggestions = NULL, 
                keepBest = FALSE,
                parallel = FALSE,
-               monitor = gaMonitor,
+               monitor = NULL,
                DNFRules = FALSE,
                seed = NULL) 
 {
@@ -36,10 +36,7 @@
   call <- match.call()
   
   type <- match.arg(type)
-  if(!is.function(population)) population <- get(population)
-  if(!is.function(selection))  selection  <- get(selection)
-  if(!is.function(crossover))  crossover  <- get(crossover)
-  if(!is.function(mutation))   mutation   <- get(mutation)
+
   
   if(missing(fitness))
   { stop("A fitness function must be provided") }
@@ -81,29 +78,9 @@
          }
   )
   
-  if(is.null(suggestions))
-  { suggestions <- matrix(nrow = 0, ncol = nvars) }
-  else
-  { if(is.vector(suggestions)) 
-  { if(nvars > 1) suggestions <- matrix(suggestions, nrow = 1)
-    else          suggestions <- matrix(suggestions, ncol = 1) }
-  else
-  { suggestions <- as.matrix(suggestions) }
-  if(nvars != ncol(suggestions))
-    stop("Provided suggestions (ncol) matrix do not match number of variables of the problem!")
-  }
+ 
   
-  # Start parallel computing (if needed)
-  parallel <- if(is.logical(parallel)) 
-  { if(parallel) startParallel(parallel) else FALSE }
-  else { startParallel(parallel) }
-  on.exit(if(parallel)
-    parallel::stopCluster(attr(parallel, "cluster")) )
-  
-  fitnessSummary <- matrix(as.double(NA), nrow = maxiter, ncol = 6)
-  colnames(fitnessSummary) <- names(gaSummary(rnorm(10)))
-  bestSol <- if(keepBest) vector(mode = "list", length = maxiter)
-  else         list()
+
   Fitness <- rep(NA, popSize + 2)
   
   
@@ -119,14 +96,15 @@
                 iter = 0, 
                 run = 1, 
                 maxiter = maxiter,
-                suggestions = suggestions,
+                suggestions = matrix(),
                 population = matrix(), 
                 elitism = elitism, 
                 pcrossover = pcrossover, 
                 pmutation = if(is.numeric(pmutation)) pmutation else NA,
                 fitness = Fitness, 
-                summary = fitnessSummary,
-                bestSol = bestSol)
+                summary = matrix(),
+                bestSol = list()
+                )
   n_evals <- 0
   if(!is.null(seed)) set.seed(seed)
   
@@ -145,48 +123,34 @@
  
   Pop <- matrix(as.double(NA), nrow = popSize + 2, ncol = nvars)
   
-  ng <- min(nrow(suggestions), popSize)
-  if(ng > 0) # use suggestion if provided
-  { Pop[1:ng,] <- suggestions }
-  # fill the rest with a random population
-  if(popSize > ng)
-  { if( ! DNFRules) 
-    Pop[(ng+1):popSize,] <- population(object)[1:(popSize-ng),]
+ 
+  
+   if( ! DNFRules) 
+    Pop[1:popSize,] <- population(object)[1:popSize,]
     else 
-    Pop[(ng+1):popSize,] <- population(object)[1:(popSize-ng),]
-  }
+    Pop[1:popSize,] <- population(object)[1:popSize,]
+  
   object@population <- Pop
   
   # start iterations
   for(iter in seq_len(maxiter))
   {
     # evalute fitness function (when needed) 
-    if(!parallel)
-    { for(i in seq_len(popSize + 2))
+   for(i in seq_len(popSize + 2))
       if(is.na(Fitness[i]))
       { Fitness[i] <- fitness(Pop[i,], ...) 
         n_evals <- n_evals + 1} 
-    }
-    else
-    { Fitness <- foreach(i = seq_len(popSize), .combine = "c") %dopar%
-{ if(is.na(Fitness[i])){ 
-  fitness(Pop[i,], ...) 
-  n_evals <- n_evals + 1    
-  }
-  else                  Fitness[i] }
-    }
+   
 
-#fitnessSummary[iter,] <- gaSummary(Fitness)
+
 
 # update object
 object@iter <- iter
 object@population <- Pop
 object@fitness <- Fitness
-object@summary <- fitnessSummary
 
 
-#PopNew <- matrix(as.double(NA), nrow = popSize, ncol = nvars)
-#fitnessNew <- rep(NA, popSize)
+
 ord <- order(Fitness, decreasing = TRUE)
 PopSorted <- Pop[ord,,drop=FALSE]
 FitnessSorted <- Fitness[ord]
@@ -195,56 +159,26 @@ FitnessSorted <- Fitness[ord]
 object@population <- PopSorted
 object@fitness <- FitnessSorted
 
-# if(keepBest) 
-#   # object@bestSol[[iter]] <- unique(Pop[Fitness == bestEval[iter],,drop=FALSE])
-#   object@bestSol[[iter]] <- unique(Pop[Fitness == fitnessSummary[iter,1],,drop=FALSE])
-# 
-# if(is.function(monitor)) 
-# { monitor(object) }
 
 # check stopping criteria
-# if(iter > 1)
-# { if(fitnessSummary[iter,1] > fitnessSummary[iter-1,1]+gaControl("eps")) 
-#   object@run <- 1 
-#   else 
-#     object@run <- object@run + 1 
-# }
+
 if(n_evals >= run) break  
 if(max(Fitness, na.rm = TRUE) >= maxfitness) break
 if(object@iter == maxiter) break  
 
 
 # selection
-if(is.function(selection))
-{ sel <- selection(object)
-  PopSorted <- sel$population
-  FitnessSorted <- sel$fitness
-}
-else
-{ sel <- sample(1:popSize, size = popSize, replace = TRUE)
-  Pop <- object@population[sel,]
-  Fitness <- object@fitness[sel]
-}
+sel <- selection(object)
+PopSorted <- sel$population
+FitnessSorted <- sel$fitness
+
+  
 object@population <- PopSorted
 object@fitness <- FitnessSorted
 
 
 # crossover Only cross the 2 best individuals
-#       if(is.function(crossover) & pcrossover > 0)
-#         { 
-#           nmating <- floor(popSize/2)
-#           mating <- matrix(sample(1:(2*nmating), size = (2*nmating)), ncol = 2)
-#           for(i in seq_len(nmating))
-#             { if(pcrossover > runif(1))
-#                 { parents <- mating[i,]
-#                   Crossover <- crossover(object, parents)
-#                   Pop[parents,] <- Crossover$children
-#                   Fitness[parents] <- Crossover$fitness
-#                 }
-#             }             
-#           object@population <- Pop
-#           object@fitness <- Fitness
-#         }
+
 parents <- c(1,2)
 Crossover <- crossover(object, parents) # Only the best individuals are crossed
 PopSorted[popSize + parents,] <- Crossover$children
@@ -276,21 +210,8 @@ if(is.function(mutation) & pm > 0)
 Pop <- PopSorted
 Fitness <- FitnessSorted
 
-# elitism
-#       if(elitism > 0) 
-#         { ord <- order(object@fitness, na.last = TRUE)
-#           u <- which(!duplicated(PopSorted, margin = 1))
-#           Pop[ord[1:elitism],] <- PopSorted[u[1:elitism],]
-#           Fitness[ord[1:elitism]] <- FitnessSorted[u[1:elitism]]
-#           object@population <- Pop
-#           object@fitness <- Fitness
-#         } 
+}
 
-  }
-
-# in case of premature convergence remove NA from summary fitness evalutations
-object@summary <- na.exclude(object@summary)
-attr(object@summary, "na.action") <- NULL
 
 # get solution(s)
 object@fitnessValue <- max(object@fitness, na.rm = TRUE)
@@ -328,10 +249,10 @@ return(object)
 .gaMESDIF <- function(type = c("binary", "real-valued", "permutation"), 
                fitness, ...,
                min, max, nBits,
-               population = gaControl(type)$population,
-               selection = gaControl(type)$selection,
-               crossover = gaControl(type)$crossover, 
-               mutation = gaControl(type)$mutation,
+               population ,
+               selection ,
+               crossover , 
+               mutation ,
                popSize = 50, 
                pcrossover = 0.8, 
                pmutation = 0.1, 
@@ -343,7 +264,7 @@ return(object)
                suggestions = NULL, 
                keepBest = FALSE,
                parallel = FALSE,
-               monitor = gaMonitor,
+               monitor = NULL,
                DNFRules = FALSE,
                seed = NULL) 
 {
@@ -351,10 +272,7 @@ return(object)
   call <- match.call()
   
   type <- match.arg(type)
-  if(!is.function(population)) population <- get(population)
-  if(!is.function(selection))  selection  <- get(selection)
-  if(!is.function(crossover))  crossover  <- get(crossover)
-  if(!is.function(mutation))   mutation   <- get(mutation)
+
   
   if(missing(fitness))
   { stop("A fitness function must be provided") }
@@ -396,30 +314,8 @@ return(object)
          }
   )
   
-  if(is.null(suggestions))
-  { suggestions <- matrix(nrow = 0, ncol = nvars) }
-  else
-  { if(is.vector(suggestions)) 
-  { if(nvars > 1) suggestions <- matrix(suggestions, nrow = 1)
-    else          suggestions <- matrix(suggestions, ncol = 1) }
-  else
-  { suggestions <- as.matrix(suggestions) }
-  if(nvars != ncol(suggestions))
-    stop("Provided suggestions (ncol) matrix do not match number of variables of the problem!")
-  }
   
-  # Start parallel computing (if needed)
-  parallel <- if(is.logical(parallel)) 
-  { if(parallel) startParallel(parallel) else FALSE }
-  else { startParallel(parallel) }
-  on.exit(if(parallel)
-    parallel::stopCluster(attr(parallel, "cluster")) )
-  
-  fitnessSummary <- matrix(as.double(NA), nrow = maxiter, ncol = 6)
-  colnames(fitnessSummary) <- names(gaSummary(rnorm(10)))
-  bestSol <- if(keepBest) vector(mode = "list", length = maxiter)
-  else         list()
-  
+ 
   #Define Fitness as a matrix, in MESDIF, each value of objectives is evaluated individually
   Fitness <- matrix(NA, nrow = popSize + elitism, ncol = 4)
   #This counts the number of indivuals that are dominated by this one
@@ -437,14 +333,15 @@ return(object)
                 iter = 0, 
                 run = 1, 
                 maxiter = maxiter,
-                suggestions = suggestions,
+                suggestions = matrix(),
                 population = matrix(), 
                 elitism = elitism, 
                 pcrossover = pcrossover, 
                 pmutation = if(is.numeric(pmutation)) pmutation else NA,
                 fitness = Fitness, 
-                summary = fitnessSummary,
-                bestSol = bestSol)
+                summary = matrix(),
+                bestSol = list())
+  
   #This GA runs until a number of evaluations is reached, not iterations !
   n_evals <- 0
   if(!is.null(seed)) set.seed(seed)
@@ -470,16 +367,14 @@ return(object)
 
   
   
-  ng <- min(nrow(suggestions), popSize)
-  if(ng > 0) # use suggestion if provided
-  { Pop[1:ng,] <- suggestions }
+
+
   # fill the rest with a random population
-  if(popSize > ng)
-  { if( ! DNFRules) 
-    Pop[(ng+1):popSize,] <- population(object, 0.25, round(nvars*0.25))[1:(popSize-ng),]
+   if( ! DNFRules) 
+    Pop[1:popSize,] <- population(object, 0.25, round(nvars*0.25))[1:popSize,]
     else 
-      Pop[(ng+1):popSize,] <- population(object, 0.25, round((length(max) - 1)*0.25))[1:(popSize-ng),]
-  }
+      Pop[1:popSize,] <- population(object, 0.25, round((length(max) - 1)*0.25))[1:popSize,]
+
   object@population <- Pop
   
   NonDominated <- logical(popSize + elitism) #Indicate wheter an individual is non-dominated
@@ -519,23 +414,15 @@ return(object)
 
     # evalute fitness function (when needed) 
 
-    if(!parallel)
-    { for(i in seq_len( NROW(UnionPop) ))
+    for(i in seq_len( NROW(UnionPop) ))
       if(all(is.na(Fitness[i,])))
       { Fitness[i,] <- fitness(UnionPop[i,], ...) 
         n_evals <- n_evals + 1} 
-    }
-    else
-    { Fitness <- foreach(i = seq_len(popSize), .combine = "c") %dopar%
-{ if(is.na(Fitness[i])){ 
-  fitness(Pop[i,], ...) 
-  n_evals <- n_evals + 1    
-}
-else                  Fitness[i] }
-    }
+    
+    
 
 #Compute dominated and non-dominated rules and initial adaptation Value
-#Número de individuos a los que domina cada regla
+#Numero de individuos a los que domina cada regla
 f <- na.exclude(Fitness)[, seq_len(nObjs), drop = F]
 n_Ind <- NROW(f)
 for(i in seq_len(n_Ind)){
@@ -586,7 +473,7 @@ cantidadNoDominados <- sum(NonDominated)
 
 if( cantidadNoDominados <= elitism){
   
-  #Adition operator (Añade los elitism mejores valores de adaptacion  a la poblacion elite)
+  #Adition operator (Incluye los elitism mejores valores de adaptacion  a la poblacion elite)
   eliteIndividuals <- order(AdaptationValue)[seq_len(elitism)]
   elitePop <- UnionPop[eliteIndividuals, , drop = F]
  
@@ -602,33 +489,11 @@ if( cantidadNoDominados <= elitism){
 object@iter <- iter
 object@population <- Pop
 object@fitness <- Fitness
-object@summary <- fitnessSummary
 
 
-#PopNew <- matrix(as.double(NA), nrow = popSize, ncol = nvars)
-#fitnessNew <- rep(NA, popSize)
-# ord <- order(Fitness, decreasing = TRUE)
-# PopSorted <- Pop[ord,,drop=FALSE]
-# FitnessSorted <- Fitness[ord]
-# 
-# #Keep the population sorted by fitness
-# object@population <- PopSorted
-# object@fitness <- FitnessSorted
-
-# if(keepBest) 
-#   # object@bestSol[[iter]] <- unique(Pop[Fitness == bestEval[iter],,drop=FALSE])
-#   object@bestSol[[iter]] <- unique(Pop[Fitness == fitnessSummary[iter,1],,drop=FALSE])
-# 
-# if(is.function(monitor)) 
-# { monitor(object) }
 
 # check stopping criteria
-# if(iter > 1)
-# { if(fitnessSummary[iter,1] > fitnessSummary[iter-1,1]+gaControl("eps")) 
-#   object@run <- 1 
-#   else 
-#     object@run <- object@run + 1 
-# }
+
 if(n_evals >= run) break  
 if(max(Fitness, na.rm = TRUE) >= maxfitness) break
 if(object@iter == maxiter) break  
@@ -636,22 +501,16 @@ if(object@iter == maxiter) break
 
 # selection by Binary Tournament (Adaptation Values is the value for the "fitness")
 #Copy the selected populatin into an intermediary population
-if(is.function(selection))
-{ sel <- selection(elitePop, popSize, nvariables, AdaptationValue[eliteIndividuals], Fitness[eliteIndividuals, , drop = F])
-  interPop <- sel$population
-  AdaptationValue <- sel$fitness
-  Fitness <- sel$obj
-}
-else
-{ sel <- sample(1:popSize, size = popSize, replace = TRUE)
-  Pop <- object@population[sel,]
-  AdapatationValue <- object@fitness[sel]
-}
+sel <- selection(elitePop, popSize, nvariables, AdaptationValue[eliteIndividuals], Fitness[eliteIndividuals, , drop = F])
+interPop <- sel$population
+AdaptationValue <- sel$fitness
+Fitness <- sel$obj
+
 object@population <- interPop
 
 
 # crossover performed by a double-point crossover
-      if(is.function(crossover) & pcrossover > 0)
+      if(pcrossover > 0)
         { 
           nmating <- round( (popSize/2) * pcrossover )
           
@@ -672,40 +531,24 @@ object@population <- interPop
         }
 
 # mutation (only .mutate popLength * probMut chromosomes)
-pm <- if(is.function(pmutation)) pmutation(object) else pmutation
+pm <- pmutation
 if(DNFRules) nvars <- length(max) - 1
-if(is.function(mutation) & pm > 0)
+if(pm > 0)
 { 
-#   genes <- sample(x = seq_len(nGenes), size = numMutaciones, replace = TRUE)
-#   cromosomas <- ceiling(genes / nvariables)
-#   vars <- (genes %% nvars) + 1
-#   if(!DNFRules)
-#     Mutation <- matrix(data = NA, nrow = numMutaciones, ncol = nvars)
-#   else
-#     Mutation <- matrix(data = NA, nrow = numMutaciones, ncol = nBits)
-#   #Fitness[cromosomas, ] <- NA
-#   for(i in seq_len(length(vars))) 
-#   {     
-#     Mutation[i,] <- mutation(object, cromosomas[i], vars[i])
-#   }
-#   suma <- nmating*2  + NROW(Mutation)
-#   descPop[(nmating * 2 + 1):suma,] <- Mutation 
-#   
-#   descPop <- na.exclude(descPop) #Por si tenemos menos cromosomas mutados
-  suma <- nmating*2 + 1
-  while(Mu_next <= nGenes){
-    cromosoma <- ceiling( Mu_next  / nvars ) 
-    gen <- (Mu_next %% nvars) + 1
-    
-    descPop[suma, ] <- mutation(object, cromosoma, gen)
-    suma <- suma + 1
-    #Calcuate next gene
-    Mu_next <- Mu_next + ceiling(log( runif(1) ) /  log(1 - pmutation))
-    
-  }
-  
-  Mu_next <- Mu_next - nGenes
+
+suma <- nmating*2 + 1
+while(Mu_next <= nGenes){
+cromosoma <- ceiling( Mu_next  / nvars ) 
+gen <- (Mu_next %% nvars) + 1
+
+descPop[suma, ] <- mutation(object, cromosoma, gen)
+suma <- suma + 1
+#Calcuate next gene
+Mu_next <- Mu_next + ceiling(log( runif(1) ) /  log(1 - pmutation))
 }
+
+Mu_next <- Mu_next - nGenes
+
 
 #Replace the worst individuals in the population with the genereted in crossovers and mutations
 
@@ -722,7 +565,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 
   
   }
-
+}
 
 # Return Non-duplicated individuals in elite pop
   if(DNFRules){
@@ -764,10 +607,10 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 .gaNMEEF <- function(type = c("binary", "real-valued", "permutation"), 
                      fitness, ...,
                      min, max, nBits,
-                     population = gaControl(type)$population,
-                     selection = gaControl(type)$selection,
-                     crossover = gaControl(type)$crossover, 
-                     mutation = gaControl(type)$mutation,
+                     population ,
+                     selection ,
+                     crossover , 
+                     mutation ,
                      popSize = 50, 
                      pcrossover = 0.8, 
                      pmutation = 0.1, 
@@ -779,7 +622,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
                      suggestions = NULL, 
                      keepBest = FALSE,
                      parallel = FALSE,
-                     monitor = gaMonitor,
+                     monitor = NULL,
                      DNFRules = FALSE,
                      seed = NULL,
                      porcCob = 0.5,
@@ -790,10 +633,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
   call <- match.call()
   
   type <- match.arg(type)
-  if(!is.function(population)) population <- get(population)
-  if(!is.function(selection))  selection  <- get(selection)
-  if(!is.function(crossover))  crossover  <- get(crossover)
-  if(!is.function(mutation))   mutation   <- get(mutation)
+
   
   if(missing(fitness))
   { stop("A fitness function must be provided") }
@@ -835,29 +675,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
          }
   )
   
-  if(is.null(suggestions))
-  { suggestions <- matrix(nrow = 0, ncol = nvars) }
-  else
-  { if(is.vector(suggestions)) 
-  { if(nvars > 1) suggestions <- matrix(suggestions, nrow = 1)
-  else          suggestions <- matrix(suggestions, ncol = 1) }
-    else
-    { suggestions <- as.matrix(suggestions) }
-    if(nvars != ncol(suggestions))
-      stop("Provided suggestions (ncol) matrix do not match number of variables of the problem!")
-  }
   
-  # Start parallel computing (if needed)
-  parallel <- if(is.logical(parallel)) 
-  { if(parallel) startParallel(parallel) else FALSE }
-  else { startParallel(parallel) }
-  on.exit(if(parallel)
-    parallel::stopCluster(attr(parallel, "cluster")) )
-  
-  fitnessSummary <- matrix(as.double(NA), nrow = maxiter, ncol = 6)
-  colnames(fitnessSummary) <- names(gaSummary(rnorm(10)))
-  bestSol <- if(keepBest) vector(mode = "list", length = maxiter)
-  else         list()
   
   #Define Fitness as a matrix, in NMEEF, each value of objectives is evaluated individually
   Fitness <- matrix(NA, nrow = popSize * 2, ncol = 4)
@@ -875,14 +693,14 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
                 iter = 0, 
                 run = 1, 
                 maxiter = maxiter,
-                suggestions = suggestions,
+                suggestions = matrix(),
                 population = matrix(), 
                 elitism = elitism, 
                 pcrossover = pcrossover, 
                 pmutation = if(is.numeric(pmutation)) pmutation else NA,
                 fitness = Fitness, 
-                summary = fitnessSummary,
-                bestSol = bestSol)
+                summary = matrix(),
+                bestSol = list())
   #This GA runs until a number of EVALUATIONS is reached, not iterations !
   n_evals <- 0
   if(!is.null(seed)) set.seed(seed)
@@ -907,16 +725,12 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
   OffspringPop <- matrix(as.integer(NA), nrow = popSize, ncol = nvars)
   UnionPop <- matrix(as.integer(NA), nrow = popSize *2, ncol = nvars)
   
-  ng <- min(nrow(suggestions), popSize)
-  if(ng > 0) # use suggestion if provided
-  { Pop[1:ng,] <- suggestions }
-  # fill the rest with a random population
-  if(popSize > ng)
-  { if( ! DNFRules) 
-    Pop[(ng+1):popSize,] <- population(object, 0.25, round(nvars*0.25))#[1:(popSize-ng),]
+ 
+  if( ! DNFRules) 
+    Pop[1:popSize,] <- population(object, 0.25, round(nvars*0.25))#[1:(popSize-ng),]
   else 
-    Pop[(ng+1):popSize,] <- population(object, 0.25, round((length(max) - 1)*0.25))[1:(popSize-ng),]
-  }
+    Pop[1:popSize,] <- population(object, 0.25, round((length(max) - 1)*0.25))#[1:(popSize,]
+  
   object@population <- Pop
   
   #This counts the number of indivuals that domain this one
@@ -954,7 +768,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
   {
     #reinitialize all values
 
-    #Dominados[] <- 0
+
     UnionPop[] <- NA
     OffspringPop[] <- NA
     
@@ -970,24 +784,17 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
     
     # selection by Binary Tournament 
     # Copy the selected populatin into the offspring population
-    if(is.function(selection))
-    { 
+ 
     sel <- selection(Pop, popSize, rank, CrowdingDistance, Fitness, coveredByIndividual) 
     OffspringPop <- sel[[1]]
     FitnessOffspring <- sel[[2]]
     coveredByIndividual[,(popSize + 1):(popSize*2)] <- sel[[3]]
-    
-    }
-    else
-    { sel <- sample(1:popSize, size = popSize, replace = TRUE)
-    Pop <- object@population[sel,]
-    AdapatationValue <- object@fitness[sel]
-    }
+   
     
     object@population <- OffspringPop
    
     # crossover performed by a double-point crossover on Offspring Pop
-    if(is.function(crossover) & pcrossover > 0)
+    if(pcrossover > 0)
     { 
       nmating <- round( (popSize/2) * pcrossover )
       
@@ -1022,9 +829,9 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
     }
     
     # mutation 
-    pm <- if(is.function(pmutation)) pmutation(object) else pmutation
+    pm <- pmutation
     if(DNFRules) nvars <- length(max) - 1
-    if(is.function(mutation) & pm > 0)
+    if(pm > 0)
     { 
       dados <- runif(nGenes)
    
@@ -1034,22 +841,15 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
       cromosomas <- ceiling(genes / nvariables)
       vars <- (genes %% nvariables) + 1
       
-#     
-#       if(!DNFRules)
-#         Mutation <- matrix(data = NA, nrow = numMutaciones, ncol = nvars)
-#       else
-#         Mutation <- matrix(data = NA, nrow = numMutaciones, ncol = nBits)
-      #Fitness[cromosomas, ] <- NA
-     
       for(i in seq_len(length(vars))) 
       {     
         object@population[cromosomas[i],] <- mutation(object, cromosomas[i], vars[i])
       }
-      #print(Mutation)
+    
       OffspringPop <- object@population
       
       FitnessOffspring[cromosomas,] <- NA
-      #OffspringPop <- na.exclude(OffspringPop) #Por si tenemos menos cromosomas mutados
+    
       
     }
     
@@ -1184,7 +984,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
   
   #get the last ranking
   
-  #Compute dominance values for performing fast sorting algorithm
+  #Compute dominance values
   f <- na.exclude(Fitness)[1:popSize,seq_len(nObjs), drop = F]
   n_Ind <- NROW(f)
   for(i in seq_len(n_Ind)){
@@ -1211,7 +1011,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
   }
   
   frentes[[1]] <- frentes[[1]][which(Fitness[seq_len(NROW(frentes[[1]])),4] > 0.6), , drop = F]
-  frentes[[1]]
+  frentes[[1]] #Return
   
 }
 
@@ -1222,13 +1022,14 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 # ---  THis part is part of the definition of the "ga" class done in the GA Package
 #--------------------------------------------------------------------------------
 #
-# We need to change this behaviour, we don�t want to depend on this functions.
-# Because we don�t use it.
+# We need to change this behaviour, we dont want to depend on this functions.
+# Because we dont use it.
 
-setClassUnion("numericOrNA", members = c("numeric", "logical", "matrix"))
-setClassUnion("matrixOrList", members = c("matrix", "list"))
+methods::setClassUnion("numericOrNA", members = c("numeric", "logical", "matrix"))
+methods::setClassUnion("matrixOrList", members = c("matrix", "list"))
 
-setClass(Class = "ga", 
+
+methods::setClass(Class = "ga", 
          representation(call = "language",
                         type = "character",
                         min = "numericOrNA", 
@@ -1255,184 +1056,6 @@ setClass(Class = "ga",
          ),
          package = "SDR" 
 ) 
-
-setMethod("print", "ga", function(x, ...) str(x))
-
-setMethod("show", "ga",
-          function(object)
-          { cat("An object of class \"ga\"\n")
-            cat("\nCall:\n", deparse(object@call), "\n\n",sep="")
-            cat("Available slots:\n")
-            print(slotNames(object))
-          }) 
-
-summary.ga <- function(object, ...)
-{
-  nvars <- ncol(object@population)
-  varnames <- parNames(object)
-  domain <- NULL
-  if(object@type == "real-valued")
-  { domain <- rbind(object@min, object@max)
-    rownames(domain) <- c("Min", "Max")
-    if(ncol(domain) == nvars) 
-      colnames(domain) <- varnames
-  }
-  suggestions <- NULL
-  if(nrow(object@suggestions) > 0) 
-  { suggestions <- object@suggestions
-    dimnames(suggestions) <- list(1:nrow(suggestions), varnames) 
-  }
-  
-  out <- list(type = object@type,
-              popSize = object@popSize,
-              maxiter = object@maxiter,
-              elitism = object@elitism,
-              pcrossover = object@pcrossover,
-              pmutation = object@pmutation,
-              domain = domain,
-              suggestions = suggestions,
-              iter = object@iter,
-              fitness = object@fitnessValue,
-              solution = object@solution)  
-  class(out) <- "summary.ga"
-  return(out)
-}
-
-setMethod("summary", "ga", summary.ga)
-
-print.summary.ga <- function(x, digits = getOption("digits"), ...)
-{
-  dotargs <- list(...)
-  if(is.null(dotargs$head)) dotargs$head <- 10
-  if(is.null(dotargs$tail)) dotargs$tail <- 1
-  if(is.null(dotargs$chead)) dotargs$chead <- 20
-  if(is.null(dotargs$ctail)) dotargs$ctail <- 1
-  
-  cat("+-----------------------------------+\n")
-  cat("|         Genetic Algorithm         |\n")
-  cat("+-----------------------------------+\n\n")
-  cat("GA settings: \n")
-  cat(paste("Type                  = ", x$type, "\n"))
-  cat(paste("Population size       = ", x$popSize, "\n"))
-  cat(paste("Number of generations = ", x$maxiter, "\n"))
-  cat(paste("Elitism               = ", x$elitism, "\n"))
-  cat(paste("Crossover probability = ", format(x$pcrossover, digits = digits), "\n"))
-  cat(paste("Mutation probability  = ", format(x$pmutation, digits = digits), "\n"))
-  
-  if(x$type == "real-valued")
-  { cat(paste("Search domain \n"))
-    print(x$domain, digits = digits)
-  }
-  
-  if(!is.null(x$suggestions))
-  { cat(paste("Suggestions", "\n"))
-    do.call(".printShortMatrix", 
-            c(list(x$suggestions, digits = digits), 
-              dotargs[c("head", "tail", "chead", "ctail")]))
-    # print(x$suggestions, digits = digits, ...)
-  }
-  
-  cat("\nGA results: \n")
-  cat(paste("Iterations             =", format(x$iter, digits = digits), "\n"))
-  cat(paste("Fitness function value =", format(x$fitness, digits = digits), "\n"))
-  if(nrow(x$solution) > 1) 
-  { cat(paste("Solutions              = \n")) }
-  else
-  { cat(paste("Solution               = \n")) }
-  do.call(".printShortMatrix", 
-          c(list(x$solution, digits = digits), 
-            dotargs[c("head", "tail", "chead", "ctail")]))
-  # print(x$solution, digits = digits, ...)
-  
-  invisible()
-}
-
-
-plot.ga <- function(x, y, ylim, cex.points = 0.7,
-                    col = c("green3", "dodgerblue3", adjustcolor("green3", alpha.f = 0.1)),
-                    pch = c(16, 1), lty = c(1,2),
-                    grid = graphics:::grid, ...)
-{
-  object <- x  # Argh.  Really want to use 'object' anyway
-  is.final <- !(any(is.na(object@summary[,1])))
-  iters <- if(is.final) 1:object@iter else 1:object@maxiter
-  summary <- object@summary
-  if(missing(ylim)) 
-  { ylim <- c(max(apply(summary[,c(2,4)], 2, 
-                        function(x) min(range(x, na.rm = TRUE, finite = TRUE)))),
-              max(range(summary[,1], na.rm = TRUE, finite = TRUE))) 
-  }
-  
-  plot(iters, summary[,1], type = "n", ylim = ylim, 
-       xlab = "Generation", ylab = "Fitness value", ...)
-  if(is.final & is.function(grid)) 
-  { grid() }
-  points(iters, summary[,1], type = ifelse(is.final, "o", "p"),
-         pch = pch[1], lty = lty[1], col = col[1], cex = cex.points)
-  points(iters, summary[,2], type = ifelse(is.final, "o", "p"),
-         pch = pch[2], lty = lty[2], col = col[2], cex = cex.points)
-  if(is.final)
-  { polygon(c(iters, rev(iters)), 
-            c(summary[,4], rev(summary[,1])), 
-            border = FALSE, col = col[3])
-    legend("bottomright", legend = c("Best", "Mean"), 
-           col = col, pch = pch, lty = lty, pt.cex = cex.points, 
-           inset = 0.01) }
-  else
-  { title(paste("Iteration", object@iter), font.main = 1) }
-  
-  out <- cbind(iter = iters, summary)
-  invisible(out)
-}
-
-setMethod("plot", "ga", plot.ga)
-
-# questa non funziona quando installa il pacchetto con NAMESPACE
-setGeneric(name = "parNames", 
-           def = function(object, ...) { standardGeneric("parNames") }
-)
-
-setMethod("parNames", "ga",
-          function(object, ...)
-          { 
-            names <- object@names
-            nvars <- ncol(object@population)
-            if(length(names) == 0)
-            { names <- paste("x", 1:nvars, sep = "") }
-            return(names)
-          })
-# per ora uso questo ma si dovrebbe ripristinare il metodo sopra:
-# gaParNames <- function(object, ...)
-# { 
-#   names <- object@names
-#   nvars <- ncol(object@population)
-#   if(length(names) == 0)
-#     { names <- paste("x", 1:nvars, sep = "") }
-#   return(names)
-# }
-
-gaMonitor <- function(object, digits = getOption("digits"), ...)
-{ 
-  fitness <- na.exclude(object@fitness)
-  cat(paste("Iter =", object@iter, 
-            " | Mean =", format(mean(fitness), digits = digits), 
-            " | Best =", format(max(fitness), digits = digits), "\n"))
-}
-
-gaSummary <- function(x, ...)
-{
-  # compute summary for each step
-  x <- na.exclude(as.vector(x))
-  q <- fivenum(x)
-  c(max = q[5], mean = mean(x), q3 = q[4], median = q[3], q1 = q[2], min = q[1])
-}
-
-
-
-
-
-
-
 
 
 
@@ -1464,7 +1087,7 @@ gaSummary <- function(x, ...)
     population <- matrix(as.double(NA), nrow = size, ncol = length( max ) )
     for(i in 1:size)
       for(j in 1:length(max))
-        #Se genera la poblacion inicial, el valor de no participación no cuenta ! 
+        #Se genera la poblacion inicial, el valor de no participacion no cuenta ! 
         population[i,j] <- sample(0:(max[j]), size = 1, replace = TRUE)
     
   } else { # reglas DNF 
@@ -1483,7 +1106,7 @@ gaSummary <- function(x, ...)
 #  
 # GENERA LA POBLACION INICIAL PARA MESDIF
 # En el argumento ... deben de ir primero el porcentaje de poblacion que se genera completamente aleatorio
-# y en segundo lugar el número máximo de variables que participan en la regla.
+# y en segundo lugar el numero maximo de variables que participan en la regla.
 .generarPoblacionMESDIF <- function(object, ...)
 {
   # Generate a random permutation of size popSize in the range [min, max]  
@@ -1505,7 +1128,7 @@ gaSummary <- function(x, ...)
       numVar <- sample(numVarMax, size = 1)
       for(j in seq_len(numVar)){
         var <- sample(length(max), size = 1)
-        while(var_init[var]){  #Hay que a�adir esto tambien a reglas DNF
+        while(var_init[var]){  #Hay que incluir esto tambien a reglas DNF
           var <- sample(length(max), size = 1)
         }
         population[i, var] <- sample(0:(max[var]), size = 1, replace = TRUE) # No-Participate value is not into account
@@ -1574,7 +1197,7 @@ gaSummary <- function(x, ...)
       numVar <- sample(numVarMax, size = 1)
       for(j in seq_len(numVar)){
         var <- sample(length(max), size = 1)
-        while(var_init[var]){  #Hay que a�adir esto tambien a reglas DNF
+        while(var_init[var]){  #Hay que incluir esto tambien a reglas DNF
           var <- sample(length(max), size = 1)
         }
         population[i, var] <- sample(0:(max[var] - 1), size = 1, replace = TRUE) # No-Participate value is not into account
@@ -1829,8 +1452,6 @@ if(DNFRules) {
   #Tambien hay que utilizar el valor 'max' para saber cu?ntos genes pertenecen a cada variable.
   switch(algorithm, 
   "SDIGA" = { resultado <- .gaSDIGA(type = if(!DNFRules) "real-valued" else "binary", 
-                              #Fit12 es para reglas DNF hasta que no se solucione la optimización de DNF para que sea igual que la CAN
-                  #fitness = .fit12, dataset, .separar(dataset = dataset), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, Pesos, DNFRules, Objetivos[[4]], FALSE,  cate, num,# Parametros de .fit12
                   fitness = .fit13, dataset, matrix(unlist(.separar(dataset)), nrow = length(dataset[[2]]) - 1, ncol = length(dataset[[7]])), targetClass, por_cubrir, n_vars, nLabels, ma, FALSE, Objetivos, Pesos, DNFRules, Objetivos[[4]], FALSE,  cate, num,
                   min = dataset[[4]][-length(dataset[[4]])],
                   max = ma,
@@ -1840,12 +1461,12 @@ if(DNFRules) {
                   crossover = .ga_dpCrossover,
                   mutation = .gaCAN_Mutation,  
                   popSize = tam_pob,
-                  pcrossover = 1 / tam_pob, #Con esto aseguramos que haya sólo un cruce, pero NO QUE SE CRUCEN LOS DOS MEJORES.
+                  pcrossover = 1 / tam_pob, 
                   pmutation = p_mut, # / length(ma), #Mutation probability applied at the gene
                   elitism = 0,
                   maxiter = N_evals,#floor( (N_evals - tam_pob) / (2 + tam_pob  * p_mut)),
                   run = N_evals, # No queremos que se detenga la evaluacion.
-                  #  maxfitness = 1, # Si encontramos un cromosoma que tiene valor máximo, detenemos la búsqueda.
+                  #  maxfitness = 1, # Si encontramos un cromosoma que tiene valor maximo, detenemos la busqueda.
                   names = dataset[[2]][1:n_vars],
                   keepBest = FALSE,
                   parallel = FALSE,
@@ -2073,10 +1694,7 @@ if(DNFRules) {
       
       #Compute fitness
       if(! marcar){
-        #fitness <- (0.7 * .LocalSupport(values) + 0.3 * .unusualness(values)) / 1.0
-        #fitness <- 0.7 * .LocalSupport(values) + 0.3 * .confianza(values)
-        # Para la realización del cálculo del fitnes se utilizan las medidas locales Crisp o difusas de la .confianza, da igual, pero son las LOCALES !!!!
-        #fitness <- 0.7 * .FLocalSupport(values) + 0.3 * .confianza(values)
+      
         fitness <- 0
         if(is.function(Objetivos[[1]]) && Pesos[1] > 0){ 
           fitness <- fitness + (Objetivos[[1]](values) * Pesos[1])
@@ -2108,7 +1726,6 @@ if(DNFRules) {
 
 
 .fitnessMESDIF <- function(regla, dataset, noClass, targetClass, por_cubrir, n_Vars, nLabels, max_regla, marcar = FALSE, Objetivos = c(.LocalSupport, .confianza, NULL, FALSE), Pesos = c(0.7,0.3,0), DNFRules = FALSE, difuso = FALSE ,test = FALSE, cate, num, NMEEF = FALSE){
-  require(parallel)
   
   if( ! any(is.na(regla))) { #Si la regla no tiene NA se puede evaluar
     
@@ -2174,11 +1791,9 @@ if(DNFRules) {
           valuesCrisp <- .getFuzzyValues(regla_num = regla_num, fuzzy = crispSets, crisp = TRUE)
         }
         
-        #gr_perts <- lapply(X = .separar(dataset), FUN = .comparaDNF3, regla = regla, regla_num, cat_particip, num_particip,  max_regla_cat, max_regla_num, nLabels, fuzzy_sets, crispSets, valuesFuzzy, valuesCrisp)
         gr_perts <- .comparaDNF4(ejemplo = noClass, regla = regla, regla_num, cat_particip, num_particip,  max_regla_cat, max_regla_num, nLabels, fuzzy_sets, crispSets, valuesFuzzy, valuesCrisp)
         
-        
-        #gr_perts <- unlist(gr_perts)
+
       }
       
       
@@ -2189,10 +1804,6 @@ if(DNFRules) {
       
       #Compute fitness
       if(! marcar){
-        #fitness <- (0.7 * .LocalSupport(values) + 0.3 * .unusualness(values)) / 1.0
-        #fitness <- 0.7 * .LocalSupport(values) + 0.3 * .confianza(values)
-        # Para la realización del cálculo del fitnes se utilizan las medidas locales Crisp o difusas de la .confianza, da igual, pero son las LOCALES !!!!
-        #fitness <- 0.7 * .FLocalSupport(values) + 0.3 * .confianza(values)
         fitness <- numeric(4)
         fitness[1] <- if(is.function( Objetivos[[1]])) Objetivos[[1]](values) else 0
         fitness[2] <- if(is.function( Objetivos[[2]])) Objetivos[[2]](values) else 0

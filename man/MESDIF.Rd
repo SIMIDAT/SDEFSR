@@ -35,13 +35,13 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
 
 \item{RulesRep}{Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.}
 
-\item{Obj1}{Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.}
+\item{Obj1}{Sets the Objective number 1. See \code{Objective values} for more information about the possible values.}
 
-\item{Obj2}{Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.}
+\item{Obj2}{Sets the Objective number 2. See \code{Objective values} for more information about the possible values.}
 
-\item{Obj3}{Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.}
+\item{Obj3}{Sets the Objective number 3. See \code{Objective values} for more information about the possible values.}
 
-\item{Obj4}{Sets the Objective nº 4. See \code{Objective values} for more information about the possible values.}
+\item{Obj4}{Sets the Objective number 4. See \code{Objective values} for more information about the possible values.}
 
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }
@@ -64,7 +64,7 @@ This function search for interesting subgroups by executing the MESDIF algorithm
 
 This function sets as target variable the last one that appear in the KEEL file. If you want
     to change the target variable, you can use \link{changeTargetVariable} for this objective.
-    The target variable MUST be categorical, if it´s not, throws an error.
+    The target variable MUST be categorical, if it is not, throws an error.
 
     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below
@@ -101,10 +101,10 @@ This function sets as target variable the last one that appear in the KEEL file.
     \item \code{eliteLength}  Sets number of individuals of the elite population. Must be less than \code{popLength}
     \item \code{crossProb}  Crossover probability of the genetic algorithm. Value in [0,1]
     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
-    \item \code{Obj1} Sets the objetive nº 1.
-    \item \code{Obj2} Sets the objetive nº 2.
-    \item \code{Obj3} Sets the objetive nº 3.
-    \item \code{Obj4} Sets the objetive nº 4.
+    \item \code{Obj1} Sets the objetive number 1.
+    \item \code{Obj2} Sets the objetive number 2.
+    \item \code{Obj3} Sets the objetive number 3.
+    \item \code{Obj4} Sets the objetive number 4.
     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.} Use \code{null} to search for every value of the target variable
   }
@@ -116,7 +116,7 @@ This function sets as target variable the last one that appear in the KEEL file.
  outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasures.txt"
  seed = 0
  nLabels = 3
- nEval = 10000
+ nEval = 500
  popLength = 100
  eliteLength = 3
  crossProb = 0.6
@@ -142,7 +142,7 @@ This function sets as target variable the last one that appear in the KEEL file.
         \item Significance -> \code{sign}
       }
 
-    If you don´t want to use a objetive value you must specify \code{null}
+    If you dont want to use a objetive value you must specify \code{null}
 }
 \examples{
 MESDIF( paramFile = NULL,
@@ -151,7 +151,7 @@ MESDIF( paramFile = NULL,
         output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
         seed = 0,
         nLabels = 3,
-        nEval = 10000,
+        nEval = 300,
         popLength = 100,
         eliteLength = 3,
         crossProb = 0.6,
@@ -166,7 +166,7 @@ MESDIF( paramFile = NULL,
 }
 \references{
 \itemize{
- \item Berlanga, F., Del Jesus, M., González, P., Herrera, F., & Mesonero, M. (2006). Multiobjective Evolutionary Induction of Subgroup Discovery Fuzzy Rules: A Case Study in Marketing.
+ \item Berlanga, F., Del Jesus, M., Gonzalez, P., Herrera, F., & Mesonero, M. (2006). Multiobjective Evolutionary Induction of Subgroup Discovery Fuzzy Rules: A Case Study in Marketing.
  \item Zitzler, E., Laumanns, M., & Thiele, L. (2001). SPEA2: Improving the Strength Pareto Evolutionary Algorithm.
 }
 }

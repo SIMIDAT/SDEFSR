@@ -289,19 +289,26 @@
 
 #' Modifiy the number of Fuzzy Labels of the dataset.
 #' 
-#' This function change the number of fuzzy labels defined in the current dataset.
+#' This function change the number of fuzzy labels defined in the current KEEL dataset.
 #' 
 #' @details The fuzzy definitions used in the \code{keel} class are triangular.
-#'     Because you can only specify the number of fuzzy definitions. All those definitions
-#'     has the same width.
+#'     Because you can only specify the number of fuzzy definitions, all those definitions
+#'     has the same width. With this function you can re-calculate this triangular fuzzy sets.
 #' 
-#' @param dataset The dataset to modify their fuzzy labels definitions
-#' @param nLabels The new number of fuzzy labels.
+#' @param dataset The dataset to modify their fuzzy labels definitions. Must be a \code{keel} class.
+#' @param nLabels The new number of fuzzy labels. An integer greater than zero.
 #' 
 #' @return  This function returns the same dataset with their fuzzy definitions modified.
+#' 
+#' @examples 
+#'     modifyFuzzyCrispIntervals(habermanTra, 2)
+#'     modifyFuzzyCrispIntervals(habermanTra, 15)
 #'
+
 modifyFuzzyCrispIntervals <- function(dataset, nLabels){
- 
+    if(nLabels < 1)
+      stop("The number of fuzzy sets ('nLabels') must be greater than zero.")
+  
     dataset[["fuzzySets"]] <- .create_fuzzyIntervals(min = dataset$min, max = dataset$max, num_sets = nLabels, types = dataset$atributeTypes)
     dataset[["crispSets"]] <- .createCrispIntervals(fuzzyIntervals = dataset[["fuzzySets"]])
   
@@ -327,13 +334,14 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' 
 #' @examples 
 #' changeTargetVariable(carTra, 3)
-#' \donotrun{
-#' #Throws an error because the variable selected is numeric
+#' \dontrun{
+#' Throws an error because the variable selected is numerical:
+#' 
 #' changeTargetVariable(habermanTra, 1)
 #' }
 #' 
 changeTargetVariable <- function(dataset, posVariable){
-  if(class(dataset) != "keel") stop("The provided dataset is not a keel class")
+  if(class(dataset) != "keel") stop("The provided 'dataset' is not a keel class")
   #if(posVariable >= dataset$nVars + 1) stop("posVariable is the same of the actual variable or is out of range")
   if(dataset[[3]][posVariable] != "c") stop("No categorical variable selected.")
   if(posVariable <= dataset$nVars){

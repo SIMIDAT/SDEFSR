@@ -18,20 +18,24 @@
 #' }
 #'    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
 #' 
-#' @author 羘gel M. Garc韆-Vico <amgv0009@@red.ujaen.es>
+#' @author Angel M. Garcia <amgv0009@@red.ujaen.es>
+#' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
-#'
+#' 
+#' @examples 
+#'     \dontrun{
+#'        
+#'     }
 read.keel <- function(file, nLabels = 3){
   
-  require(parallel)
   
   data <- .readFile(file)
   value <- which(data == "@data") - 1
-  if(length(value) == 0) stop("No @data field found, this is not a KEEL format dataset. Aborting load...")
+  if(length(value) == 0) stop("No '@data' field found, this is not a KEEL format dataset. Aborting load...")
   properties <- data[1:value]
   data <- data[(value + 2):length(data)]
   
-  # Preparaci贸n de las propiedades de los datos
+  # Preparacion de las propiedades de los datos
   
   properties <- lapply(X = properties, FUN = .preprocessHeader)
   
@@ -44,14 +48,14 @@ read.keel <- function(file, nLabels = 3){
   
   #Procesamos @relation
   relation_pos <- grep(pattern = "@relation", x = properties, fixed = TRUE)
-  if(length(relation_pos) == 0) stop("No @relation field provided, this is not a KEEL format dataset. Aborting load... ")
+  if(length(relation_pos) == 0) stop("No '@relation' field provided, this is not a KEEL format dataset. Aborting load... ")
   relacion <- properties[[relation_pos]][2]
   
   #Procesamos el resto de atributos
   atributes <- properties[- c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
   aux <- vector(mode = "list", length = 5)
   
-  if(length(atributes) == 0) stop("No @input or @output fields found, this is not a KEEL format dataset. Aborting load...")
+  if(length(atributes) == 0) stop("No '@input' or '@output' fields found, this is not a KEEL format dataset. Aborting load...")
   
   for(i in seq_len(length(atributes))){
     aux <- .processLine(line = atributes[[i]])
@@ -64,14 +68,14 @@ read.keel <- function(file, nLabels = 3){
   }
  
   
-  #Preparaci贸n de los datos
+  #Preparacion de los datos
   if(Sys.info()[1] != "Windows")
-    data <- mclapply(X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = detectCores() - 1)
-  else #In windows mclapply doesn?t work
-    data <- mclapply(X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1)
+    data <- parallel::mclapply(X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = detectCores() - 1)
+  else #In windows mclapply doesnt work
+    data <- parallel::mclapply(X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1)
   
   
-  #Preparaci贸n del resto de atributos del dataset
+  #Preparacion del resto de atributos del dataset
   
   covered <- logical(length = length(data))                     
   fuzzySets <- .create_fuzzyIntervals(min = atribs_min, max = atribs_max, num_sets = nLabels, types = atribs_types)
@@ -119,7 +123,7 @@ read.keel <- function(file, nLabels = 3){
 .read.parametersFile2 <- function(file){
   
   data <- .readFile(file)
-  data <- gsub(pattern = "\r", replacement = "", x = data, fixed = TRUE) #Eliminar caracteres extra帽os.
+  data <- gsub(pattern = "\r", replacement = "", x = data, fixed = TRUE) #Remove weird characters
   
   data <- strsplit(x = data, split = " = " )
   
@@ -157,20 +161,20 @@ read.keel <- function(file, nLabels = 3){
   miCf <- grep(pattern = "minCnf", x = data, fixed = TRUE)
   #--------------------------------------------------------
   
-  if(length(alg) == 0) stop("Param file error: Algorithm not especified. ")
-  if(length(iData) == 0) stop("Param file error: inputData not especified. ")
-  if(length(oData) == 0) stop("Param file error: outputData not especified. ")
-  if(length(seed) == 0) stop("Param file error: Seed not especified. ")
-  if(length(labels) == 0) stop("Param file error: nLabels not especified. ")
-  if(length(evals) == 0) stop("Param file error: nEval not especified. ")
-  if(length(len) == 0) stop("Param file error: popLength not especified. ")
-  if(length(cross) == 0) stop("Param file error: crossProb not especified. ")
-  if(length(mut) == 0) stop("Param file error: mutProb not especified. ")
-  if(length(rep) == 0) stop("Param file error: RulesRep not especified. ")
-  if(length(tC) == 0) stop("Param file error: targetClass not especified. ")
+  if(length(alg) == 0) stop("Param file error: 'Algorithm' not especified. ")
+  if(length(iData) == 0) stop("Param file error: 'inputData' not especified. ")
+  if(length(oData) == 0) stop("Param file error: 'outputData' not especified. ")
+  if(length(seed) == 0) stop("Param file error: 'Seed' not especified. ")
+  if(length(labels) == 0) stop("Param file error: 'nLabels' not especified. ")
+  if(length(evals) == 0) stop("Param file error: 'nEval' not especified. ")
+  if(length(len) == 0) stop("Param file error: 'popLength' not especified. ")
+  if(length(cross) == 0) stop("Param file error: 'crossProb' not especified. ")
+  if(length(mut) == 0) stop("Param file error: 'mutProb' not especified. ")
+  if(length(rep) == 0) stop("Param file error: 'RulesRep' not especified. ")
+  if(length(tC) == 0) stop("Param file error: 'targetClass' not especified. ")
   
   algoritmo <- data[[alg]][2]
-  if(! any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD"))) stop("Param file error: Algorithm must be SDIGA, MESDIF or NMEEFSD (in upper case)")
+  if(! any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD"))) stop("Param file error: 'Algorithm' must be \"SDIGA\", \"MESDIF\" or \"NMEEFSD\" ")
   #General parameters
   #datos de entrada
   input_data <- character(2) # Dos inputs, training y tes
@@ -195,14 +199,14 @@ read.keel <- function(file, nLabels = 3){
   #SDIGA own parameters
   if(algoritmo == "SDIGA"){
     
-    if(length(miConf) == 0) stop("Param file error: minConf not specified.")
-    if(length(ob1) == 0) stop("Param file error: Obj1 not specified.")
-    if(length(ob2) == 0) stop("Param file error: Obj2 not specified.")
-    if(length(ob3) == 0) stop("Param file error: Obj3 not specified (If you don麓t want specify, you must write null).")
-    if(length(w1) == 0) stop("Param file error: w1 not specified.")
-    if(length(w2) == 0) stop("Param file error: w2 not specified.")
-    if(length(w3) == 0) stop("Param file error: w3 not specified.")
-    if(length(search) == 0) stop("Param file error: localSearch not specified.")
+    if(length(miConf) == 0) stop("Param file error: 'minConf' not specified.")
+    if(length(ob1) == 0) stop("Param file error: 'Obj1' not specified.")
+    if(length(ob2) == 0) stop("Param file error: 'Obj2' not specified.")
+    if(length(ob3) == 0) stop("Param file error: 'Obj3' not specified (If you dont want specify, you must write null).")
+    if(length(w1) == 0) stop("Param file error: 'w1' not specified.")
+    if(length(w2) == 0) stop("Param file error: 'w2' not specified.")
+    if(length(w3) == 0) stop("Param file error: 'w3' not specified.")
+    if(length(search) == 0) stop("Param file error: 'localSearch' not specified.")
     
     minimun_confidence <- as.double( data[[miConf]][2] )
     Obj1 <- data[[ob1]][2]
@@ -220,12 +224,12 @@ read.keel <- function(file, nLabels = 3){
   #MESDIF own parameters
   if(algoritmo == "MESDIF"){
     
-    if(length(elit) == 0) stop("Param file error: elitePop not specified.")
-    if(length(ech) == 0) stop("Param file error: echo not specified.")
-    if(length(ob1) == 0) stop("Param file error: Obj1 not specified.")
-    if(length(ob2) == 0) stop("Param file error: Obj2 not specified.")
-    if(length(ob3) == 0) stop("Param file error: Obj3 not specified (If you don麓t want specify, you must write null).")
-    if(length(ob4) == 0) stop("Param file error: Obj3 not specified (If you don麓t want specify, you must write null).")
+    if(length(elit) == 0) stop("Param file error: 'elitePop' not specified.")
+    if(length(ech) == 0) stop("Param file error: 'echo' not specified.")
+    if(length(ob1) == 0) stop("Param file error: 'Obj1' not specified.")
+    if(length(ob2) == 0) stop("Param file error: 'Obj2' not specified.")
+    if(length(ob3) == 0) stop("Param file error: 'Obj3' not specified (If you dont want specify, you must write null).")
+    if(length(ob4) == 0) stop("Param file error: 'Obj4' not specified (If you dont want specify, you must write null).")
     
     
     elite <- as.numeric(data[[elit]][2])
@@ -242,11 +246,11 @@ read.keel <- function(file, nLabels = 3){
   
   #NMEEF-SD own parameters
  if(algoritmo == "NMEEFSD"){
-   #if(length(div) == 0) stop("Param file error: diversity not specified.")
-   if(length(rInit) == 0) stop("Param file error: ReInitCob not specified.")
-   if(length(pCob) == 0) stop("Param file error: porcCob not specified.")
-   if(length(dom) == 0) stop("Param file error: StrictDominance not specified.")
-   if(length(miCf) == 0) stop("Param file error: minCnf not specified.")
+   #if(length(div) == 0) stop("Param file error: 'diversity' not specified.")
+   if(length(rInit) == 0) stop("Param file error: 'ReInitCob' not specified.")
+   if(length(pCob) == 0) stop("Param file error: 'porcCob' not specified.")
+   if(length(dom) == 0) stop("Param file error: 'StrictDominance' not specified.")
+   if(length(miCf) == 0) stop("Param file error: 'minCnf' not specified.")
    
    diversity <- data[[div]][2]
    reInit <- data[[rInit]][2]
@@ -548,7 +552,7 @@ read.keel <- function(file, nLabels = 3){
   returnList <- vector(mode = "list", length = 5)
   returnList[[1]] <- line[2] # Attribute name
   
- if(line[3] != "real" & line[3] != "integer"){ # Dato categ贸rico
+ if(line[3] != "real" & line[3] != "integer"){ # Dato categorico
     returnList[[2]] <- 'c' # Attribute type
     returnList[[3]] <- 0   #Minimum
     returnList[[4]] <- length(line) - 2 #Maximun number of categorical values
@@ -570,7 +574,7 @@ read.keel <- function(file, nLabels = 3){
 #
 #
 # This function reads an entire file in a block and the it is splitted by the \n character.
-# It磗 a 50 % faster than using scan()
+# It is a 50 % faster than using scan()
 #
 #
 .readFile <- function(file){

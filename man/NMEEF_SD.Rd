@@ -34,19 +34,21 @@ NMEEF_SD(paramFile = NULL, training = NULL, test = NULL,
 
 \item{RulesRep}{Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.}
 
-\item{Obj1}{Sets the Objective nº 1. See \code{Objective values} for more information about the possible values.}
+\item{Obj1}{Sets the Objective number 1. See \code{Objective values} for more information about the possible values.}
 
-\item{Obj2}{Sets the Objective nº 2. See \code{Objective values} for more information about the possible values.}
+\item{Obj2}{Sets the Objective number 2. See \code{Objective values} for more information about the possible values.}
 
-\item{Obj3}{Sets the Objective nº 3. See \code{Objective values} for more information about the possible values.}
+\item{Obj3}{Sets the Objective number 3. See \code{Objective values} for more information about the possible values.}
 
 \item{minCnf}{Sets the minimum confidence that must have a rule in the Pareto front for being returned. A number in [0,1].}
 
+\item{reInitCoverage}{Sets if the algorithm must perform the reinitialitation based on coverage when it is needed. A string with "yes" or "no".}
+
+\item{porcCob}{Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]}
+
+\item{StrictDominance}{Sets if the comparison between individuals must be done by strict dominance or not. A string with "yes" or "no".}
+
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
-
-\item{reInitCoverage.}{Sets if the algorithm must perform the reinitialitation based on coverage when it is needed. A string with "yes" or "no".}
-
-\item{porcCob.}{Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]}
 }
 \value{
 The algorithm shows in the console the following results:
@@ -54,10 +56,10 @@ The algorithm shows in the console the following results:
  \item The parameters used in the algorithm
  \item The rules generated.
  \item The quality measures for test of every rule and the global results.
-}
 
     Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or
     in the \code{outputData} parameter in the parameters file.
+}
 }
 \description{
 Perfoms a subgroup discovery task executing the algorithm NMEEF-SD
@@ -65,7 +67,7 @@ Perfoms a subgroup discovery task executing the algorithm NMEEF-SD
 \details{
 This function sets as target variable the last one that appear in the KEEL file. If you want
     to change the target variable, you can use \link{changeTargetVariable} for this objective.
-    The target variable MUST be categorical, if it´s not, throws an error.
+    The target variable MUST be categorical, if it is not, throws an error.
 
     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below
@@ -83,7 +85,7 @@ This function sets as target variable the last one that appear in the KEEL file.
     where the individuals dominated by one individual are, the thirt front dominated by two and so on.
 
     To promove diversity NMEEF-SD has a mechanism of reinitialization of the population based on coverage
-    if the Pareto doesn´t evolve during a 5%% of the total of evaluations.
+    if the Pareto doesnt evolve during a 5%% of the total of evaluations.
 
     At the final of the evolutionary process, the algorithm returns only the individuals in the Pareto front
     which has a confidence greater than a minimum confidence level.
@@ -105,9 +107,9 @@ This function sets as target variable the last one that appear in the KEEL file.
     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
     \item \code{porcCob}  Sets the maximum percentage of variables participe in a rule when doing the reinitialization based on coverage. Value in [0,1]
-    \item \code{Obj1} Sets the objective nº 1.
-    \item \code{Obj2} Sets the objective nº 2.
-    \item \code{Obj3} Sets the objective nº 3.
+    \item \code{Obj1} Sets the objective number 1.
+    \item \code{Obj2} Sets the objective number 2.
+    \item \code{Obj3} Sets the objective number 3.
     \item \code{minCnf} Minimum confidence for returning a rule of the Pareto. Value in [0,1]
     \item \code{StrictDominance} Sets if the comparison of individuals when calculating dominance must be using strict dominance or not. Values: "yes" or "no"
     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.}. Use \code{null} to search for every value of the target variable
@@ -121,7 +123,7 @@ outputData = "irisD-10-1-INFO.txt" "irisD-10-1-Rules.txt" "irisD-10-1-TestMeasur
 seed = 1
 RulesRep = can
 nLabels = 3
-nEval = 10000
+nEval = 500
 popLength = 51
 crossProb = 0.6
 mutProb = 0.1
@@ -149,7 +151,7 @@ targetClass = Iris-setosa
         \item Significance -> \code{sign}
       }
 
-    If you don´t want to use a objetive value you must specify \code{null}
+    If you dont want to use a objetive value you must specify \code{null}
 }
 \examples{
 NMEEF_SD(paramFile = NULL,
@@ -158,7 +160,7 @@ NMEEF_SD(paramFile = NULL,
                output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
                seed = 0,
                nLabels = 3,
-               nEval = 10000,
+               nEval = 300,
                popLength = 100,
                mutProb = 0.1,
                crossProb = 0.6,
@@ -174,6 +176,6 @@ NMEEF_SD(paramFile = NULL,
                )
 }
 \references{
-Carmona, C., González, P., del Jesús, M., & Herrera, F. (2010). NMEEF-SD: Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery.
+Carmona, C., Gonzalez, P., del Jesus, M., & Herrera, F. (2010). NMEEF-SD: Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery.
 }
 
