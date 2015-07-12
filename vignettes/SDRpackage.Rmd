@@ -13,7 +13,7 @@ vignette: >
 
 
 \abstract{
-Subgroup Discovery is a data mining task between classification and description, this task is nowadays an relevant task for researchers due to it success in many fields, especially the medical field. The SDR package provide the posibility of using some of the algorithms that exists in the specialized bibliography by means of using datasets provided in the format specified by data mining tool KEEL without any other dependencies in the R console. Also, the package provide a graphical interface to use the algorithms in a more visual way and to do some basics exploratory analysis with datasets in KEEL format.
+Subgroup Discovery is a data mining task between classification and description, this task is nowadays a relevant task for researchers due to it success in many fields, especially the medical field. The SDR package provide the posibility of use some of the algorithms that exists in the specialized bibliography by means of using datasets provided in the format specified by data mining tool KEEL without dependencies in the R console. Also, the package provide a graphical interface to use the algorithms in a more visual way and to do basic exploratory analysis with datasets in KEEL format.
 }
 
 
@@ -54,14 +54,40 @@ Subgroup discovery is halfway between description and classification because in 
 A key point to understand what subgroup discovery do is his difference with predictive data mining. Predictive data mining tries to split the entire search space in a normally complex way to find a value for a variable of interest in new incoming instances while subgroup discovery tries to find interesting relations between those instances to find what characteristics of those instances are interesting regarding the variable of interest.  
 An example could be a group of patients and our variable of interest is if those patients has or has not got heart disease. Predictive data mining objective is to predict if new patients will have a heart disease by their characteristcs while subgroup discovery tries to find what subgroup of patients are more likely to have a heart disease and with those characteristics, make a treatment against those characteristics.
 
-## Main elements of subgroup discoery algorithms
+## Main elements of subgroup discovery algorithms
 
-All the algorithms that are included into this data mining task has the next characteristics:
+All the algorithms that are included into this data mining task must have the next characteristics:
 \begin{itemize}
   
-  \item Type of target variable: 
+  \item Type of target variable: The target variable could be binary (two posible values), categorical ( $n$ posible values) and numerical (a real value within a range).
+  \item Description language: Rules must be as simple as possible. Due to this, rules are composed normally by conjunctions of attribute-value pairsor in disyuntive normal form. Also, to improve the interpretability of the results, fuzzy logic could be used.
+  \item Quality measures: Are very importante because they define when a subgroup is "interesting". They will be briefly described below.
+  \item Search strategy: The search space grows exponentially by the number of variables. Using a search strategy that could find a good solution or the optimal one without search into the whole search space it is important.
   
 \end{itemize}
+
+## Quality measures for subgroup discovery
+
+A lot of quality measures was defined for this task and there is no consensus for what quality measure it´s the best for the task. The most important quality measures for subgroup discovery are described below\cite{kais}:
+
+\begin{itemize}
+  
+  \item $N_r$: The number of rules generated.
+  \item $N_v$: The average number of variables that the rules generated have.
+  \item \textbf{Support:} It measures the frequency of correctly classified examples covered by the rule: \begin{equation} Sup(x)= \frac{n(Cond \wedge  T_v)}{n_s} \end{equation} Where $n(Cond \wedge  T_v)$ means the number of correctly covered examples.  
+  \item \textbf{Coverage:} It measures the percentage of examples covered by the rule related to the total number of examples: \begin{equation} Cov(x)= \frac{n(Cond)}{n_s} \end{equation} where $n(Cond)$ means the number of covered examples by the rule and $n_s$ the number of examples in the dataset.
+  \item \textbf{Confidence:} It measure the percentage of examples correctly covered of the total of covered examples: \begin{equation} Conf(x) = \frac{n(Cond  \wedge Target_{value})}{n(Cond)} \end{equation}
+  \item \textbf{Interest:} It measures the interest of the rule determined by the antecedent and consequent: \begin{equation} Int(x) = \frac{\sum_{i = 1}^{n_v}Gain(A_i)}{n_v \cdot log_2(|dom(G_k)|)} \end{equation} where $Gain$ is the information gain, $A_i$ is the number of values of the variable and $|dom(G_k)|$ is the cardinality of the target variable.
+  \item \textbf{Significance:} It reflects the novelty in the distribution of the examples covered by the rule regarding the whole dataset: \begin{equation} Sign(x) = 2 \cdot \sum_{k=1}^{n_c}n(Cond \wedge T_{vk}) \cdot log(\frac{n(Cond \wedge T_{vk})}{n(Cond \wedge T_v) \cdot p(Cond)}) \end{equation} where $p(Cond) = \frac{n(Cond)}{n_s}$
+  \item \textbf{Unusualness:} It is defined as the weigthed relative accuracy of a rule \begin{equation} WRAcc(x) = \frac{n(Cond)}{n_s}(\frac{n(Cond \wedge T_v)}{n(Cond)} - \frac{n(T_v)}{n_s}) \end{equation} where $n(T_v)$ is the number of examples that belong to the target variable.
+  
+\end{itemize}
+
+# Algorithms of the package
+
+Now, we describe the algorithms that are available in our package. There are three algorithms in our package: SDIGA \cite{sdiga}, MESDIF \cite{mesdif} and NMEEF-SD \cite{nmeef}. In the next chapter we describe how to use the algorithms.
+
+
 
 ## Vignette Info
 
