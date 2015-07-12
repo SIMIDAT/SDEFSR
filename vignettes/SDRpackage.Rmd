@@ -1,0 +1,114 @@
+---
+title: "Using Subgroup Discovery algorithms in R: The **SDR** package"
+author: "Angel M. Garcia <amgv0009@red.ujaen.es>"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document:
+    number_sections: yes
+vignette: >
+  %\VignetteEncoding{UTF-8}
+  %\VignetteIndexEntry{Using Subgroup Discovery algorithms in R: The **SDR** package}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+
+\abstract{
+Subgroup Discovery is a data mining task between classification and description, this task is nowadays an relevant task for researchers due to it success in many fields, especially the medical field. The SDR package provide the posibility of using some of the algorithms that exists in the specialized bibliography by means of using datasets provided in the format specified by data mining tool KEEL without any other dependencies in the R console. Also, the package provide a graphical interface to use the algorithms in a more visual way and to do some basics exploratory analysis with datasets in KEEL format.
+}
+
+
+# Introduction
+Nowadays, a huge amount of information is generated everyday over the Internet. Such information contains implicit knowledge that is very important to many organizations because they give the possibility, for example, of improve their products or services.  
+In order to achieve this purpose, traditional techniques of knowledge extraction like _OLAP(On-Line Analitical Processing)_ are not capable to extract knowledge as well as data mining do. Due to the success of data mining at extracting knowledge, a lot of techniques and methods have been designed. Such methods can be classified into two vast fields according to their final objective:  
+\begin{itemize}
+
+\item Predictive data mining: which objective is to find a value of a predefined variable of interest in new instances that arrive at the system.  
+\item Descriptive data mining: which objective is to find relationships between instances that are at the moment in the system. 
+
+\end{itemize}
+
+This classification doesn´t cover all the algorithms that exists, and subgroup discovery is one of those fields not covered by this classification because it has caracteristics of both.
+Now, R has in CRAN repository a package called *rsubgroup* \cite{rsubgroup}, this package is only an interface to use the subgroup discovery algorithms provided in VIKAMINE \cite{vikamine} data mining tool, and has a strong dependency with this tool and use the package *rJava* \cite{rjava} that also provided an interface to use java files in R. So, this packages has a lot of external dependencies.
+
+Our **SDR** package implements by now other subgroup discovery algorithms that is not available on VIKAMINE and those algorithms are implemented directly in R, so no dependencies with other tools/packages are necessary to perform a subgroup discovery task and the posibilities of growing the package by means of the adition of new algorithms is easier for everyone (we have a public GitHub repository where everyone can contribute). 
+Also our package provide a web interface available at http://sdrinterface.shinyapps.io and locally by calling the `SDR_GUI()` function. Such interface could, in one hand make a subgroup discovery task via web without having R installed in the system or in the other hand, make an easier task by using the visual controls of the web interface in a local way.  
+Further, our package provide a function to read KEEL \cite{keel} datasets files, a dataset format that is not supported now in R.
+
+# Subgroup Discovery 
+
+Subgroup discovery could be defined as \cite{definicionSD}:
+
+> In subgroup discovery, we assume we are given a so-called population of individuals
+(objects, customer, . . .) and a property of those individuals we are interested in. The
+task of subgroup discovery is then to discover the subgroups of the population that are
+statistically "most interesting", i.e. are as large as possible and have the most unusual
+statistical (distributional) characteristics with respect to the property of interest.  
+
+Subgroup discovery tries to find relations between different properties of a set with respect of a target variable, but this relations must be statistically interesting, so it is not necessary to find complete relations but partial relations.  
+The representation of thes relations is in form of rules, one per relation. This rule can be defined as:  
+
+$$ R: Cond \rightarrow Target_{value} $$
+
+Where $Target_{value}$ is the value for the variable of interes (target variable) for the subgroup discovery task and $Cond$ is a normally a conjunction of attribute-value pairs which describe the characteristics of the subgroup induced.  
+Subgroup discovery is halfway between description and classification because in one hand, subgroup discovery has a target variable but his objective is not predict but describe. Likewise the use of a target variable is not possible in description, because description find relations among all variables.  
+A key point to understand what subgroup discovery do is his difference with predictive data mining. Predictive data mining tries to split the entire search space in a normally complex way to find a value for a variable of interest in new incoming instances while subgroup discovery tries to find interesting relations between those instances to find what characteristics of those instances are interesting regarding the variable of interest.  
+An example could be a group of patients and our variable of interest is if those patients has or has not got heart disease. Predictive data mining objective is to predict if new patients will have a heart disease by their characteristcs while subgroup discovery tries to find what subgroup of patients are more likely to have a heart disease and with those characteristics, make a treatment against those characteristics.
+
+## Main elements of subgroup discoery algorithms
+
+All the algorithms that are included into this data mining task has the next characteristics:
+\begin{itemize}
+  
+  \item Type of target variable: 
+  
+\end{itemize}
+
+## Vignette Info
+
+Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
+
+
+
+
+
+\bibitem[Wrobel S. (2001)]{definicionSD}
+\newblock Inductive logic programming for knowledge discovery in databases. 
+\newblock Springer, chap Relational Data Mining, pp 74-101.

@@ -161,8 +161,30 @@ MESDIF( paramFile = NULL,
         Obj2 = "CCNF",
         Obj3 = "null",
         Obj4 = "null",
+        targetClass = "positive"
+        )
+
+\dontrun{
+Execution for all classes, see 'targetClass' parameter
+MESDIF( paramFile = NULL,
+        training = habermanTra,
+        test = habermanTst,
+        output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+        seed = 0,
+        nLabels = 3,
+        nEval = 300,
+        popLength = 100,
+        eliteLength = 3,
+        crossProb = 0.6,
+        mutProb = 0.01,
+        RulesRep = "can",
+        Obj1 = "CSUP",
+        Obj2 = "CCNF",
+        Obj3 = "null",
+        Obj4 = "null",
         targetClass = "null"
         )
+ }
 }
 \references{
 \itemize{

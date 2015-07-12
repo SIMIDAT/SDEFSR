@@ -29,7 +29,10 @@ A KEEL data file must have the following structure:
 }
 \examples{
 \dontrun{
+       Reads a KEEL dataset from a file.
+       read.keel(file = "C:\\KEELFile.txt")
 
+       read.keel(file = "C:\\KEELFile.txt", nLabels = 7)
     }
 }
 \author{

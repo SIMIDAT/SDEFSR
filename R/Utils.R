@@ -440,7 +440,7 @@ changeTargetVariable <- function(dataset, posVariable){
 # returns de original dataes
 #
 .unir <- function(dataNoClass , classes){
-  lapply(X = 1:length(dataNoClass), FUN = function(num, x,y) append(x[[num]],y[[num]]), dataNoClass, clases)
+  lapply(X = 1:length(dataNoClass), FUN = function(num, x,y) append(x[[num]],y[[num]]), dataNoClass, classes)
   
 }
 

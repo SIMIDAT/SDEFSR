@@ -172,8 +172,30 @@ NMEEF_SD(paramFile = NULL,
                reInitCoverage = "yes",
                porcCob = 0.5,
                StrictDominance = "yes",
+               targetClass = "positive"
+               )
+\dontrun{
+      NMEEF_SD(paramFile = NULL,
+               training = habermanTra,
+               test = habermanTst,
+               output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+               seed = 0,
+               nLabels = 3,
+               nEval = 300,
+               popLength = 100,
+               mutProb = 0.1,
+               crossProb = 0.6,
+               RulesRep = "can",
+               Obj1 = "CSUP",
+               Obj2 = "CCNF",
+               Obj3 = "null",
+               minCnf = 0.6,
+               reInitCoverage = "yes",
+               porcCob = 0.5,
+               StrictDominance = "yes",
                targetClass = "null"
                )
+     }
 }
 \references{
 Carmona, C., Gonzalez, P., del Jesus, M., & Herrera, F. (2010). NMEEF-SD: Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery.

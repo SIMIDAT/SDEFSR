@@ -167,7 +167,28 @@ SDIGA(parameters_file = NULL,
       w3 = 0,
       minConf = 0.6,
       lSearch = "yes",
+      targetClass = "positive")
+\dontrun{
+SDIGA(parameters_file = NULL,
+      training = habermanTra,
+      test = habermanTst,
+      output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+      seed = 0,
+      nLabels = 3,
+      nEval = 300,
+      popLength = 100,
+      mutProb = 0.01,
+      RulesRep = "can",
+      Obj1 = "CSUP",
+      w1 = 0.7,
+      Obj2 = "CCNF",
+      w2 = 0.3,
+      Obj3 = "null",
+      w3 = 0,
+      minConf = 0.6,
+      lSearch = "yes",
       targetClass = "null")
+      }
 }
 \references{
 M. J. del Jesus, P. Gonzalez, F. Herrera, and M. Mesonero, "Evolutionary

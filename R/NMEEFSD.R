@@ -484,7 +484,28 @@
 #' }
 #' 
 #' @references Carmona, C., Gonzalez, P., del Jesus, M., & Herrera, F. (2010). NMEEF-SD: Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery. 
-#' @examples    
+#' @examples  
+#'    NMEEF_SD(paramFile = NULL, 
+#'                training = habermanTra, 
+#'                test = habermanTst, 
+#'                output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+#'                seed = 0, 
+#'                nLabels = 3,
+#'                nEval = 300, 
+#'                popLength = 100, 
+#'                mutProb = 0.1,
+#'                crossProb = 0.6,
+#'                RulesRep = "can",
+#'                Obj1 = "CSUP",
+#'                Obj2 = "CCNF",
+#'                Obj3 = "null",
+#'                minCnf = 0.6,
+#'                reInitCoverage = "yes",
+#'                porcCob = 0.5,
+#'                StrictDominance = "yes",
+#'                targetClass = "positive"
+#'                )  
+#' \dontrun{
 #'       NMEEF_SD(paramFile = NULL, 
 #'                training = habermanTra, 
 #'                test = habermanTst, 
@@ -505,6 +526,7 @@
 #'                StrictDominance = "yes",
 #'                targetClass = "null"
 #'                )
+#'      }
 #'               
 NMEEF_SD <- function(paramFile = NULL, 
                      training = NULL, 
@@ -604,7 +626,7 @@ NMEEF_SD <- function(paramFile = NULL,
   #----- OBTENCION DE LAS REGLAS -------------------
   if(parametros$targetClass != "null"){ # Ejecuci-n para una clase
     cat("\n", "\n", "Searching rules for only one value of the target class...", "\n", "\n", file ="", fill = TRUE) 
-    reglas <- .findRule(parametros$targetClass, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes")
+    reglas <- .findRule(parametros$targetClass, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes", minCnf)
     
     if(! is.null(unlist(reglas)) ){
       if(! DNF) 
@@ -622,9 +644,9 @@ NMEEF_SD <- function(paramFile = NULL,
     cat("\n", "\n", "Searching rules for all values of the target class...", "\n", "\n", file ="", fill = TRUE)  
     
     if(Sys.info()[1] == "Windows")
-      reglas <- lapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"  )
+      reglas <- lapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes", minCnf  )
     else
-      reglas <- mclapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"   , mc.cores = detectCores() )
+      reglas <- parallel::mclapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"   , mc.cores = parallel::detectCores() - 1, minCnf)
     
     if(! is.null(unlist(reglas)) ){
       if(! DNF) 
@@ -667,7 +689,7 @@ NMEEF_SD <- function(paramFile = NULL,
   
   n_reglas <- NROW(reglas)
   for(i in seq_len(n_reglas)){
-    val <- .probeRule2(rule = reglas[i, - NCOL(reglas)], testSet = test, targetClass = reglas[i, NCOL(reglas)], numRule = i, parametros = parametros, Objetivos = Objetivos, Pesos = Pesos, cate = cate, num = num, DNF = DNF)
+    val <- .probeRule2(rule = reglas[i, - NCOL(reglas)], testSet = test, targetClass = reglas[i, NCOL(reglas)], numRule = i, parametros = parametros, Objetivos = Objetivos, Pesos = c(0.7,0.3, 0), cate = cate, num = num, DNF = DNF)
     test[["covered"]] <- val[["covered"]]
     sumNvars <- sumNvars + val[["nVars"]]
     sumCov <- sumCov + val[["coverage"]]

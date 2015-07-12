@@ -24,10 +24,14 @@
 #' 
 #' @examples 
 #'     \dontrun{
+#'        Reads a KEEL dataset from a file.
+#'        read.keel(file = "C:\KEELFile.txt")
 #'        
+#'        read.keel(file = "C:\KEELFile.txt", nLabels = 7)
 #'     }
 read.keel <- function(file, nLabels = 3){
-  
+  if(nLabels < 1)
+    stop("Number of fuzzy sets ('nLabels') must be greater than zero.")
   
   data <- .readFile(file)
   value <- which(data == "@data") - 1
@@ -70,7 +74,7 @@ read.keel <- function(file, nLabels = 3){
   
   #Preparacion de los datos
   if(Sys.info()[1] != "Windows")
-    data <- parallel::mclapply(X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = detectCores() - 1)
+    data <- parallel::mclapply(X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1)
   else #In windows mclapply doesnt work
     data <- parallel::mclapply(X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1)
   

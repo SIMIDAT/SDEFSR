@@ -85,7 +85,7 @@
   
   
   
-  object <- new("ga", 
+  object <- new(".ga", 
                 call = call, 
                 type = type,
                 min = min, 
@@ -322,7 +322,7 @@ return(object)
   Dominados <- numeric(popSize + elitism)
   
   
-  object <- new("ga", 
+  object <- new(".ga", 
                 call = call, 
                 type = type,
                 min = min, 
@@ -627,7 +627,8 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
                      seed = NULL,
                      porcCob = 0.5,
                      StrictDominance = TRUE,
-                     reInitPop = TRUE) 
+                     reInitPop = TRUE, 
+                     minCnf = 0.6) 
 {
   
   call <- match.call()
@@ -682,7 +683,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 
   
   
-  object <- new("ga", 
+  object <- new(".ga", 
                 call = call, 
                 type = type,
                 min = min, 
@@ -1010,7 +1011,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
       Fitness[i,4] <- fit[[1]][1]
   }
   
-  frentes[[1]] <- frentes[[1]][which(Fitness[seq_len(NROW(frentes[[1]])),4] > 0.6), , drop = F]
+  frentes[[1]] <- frentes[[1]][which(Fitness[seq_len(NROW(frentes[[1]])),4] > minCnf), , drop = F]
   frentes[[1]] #Return
   
 }
@@ -1025,37 +1026,42 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 # We need to change this behaviour, we dont want to depend on this functions.
 # Because we dont use it.
 
-methods::setClassUnion("numericOrNA", members = c("numeric", "logical", "matrix"))
-methods::setClassUnion("matrixOrList", members = c("matrix", "list"))
 
 
-methods::setClass(Class = "ga", 
+methods::setClassUnion(".numericOrNA", members = c("numeric", "logical", "matrix"))
+
+methods::setClassUnion(".matrixOrList", members = c("matrix", "list"))
+
+#Modification of the class 'ga' provided by the package "GA" created by Luca Scrucca.
+
+methods::setClass(Class = ".ga", 
          representation(call = "language",
                         type = "character",
-                        min = "numericOrNA", 
-                        max = "numericOrNA", 
-                        nBits = "numericOrNA", 
+                        min = ".numericOrNA", 
+                        max = ".numericOrNA", 
+                        nBits = ".numericOrNA", 
                         names = "character",
                         popSize = "numeric",
                         iter = "numeric", 
                         run = "numeric", 
                         maxiter = "numeric",
                         suggestions = "matrix",
-                        population = "matrixOrList",
+                        population = ".matrixOrList",
                         popNew = "matrix",
                         elitism = "numeric", 
                         pcrossover = "numeric", 
-                        pmutation = "numericOrNA",
-                        fitness = "numericOrNA",
+                        pmutation = ".numericOrNA",
+                        fitness = ".numericOrNA",
                         summary = "matrix",
                         bestSol = "list",
                         fitnessValue = "numeric",
                         solution = "matrix",
-                        maxValuesRule = "numericOrNA",
+                        maxValuesRule = ".numericOrNA",
                         DNFRules = "logical"
          ),
          package = "SDR" 
 ) 
+
 
 
 
@@ -1440,7 +1446,7 @@ methods::setClass(Class = "ga",
 #
 #
 
-.ejecutarga <- function(algorithm, dataset, targetClass, n_vars, por_cubrir, nLabels, N_evals, tam_pob, p_cross = 0.5, p_mut, seed, Objetivos = c(.LocalSupport, .confianza, NULL, FALSE), Pesos = c(0.7,0.3,0), DNFRules = FALSE, cate, num, elitism = 5, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE){
+.ejecutarga <- function(algorithm, dataset, targetClass, n_vars, por_cubrir, nLabels, N_evals, tam_pob, p_cross = 0.5, p_mut, seed, Objetivos = c(.LocalSupport, .confianza, NULL, FALSE), Pesos = c(0.7,0.3,0), DNFRules = FALSE, cate, num, elitism = 5, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE, minCnf = 0.6){
   
   ma <- dataset$conjuntos
   
@@ -1522,7 +1528,8 @@ if(DNFRules) {
                                       seed = seed, 
                                       porcCob = porcCob,
                                       StrictDominance = strictDominance,
-                                      reInitPop = reInit) 
+                                      reInitPop = reInit,
+                                      minCnf = minCnf) 
   return(resultado) #Devolver las que superen minConf
   }
   )

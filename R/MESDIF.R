@@ -277,6 +277,27 @@
 #' }
 #' 
 #' @examples 
+#'  MESDIF( paramFile = NULL,
+#'         training = habermanTra, 
+#'         test = habermanTst, 
+#'         output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+#'         seed = 0, 
+#'         nLabels = 3,
+#'         nEval = 300, 
+#'         popLength = 100, 
+#'         eliteLength = 3,
+#'         crossProb = 0.6,
+#'         mutProb = 0.01, 
+#'         RulesRep = "can",
+#'         Obj1 = "CSUP", 
+#'         Obj2 = "CCNF",
+#'         Obj3 = "null",
+#'         Obj4 = "null",
+#'         targetClass = "positive"
+#'         )
+#' 
+#' \dontrun{
+#' Execution for all classes, see 'targetClass' parameter
 #' MESDIF( paramFile = NULL,
 #'         training = habermanTra, 
 #'         test = habermanTst, 
@@ -295,6 +316,7 @@
 #'         Obj4 = "null",
 #'         targetClass = "null"
 #'         )
+#'  }
 #' 
 MESDIF <- function(paramFile = NULL,
                    training = NULL, 
@@ -402,7 +424,7 @@ MESDIF <- function(paramFile = NULL,
     if(Sys.info()[1] == "Windows")
       reglas <- lapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos)
     else
-      reglas <- mclapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos   , mc.cores = detectCores() )
+      reglas <- parallel::mclapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos   , mc.cores = parallel::detectCores() - 1)
   
     
     if(! DNF) 
@@ -440,7 +462,7 @@ MESDIF <- function(paramFile = NULL,
   
   n_reglas <- NROW(reglas)
   for(i in seq_len(n_reglas)){
-    val <- .probeRule2(rule = reglas[i, - NCOL(reglas)], testSet = test, targetClass = reglas[i, NCOL(reglas)], numRule = i, parametros = parametros, Objetivos = Objetivos, Pesos = Pesos, cate = cate, num = num, DNF = DNF)
+    val <- .probeRule2(rule = reglas[i, - NCOL(reglas)], testSet = test, targetClass = reglas[i, NCOL(reglas)], numRule = i, parametros = parametros, Objetivos = Objetivos, Pesos = c(0.7,0.3,0), cate = cate, num = num, DNF = DNF)
     test[["covered"]] <- val[["covered"]]
     sumNvars <- sumNvars + val[["nVars"]]
     sumCov <- sumCov + val[["coverage"]]
@@ -456,16 +478,16 @@ MESDIF <- function(paramFile = NULL,
   
   #Medidas de calidad globales
   cat("Global:", file ="", fill = TRUE)
-  cat(paste("\t ? N_rules:", NROW(reglas), sep = " "),
-      paste("\t ? N_vars:", round(sumNvars / n_reglas, 6), sep = " "),
-      paste("\t ? Coverage:", round(sumCov / n_reglas, 6), sep = " "),
-      paste("\t ? Significance:", round(sumSign / n_reglas, 6), sep = " "),
-      paste("\t ? Unusualness:", round(sumUnus / n_reglas, 6), sep = " "),
-      paste("\t ? Accuracy:", round(sumAccu / n_reglas, 6), sep = " "),
-      paste("\t ? CSupport:", round(sum(test[["covered"]] / test[["Ns"]]), 6), sep = " "),
-      paste("\t ? FSupport:", round(sumFsup / n_reglas, 6), sep = " "),
-      paste("\t ? FConfidence:", round(sumFconf / n_reglas, 6), sep = " "),
-      paste("\t ? CConfidence:", round(sumCconf / n_reglas, 6), sep = " "),
+  cat(paste("\t - N_rules:", NROW(reglas), sep = " "),
+      paste("\t - N_vars:", round(sumNvars / n_reglas, 6), sep = " "),
+      paste("\t - Coverage:", round(sumCov / n_reglas, 6), sep = " "),
+      paste("\t - Significance:", round(sumSign / n_reglas, 6), sep = " "),
+      paste("\t - Unusualness:", round(sumUnus / n_reglas, 6), sep = " "),
+      paste("\t - Accuracy:", round(sumAccu / n_reglas, 6), sep = " "),
+      paste("\t - CSupport:", round(sum(test[["covered"]] / test[["Ns"]]), 6), sep = " "),
+      paste("\t - FSupport:", round(sumFsup / n_reglas, 6), sep = " "),
+      paste("\t - FConfidence:", round(sumFconf / n_reglas, 6), sep = " "),
+      paste("\t - CConfidence:", round(sumCconf / n_reglas, 6), sep = " "),
       file = "", sep = "\n"
   )
   
@@ -505,19 +527,21 @@ MESDIF <- function(paramFile = NULL,
 
 
 
-.findRule <- function(targetClass, algorithm, training, parametros, DNF, cate, num, Objetivos, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE){
+.findRule <- function(targetClass, algorithm, training, parametros, DNF, cate, num, Objetivos, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE, minCnf = 0.6){
   #Check if target class is valid
   if(! any(training$class_names == targetClass)) stop("Invalid target class value provided.")
   #cat(" ? Target value:", targetClass ,"\n", file = "", sep = " ", fill = TRUE)
   
   por_cubrir = training$examplesPerClass[[targetClass]]
-  rule <- .ejecutarga(algorithm = algorithm, dataset = training, targetClass = targetClass, n_vars = training$nVars, por_cubrir = por_cubrir, nLabels = parametros$nLabels, N_evals = parametros$nEval,  tam_pob = parametros$popLength, p_cross = parametros$crossProb, p_mut = parametros$mutProb, seed = parametros$seed, Objetivos = Objetivos, Pesos = Pesos, DNFRules = DNF, cate = cate, num = num, elitism = parametros[["elitePop"]], porcCob = porcCob, strictDominance = strictDominance, reInit = reInit)     
+  rule <- .ejecutarga(algorithm = algorithm, dataset = training, targetClass = targetClass, n_vars = training$nVars, por_cubrir = por_cubrir, nLabels = parametros$nLabels, N_evals = parametros$nEval,  tam_pob = parametros$popLength, p_cross = parametros$crossProb, p_mut = parametros$mutProb, seed = parametros$seed, Objetivos = Objetivos, Pesos = c(0.7,0.3,0), DNFRules = DNF, cate = cate, num = num, elitism = parametros[["elitePop"]], porcCob = porcCob, strictDominance = strictDominance, reInit = reInit, minCnf = minCnf)     
   
   
   reglas <- vector(mode = "list", length = NROW(rule))
-  rule <- cbind(rule, targetClass)
-  for(i in seq_len(length(reglas))){
-    reglas[[i]] <- rule[i,]
+  if(length(rule > 0)){
+    rule <- cbind(rule, targetClass)
+    for(i in seq_len(length(reglas))){
+      reglas[[i]] <- rule[i,]
+    }
   }
   reglas
 }
