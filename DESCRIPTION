@@ -1,14 +1,14 @@
 Package: SDR
 Type: Package
 Title: Subgroup Discovery Algorithms for R
-Version: 1.0.0.1
+Version: 0.6.0.0
 Date: 2015-06-14
 Authors@R: c(person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role = c("aut", "cre")),
     person("Pedro", "Gonzalez", email = "pglez@ujaen.es", role = c("aut", "cph")),
-    person("Cristóbal J.", "Carmona", email = "ccarmona@ujaen.es", role = c("aut", "cph")),
+    person("Cristobal J.", "Carmona", email = "ccarmona@ujaen.es", role = c("aut", "cph")),
     person("Francisco", "Charte", email = "francisco@fcharte.com", role = "ctb")
     )
-Maintainer: Angel M. García <amgv0009@red.ujaen.es>
+Maintainer: Angel M. Garcia <amgv0009@red.ujaen.es>
 Description: This package implements some algorithms for the data mining task called "subgroup discovery". It also provide a Shiny App for make the analysis easier.
     The algorithms works with datasets provided in KEEL format.
     If you want more information about this format, please refer to \url{"http://www.keel.es"} .

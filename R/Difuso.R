@@ -61,7 +61,7 @@
 
 #-----------------------------------------------------------------------------------
 #    Creates crisp sets relative to the fuzzy sets generated before.
-#    This works because the fuzzy sets are all triangular. If it doesn´t, it doesn´t work
+#    This works because the fuzzy sets are all triangular. If it does not, it does not work
 #-----------------------------------------------------------------------------------
 
 .createCrispIntervals <- function(fuzzyIntervals){
@@ -175,7 +175,7 @@
 
   resultado <- .grado_pertenencia5(x = as.vector(ejemplo_num), xmin = values[2,], xmedio = values[3,], xmax = values[4,], n_matrices = NCOL(values))
  
-  #Obtengo correctamente los grados de pertenencia, pero no consigo obtener el mÃ¡ximo de cada variable.  
+  #Obtengo correctamente los grados de pertenencia, pero no consigo obtener el maximo de cada variable.  
   a <- which(!duplicated(values[1,]))
   long <- length(a)
   rangos <- vector(mode = "list", length = long)
@@ -214,7 +214,7 @@ if(NCOL(resultado) > 1){
 #
 .getMaxCrispForAVariable2 <- function(values, ejemplo_num){
   resultado <- .gradoPertenenciaCrisp2(x = as.vector(ejemplo_num), xmin = values[2,], xmax = values[3,], DNF = TRUE)
-  #Obtengo correctamente los grados de pertenencia, pero no consigo obtener el mÃ¡ximo de cada variable.  
+  #Obtengo correctamente los grados de pertenencia, pero no consigo obtener el maximo de cada variable.  
   a <- which(!duplicated(values[1,]))
   long <- length(a)
   rangos <- vector(mode = "list", length = long)
