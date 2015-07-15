@@ -633,6 +633,14 @@ NMEEF_SD <- function(paramFile = NULL,
         reglas <-  matrix(unlist(reglas), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
       else 
         reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
+      
+      for(i in seq_len(NROW(reglas))){
+        cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
+        cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
+        .print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+        cat("\n","\n",  file = "", sep = "",fill = TRUE)
+        cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
+      }
     } else {
       cat("No rules found with a confidence greater than the specified", file = "", fill = TRUE)
       cat("No rules found with a confidence greater than the specified\n", file = parametros$outputData[2], append = TRUE)

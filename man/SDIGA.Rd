@@ -187,7 +187,7 @@ SDIGA(parameters_file = NULL,
       w3 = 0,
       minConf = 0.6,
       lSearch = "yes",
-      targetClass = "null")
+      targetClass = "positive")
       }
 }
 \references{

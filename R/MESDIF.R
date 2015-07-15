@@ -434,6 +434,7 @@ MESDIF <- function(paramFile = NULL,
     
   #Print Rules if we are not in Windows because mclapply doesnt show any output.
   #if(Sys.info()[1] != "Windows")
+  }
   for(i in seq_len(NROW(reglas))){
     cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
     cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
@@ -443,7 +444,7 @@ MESDIF <- function(paramFile = NULL,
   }
     
     
-  }
+  
   
   #---------------------------------------------------
   
