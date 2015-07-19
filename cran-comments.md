@@ -5,6 +5,11 @@
 * local Ubuntu 14.04 install, R-devel
 * local Windows 8.1 install, R 3.2.1 and R-devel
 
+##Resubmission 
+This is a resubmission, in this version I have:
+* Modified the names of files used in the creation of the vignette, now the vignette is created correctly.
+* Modified the Description field of DESCRIPTION file.
+
 ## R CMD check results 
 There were no or ERRORs or WARNINGs.
 
