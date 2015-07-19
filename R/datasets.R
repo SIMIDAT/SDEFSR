@@ -22,7 +22,9 @@
 #'     habermanTra$data 
 #'     habermanTra$fuzzySets
 #'     
-"habermanTra"
+#' @docType data
+#' @name habermanTra
+NULL
 
 
 
@@ -49,8 +51,9 @@
 #' @examples 
 #'     habermanTra$data 
 #'     habermanTra$fuzzySets
-#'   
-"habermanTst"
+#'   @docType data
+#'   @name habermanTst
+NULL
 
 
 
@@ -78,7 +81,9 @@
 #'    carTra$data
 #'    carTra$atributeNames
 #'    
-"carTra" 
+#'    @docType data
+#'    @name carTra
+NULL
 
 
 
@@ -105,7 +110,9 @@
 #'    carTra$data
 #'    carTra$atributeNames
 #'    
-"carTst" 
+#'    @docType data
+#'    @name carTst
+NULL
 
 
 
@@ -127,7 +134,10 @@
 #'  
 #'  @examples 
 #'      germanTra$data
-"germanTra"
+#'      
+#'      @docType data
+#'      @name germanTra
+NULL
 
 
 
@@ -148,4 +158,7 @@
 #'  
 #'  @examples 
 #'      germanTra$data
-"germanTst"
+#'      
+#'      @docType data
+#'      @name germanTst
+NULL

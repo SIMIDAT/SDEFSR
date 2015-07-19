@@ -158,7 +158,7 @@
 
 #' 
 #' @title Multiobjective Evolutionary Subgroup DIscovery Fuzzy rules (MESDIF) Algorithm
-#' @description This function search for interesting subgroups by executing the MESDIF algorithm. 
+#' @description Performs a subgroup discovery task executing the algorithm MESDIF
 #' 
 #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
 #' @param training A \code{keel} class variable with training data.

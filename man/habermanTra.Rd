@@ -17,9 +17,6 @@ Landwehr, J. M., Pregibon, D., and Shoemaker, A. C. (1984), Graphical Models for
 Lo, W.-D. (1993). Logistic Regression Trees, PhD thesis, Department of Statistics,
     University of Wisconsin, Madison, WI.
 }
-\usage{
-habermanTra
-}
 \description{
 Training data for the Haberman dataset.
 }
@@ -33,5 +30,4 @@ This data set contains cases from a study that was conducted between 1958 and 19
 habermanTra$data
     habermanTra$fuzzySets
 }
-\keyword{datasets}
 

@@ -9,9 +9,6 @@
 \source{
 \url{http://sci2s.ugr.es/keel/dataset.php?cod=88}
 }
-\usage{
-germanTst
-}
 \description{
 Test data for the german dataset
 }
@@ -23,5 +20,4 @@ A numerical version of the Statlog German Credit Data data set.
 \examples{
 germanTra$data
 }
-\keyword{datasets}
 

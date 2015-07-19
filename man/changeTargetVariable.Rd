@@ -12,7 +12,7 @@ changeTargetVariable(dataset, posVariable)
 \item{posVariable}{The position of the variable to set as target Variable.}
 }
 \value{
-The dataset with te variables changed
+The dataset with the variables changed
 }
 \description{
 Change the actual target variable for another one if it is categorical.
