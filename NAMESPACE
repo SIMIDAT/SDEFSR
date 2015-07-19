@@ -1,2 +1,6 @@
 exportPattern("^[[:alpha:]]+")
 import(methods)
+import(stats)
+import(parallel)
+import(shiny)
+

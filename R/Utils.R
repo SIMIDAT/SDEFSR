@@ -329,7 +329,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' 
 #' @param dataset The KEEL dataset class
 #' @param posVariable The position of the variable to set as target Variable.
-#' @return The dataset with te variables changed
+#' @return The dataset with the variables changed
 #' 
 #' 
 #' @examples 

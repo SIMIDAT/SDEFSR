@@ -2,6 +2,6 @@
     "installOptions" : {
         "installDependencies" : true,
         "installFromRepository" : true,
-        "libraryPath" : "E:/Programas/R-devel/library"
+        "libraryPath" : "/home/a/R/x86_64-unknown-linux-gnu-library/3.3"
     }
 }

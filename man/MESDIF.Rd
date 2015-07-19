@@ -57,7 +57,7 @@ The algorithm shows in the console the following results:
     in the \code{outputData} parameter in the parameters file.
 }
 \description{
-This function search for interesting subgroups by executing the MESDIF algorithm.
+Performs a subgroup discovery task executing the algorithm MESDIF
 }
 \details{
 

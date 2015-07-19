@@ -14,9 +14,6 @@ M. Bohanec and V. Rajkovic: Knowledge acquisition and explanation for multi-attr
 B. Zupan, M. Bohanec, I. Bratko, J. Demsar: Machine learning by function decomposition.
     ICML-97, Nashville, TN. 1997 (to appear).
 }
-\usage{
-carTst
-}
 \description{
 Test data for the car dataset
 }
@@ -29,5 +26,4 @@ Car Evaluation Database was derived from a simple hierarchical decision model.
 carTra$data
    carTra$atributeNames
 }
-\keyword{datasets}
 

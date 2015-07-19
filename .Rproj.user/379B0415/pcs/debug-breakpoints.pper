@@ -30,21 +30,6 @@
                 "path" : "~/MEGA/MEGAsync/Universidad/Trabajo Fin de Grado/SDR/inst/shiny/server.R",
                 "state" : 1,
                 "type" : 1
-            },
-            {
-                "editor_line_number" : 413,
-                "editor_state" : 1,
-                "function_name" : "MESDIF",
-                "function_steps" : "13,3,3",
-                "id" : 7,
-                "is_package_breakpoint" : true,
-                "is_pending_debug_completion" : false,
-                "line_number" : 413,
-                "needs_updated_steps" : false,
-                "package_name" : "SDR",
-                "path" : "~/MEGA/MEGAsync/Universidad/Trabajo Fin de Grado/SDR/R/MESDIF.R",
-                "state" : 1,
-                "type" : 0
             }
         ]
     }
