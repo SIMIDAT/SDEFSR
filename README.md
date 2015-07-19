@@ -39,7 +39,7 @@ irisKEEL <- changeTargetVariable(irisKEEL, 3) #Use variable at position 3 as tar
 
 The are three subgroup discovery implemented: __SDIGA__, __MESDIF__ and __NMEEF-SD__ You can use this algorithms by:
 * specifying the path of a parameter file 
-* specifying all the parameters of the algorithm in the function call, one by one.
+* specifying all the parameters of the algorithm in the function call, one by one.  
 The former is normally used with datasets prepared to make an execution directly, because this way does not allow to change the structure of the datasets and set other target variable, this target variable is the last variable defined in the dataset.
 The latter is for dataset that we loaded in R and make some modifications.
 
