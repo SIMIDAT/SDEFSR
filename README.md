@@ -1,9 +1,9 @@
 [SDR] (https://github.com/aklxao2/SDR/) 
 ====
 
-[![Travis-CI Build Status](https://travis-ci.org/aklxao2/SDR.svg?branch=master)](https://travis-ci.org/aklxao2/SDR)  
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/SDR)](https://cran.r-project.org/web/packages/SDR/index.html)
 [![Downloads] (http://cranlogs.r-pkg.org/badges/SDR)](https://cran.rstudio.com/web/packages/SDR/index.html)
+[![totalDownloads] (http://cranlogs.r-pkg.org/badges/grand-total/SDR)](https://cran.rstudio.com/web/packages/SDR/index.html)
 
 Implementation of algorithms of the data mining task called "subgroup discovery" implemented directly in R without any other dependecies.
 Those algorithms works with data sets provided in the format of _KEEL data mining tool_ . Also, the package provide a Shiny App to ease the work.
