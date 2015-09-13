@@ -563,7 +563,7 @@ read.keel <- function(file, nLabels = 3){
     returnList[[5]] <- line[3:length(line)]
  
     } else { #Numerical Values
-   returnList[[2]] <- 'e'
+   returnList[[2]] <- if(line[3] == "integer") 'e' else 'r' 
    returnList[[3]] <- as.numeric(line[4])
    returnList[[4]] <- as.numeric(line[5])
    returnList[[5]] <- NA
@@ -586,4 +586,223 @@ read.keel <- function(file, nLabels = 3){
   
   #Return
   strsplit(x = contents, split = "\n", fixed = TRUE)[[1]]
+}
+
+
+
+#' Saves a \code{keel} dataset into a KEEL dataset format file.
+#' 
+#' This function exports a keel dataset stored in memory into a KEEL format file in the hard disk. The function ask
+#' the user if he wants to save the file or not. This function can not save information about the fuzzy
+#' definition created by the function \link{read.keel} because the KEEL format does not
+#' specify this kind of information on their format.
+#' 
+#' @param dataset The \code{keel} object stored in R.
+#' @param file The file to save the KEEL dataset.
+#' 
+#' @details  A KEEL data file must have the following structure:
+#'  \itemize{
+#'    \item{ @@relation: Name of the data set }
+#'    \item{ @@attribute: Description of an attribute (one for each attribute)}
+#'    \item{ @@inputs: List with the names of the input attributes }
+#'    \item{ @@output: Name of the output attribute (Not used in this algorithms implementation) }
+#'    \item{ @@data: Starting tag of the data}
+#' }
+#'    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
+#' 
+#' @author Angel M. Garcia <amgv0009@@red.ujaen.es>
+#' 
+#' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
+#' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
+#'
+save.keel <- function(dataset, file){
+  #First, we need to ask the user if he want to save the file
+  
+  if(is.null(file)){
+    stop("Parameter 'file' can not be NULL.")
+  } 
+  
+  if(length(file) > 1){
+    stop("'file' must be of length 1.")
+  }
+  
+  if(length(dataset) > 1){
+    stop("'dataset' must be of length 1.")
+  }
+
+  respuesta <- .yesno("Do you really want to save this dataset? (y/n): ")
+  
+  if(respuesta == "y"){
+    #Add .dat extension to the file.
+    file <- paste(file, ".dat", sep = "")
+    #Save file
+    #get relation name
+    cat("Getting attributes...")
+    line <- paste("@relation", dataset[[1]])
+    
+    #get attributes
+    aux <- character(length(dataset[[2]]))
+    aux[which(dataset[[3]] == "e")] <- "integer"
+    aux[which(dataset[[3]] == "r")] <- "real"
+    pos <- which(dataset[[3]] == "c")
+    aux_values <- character(length(dataset[[2]]))
+    aux_values[pos] <- dataset$categoricalValues[pos]
+    aux_values[-pos] <- paste("[",dataset$min[-pos], ", ", dataset$max[-pos], "] ", sep = "")
+    a <- lapply(aux_values, function(x) if(length(x) > 1) {
+      aux <- paste(x , collapse = ", " )
+      paste("{", aux, "}", sep = "")
+    } else{
+      x
+    } )
+    a <- unlist(a)
+    
+    atributos <- paste("@attribute", dataset$atributeNames, aux, a)
+    atributos <- paste(atributos, collapse = "\n")
+    
+    line <- paste(line, atributos, sep = "\n")
+    
+    #get inputs and outputs 
+    inputs <- paste(dataset[[2]][-length(dataset[[2]])], collapse = ", ")
+    output <- dataset[[2]][length(dataset[[2]])]
+    line <- paste(line, "\n", "@inputs ", inputs, "\n", sep = "")
+    line <- paste(line, "@outputs ", output, "\n@data",  sep = "")
+    cat("Done\nGetting data (this may take some time)...")
+    
+    #get data 
+    categ <- which(dataset[[3]] == "c")
+    if(Sys.info()[1] != "Windows"){
+    data <- parallel::mclapply(X = dataset$data, FUN = function(x, pos, catValues){
+            resultado <- lapply(X = seq_len(length(pos)), FUN = function(y, pos, data){
+                          data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]
+                          data[pos[y]]
+                        }, categ, x)
+            x[pos] <- resultado
+            unlist(x)
+          }, categ, dataset$categoricalValues, mc.cores = parallel::detectCores() - 1)
+    } else {
+      data <- lapply(X = dataset$data, FUN = function(x, pos, catValues){
+        resultado <- lapply(X = seq_len(length(pos)), FUN = function(y, pos, data){
+          data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]
+          data[pos[y]]
+        }, categ, x)
+        x[pos] <- resultado
+        unlist(x)
+      }, categ, dataset$categoricalValues)
+    }
+    
+    
+    #Paste data into the line
+   data <- lapply(data, function(x){
+     paste(x, collapse = ", ")
+   })
+   
+    data <- unlist(data)
+    line <- paste(line, paste(data, collapse = "\n"), sep = "\n" )
+    cat("Done\n")
+    
+    #Save file
+    cat(line, file = file,  sep = "", append = FALSE)
+    cat("File succesfully saved.")
+  } else {
+    cat("File not saved.")
+  }
+}
+
+
+#'
+#' Add one or a set of instances to an actual KEEL dataset
+#'
+addKeelRegister <- function(items, dataset){
+  if(class(dataset) != "keel"){
+    stop("Provided dataset is not of class 'keel'.")
+  }
+  
+  
+  # If items is not a list, is a single element.
+  if(class(items) != "list"){
+      
+    if(.checkElement(item = items, dataset = dataset)){
+      #We use this because it is only a single element !
+      dataset$data[[length(dataset$data) + 1]] <- items
+      dataset$data
+    } else {
+      stop("Adding an invalid element into the dataset.")
+    }
+    
+  } else { #If it is a list, there are more than one item, add it efficiently.
+    resultDataset <- vector(mode = "list", length = length(dataset$data) + length(items))
+    
+    #Copy old data to the new list
+    resultDataset[seq_len(length(dataset$data))] <- dataset$data
+    
+    #Check if all new data are correct.
+    allElements <- unlist(lapply(X = items, FUN = .checkElement, dataset))
+    
+    if(all(allElements)){
+      #Introduce the elements at the end of the $data atribute of the dataset.
+      resultDataset[(length(dataset$data) + 1):length(resultDataset)] <- items
+      
+      #Process the elements for 
+      
+      #Return
+      resultDataset
+    } else {
+      stop("One or more new items are invalid. No items added.")
+    }        
+  }
+  
+}
+
+
+
+
+
+
+#Checks if a single instance has correct data.
+.checkElement <- function(item, dataset){
+  
+  #Check lengths
+  if(length(item) != length(dataset$max))
+    return(FALSE)
+  
+  if(class(item) == "numeric"){ 
+    # If all item elements are numeric it is because: 
+    # 1.- all his attributes are numeric 
+    # 2.- categorical values are coded into a numeric number, this is how read.keel() do the reading of data.
+    all(item < dataset$max)
+    
+  } else {
+    # If not, we need to check every categorical value if they have valid values. This is slower than the former option.
+      catData <- which(dataset$atributeTypes == "c")
+      numData <- which(dataset$atributeTypes == "r" | dataset$atributeTypes == "e")
+      
+      cvalues <- dataset$categoricalValues[catData]
+      cItem <- item[catData]
+      
+      #Check if categorical values of an item have got valid values.
+       values <- lapply(X = seq_len(length(cItem)), 
+                   FUN = function(x, lista, items){ 
+                      any(lista[[x]] == items[x])
+                    }, cvalues, cItem)
+      values <- unlist(values)
+      
+      # If all values are valid, continue the process
+      if(! all(values)){
+        return (FALSE)
+      }
+      
+      # Check numerical values
+      min <- dataset$min[numData]
+      max <- dataset$max[numData]
+      nItem <- as.numeric(item[numData])
+      
+      # If not all the elements are within the bounds, throw false.
+      if(! all(nItem >= min & nItem <= max) ){
+        return (FALSE)
+      }
+      
+      #Return, the element is ok.
+      TRUE
+      
+  }
 }
