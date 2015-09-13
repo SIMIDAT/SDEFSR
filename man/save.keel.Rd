@@ -7,15 +7,15 @@
 save.keel(dataset, file)
 }
 \arguments{
-\item{dataset}{The \code{keel} object stored in R.}
+\item{dataset}{The \code{keel} object stored in R environment.}
 
-\item{file}{The file to save the KEEL dataset.}
+\item{file}{The file name (or path) to save the KEEL dataset.}
 }
 \description{
-This function exports a keel dataset stored in memory into a KEEL format file in the hard disk. The function ask
-the user if he wants to save the file or not. This function can not save information about the fuzzy
+This function exports a keel dataset stored in the R environment into a KEEL format file on the hard disk.
+This function can not save information about the fuzzy
 definition created by the function \link{read.keel} because the KEEL format does not
-specify this kind of information on their format.
+define that kind of information.
 }
 \details{
 A KEEL data file must have the following structure:
