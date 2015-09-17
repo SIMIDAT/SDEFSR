@@ -14,23 +14,6 @@
               #############################################################################
 
 
-methods::setClass(".Fuzzy", 
-         slots = c(name = "character", 
-                   x0 = "numeric", 
-                   x1 = "numeric", 
-                   x3 = "numeric", 
-                   y = "numeric", 
-                   label = "integer"),
-         package = "SDR"
-         )
-
-
-
-
-
-
-
-
 
 #'
 #' Creates a random general rule
@@ -78,15 +61,17 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
    # Select Randomly variables of the dataset to create the antecedent (maximum 50 % of the variables are selected)
   numVarsOfRule <- ceiling(sample.int(dataset$nVars, 1) * 0.5)
   variables <- sample(dataset$nVars, numVarsOfRule)
-  
   regla$antecedent <- lapply(variables, .createNewFuzzyAntecedent, dataset, DNF)
   
+  
+  # Fill the rest of the data.
   regla$t_norm <- tnorm
   regla$t_conorm <- tconorm
   regla$ruleWeight <- rule_weight
   regla$level = 1L
   regla$clas <- sample(0:(length(dataset$class_names) - 1), 1)
   
+  #Return 
   regla
 }
 
@@ -94,7 +79,13 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
 
 
 #'
+#'
 #' Creates a random fuzzy antecedent for a specific variable
+#' 
+#' @param  variable The position of the variable to use.
+#' @param dataset The keel dataset where the function takes the data.
+#' @param DNF If TRUE, DNF representation are used, else, canonical.
+#' 
 #' 
 .createNewFuzzyAntecedent <- function(variable, dataset, DNF = FALSE){
   antecedent <- structure(list(labels = list(), 
@@ -128,3 +119,252 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
   
   antecedent
 }
+
+
+
+
+
+
+#'
+#' This function delete a variable from a rule 
+#' 
+#' @param rule The rule to work with.
+#' 
+#' @return A new rule with a random variable in the antecedent removed.
+#'
+Rule.deleteVariable <- function(rule){
+  if(class(rule) == "Rule"){
+    #Select the variable to remove in the antecedent
+    variable <- sample(length(rule$antecedent), 1)
+    #Remove the antecedent
+    rule$antecedent <- rule$antecedent[- variable]
+    
+    #Reset the values, because it is a new rule
+    rule$weight <- 0
+    rule$raw_fitness <- 0
+    rule$evaluated <- FALSE
+    rule$ideal <- 0L
+    rule$level <- 1L
+    
+    #Return 
+    rule
+  }
+}
+
+
+
+
+
+#'
+#'  Remove completely the antecedent part of a rule.
+#'  
+#'  @param rule The rule to where we want to remove the antecedent.
+#'  
+#'  @return A new rule with an empty antecedent
+#'  
+Rule.clearAntecedent <- function(rule){
+  if(class(rule) == "Rule"){
+    #Remove antecedent part overwrittin by an empty list.
+    rule$antecedent <- list()
+    
+    #Reset the values, because it is a new rule
+    rule$weight <- 0
+    rule$raw_fitness <- 0
+    rule$evaluated <- FALSE
+    rule$ideal <- 0L
+    rule$level <- 1L
+    
+    #Return
+    rule
+  }
+}
+
+
+#'
+#' Add a new variable to the antecedent of the rule.
+#' 
+#' @param rule The rule to work with.
+#' @param dataset The dataset to get the data.
+#' @param DNF Rule representation. If TRUE, dnf representation, else, canonica.
+#' @return A new rule with an added variable.
+#'
+Rule.addVariable <- function(rule, dataset, DNF){
+  if(class(rule) == "Rule"){
+    
+    nVars <- dataset$nVars
+    old_antecedent <- rule$antecedent
+    
+    if(length(old_antecedent) >= nVars){
+      stop("It is not possible to add new vars to this rule because it has all possible variables.")
+    }
+    
+    # Get variables that are now in the rule.
+    selected <- logical(nVars)
+    selected[unlist(lapply(old_antecedent, function(x){x$var}))] <- TRUE
+    
+    #From the not selected variables, we pick up one randomly
+    notSel <- which(!selected)
+    old_antecedent[[length(old_antecedent) + 1]] <- 
+      createNewFuzzyAntecedent(variable = notSel[.randIntClosed(1,length(notSel))],
+                               dataset = dataset, 
+                               DNF = DNF)
+    rule$antecedent <- old_antecedent
+    
+    #Return
+    rule
+  }
+}
+  
+  
+  #'
+  #' Adds a new label to the variable selected in the rule.
+  #' 
+  #'  @param rule The rule to work with
+  #'  @param variable the selected variable (is the index of the list $antecedent of the rule)
+  #'  @param dataset, the dataset where getting all the data.
+  #'  @param DNF used for rule representation (DNF or canonica)
+  #'  
+  #'  @return the same rule but with the params reinitialized and marked as non evaluated.
+  Rule.addLabel <- function(rule, variable, dataset, DNF){
+    if(class(rule) == "Rule" & class(dataset) == "keel"){
+      
+      if(variable > length(rule$antecedent)){
+        stop("Can not add label to this rule. Variable used is grater than antecedent size.")
+      }
+      
+      fuzzyAnt <- rule$antecedent[[variable]]
+      datasetVar <- fuzzyAnt$var
+      
+      selected <- logical(fuzzyAnt$max_label)
+      #Find a label that is not in the rule yet.
+      selected[unlist(lapply(fuzzyAnt$labels, function(x){x$value})) + 1] <- TRUE
+      if(! all(selected)){
+         labelSelected <- sample(which(!selected), 1)
+        
+        #Add the label to the fuzzy Antecedent
+        if(!DNF){
+          if(length(fuzzyAnt$labels) < 1){
+            fuzzyAnt$labels <- list(list(name = dataset$atributeNames[datasetVar], value = labelSelected - 1))
+          }
+        } else {
+          fuzzyAnt$labels[[length(fuzzyAnt$labels) + 1]] <- list(name = dataset$atributeNames[datasetVar], value = labelSelected - 1)
+        }
+      }
+      
+      rule$antecedent[[variable]] <- fuzzyAnt
+      #Reset the values, because it is a new rule
+      rule$weight <- 0
+      rule$raw_fitness <- 0
+      rule$evaluated <- FALSE
+      rule$ideal <- 0L
+      rule$level <- 1L
+      #return
+      rule
+    }
+  }
+  
+  
+  
+  
+  
+  #'
+  #' Change randomly a label associated to the rule with a non-existing label on the rule
+  #' 
+  #'  @param rule The rule to work with
+  #'  @param variable the selected variable (is the index of the list $antecedent of the rule)
+  #'  
+  Rule.changeLabel <- function(rule, variable){
+    if(class(rule) == "Rule"){
+      if(variable > length(rule$antecedent)){
+        stop("Can not change Label. 'variable' is greater than antecedent length.")
+      }
+      
+      fuzzyAnt <- rule$antecedent[[variable]]
+      selected <- logical(fuzzyAnt$max_label)
+      
+      #Find a label that is not in the rule yet.
+      selected[unlist(lapply(fuzzyAnt$labels, function(x){x$value})) + 1] <- 
+      if(!all(selected)){
+        labelSelected <- sample(which(!selected), 1) - 1
+        #Select a label and change it.
+        fuzzyAnt$labels[[.randIntClosed(1, length(fuzzyAnt$labels))]]$value <- labelSelected
+      }
+      
+      rule$antecedent[[variable]] <- fuzzyAnt
+      #Reset the values, because it is a new rule
+      rule$weight <- 0
+      rule$raw_fitness <- 0
+      rule$evaluated <- FALSE
+      rule$ideal <- 0L
+      rule$level <- 1L
+      #return
+      rule
+      
+    }
+  }
+  
+  
+  #'
+  #' Create a new rule by changing mixing the antecedent part of two rules.
+  #' 
+  #' @param rule1 A rule
+  #' @param rule2 Another rule
+  #' @param DNF Representation of rules, DNF (TRUE) or canonica (FALSE)
+  #' 
+  #' @return a list with the antecedents mixed. (This list would be the $antecedent part of another rule)
+  #' 
+  Rule.exchangeVariables <- function(rule1, rule2, DNF = FALSE){
+    if(class(rule1) == "Rule" & class(rule2) == "Rule"){
+     
+      fuzzyAnt1 <- rule1$antecedent
+      fuzzyAnt2 <- rule2$antecedent
+      
+      #Select randomly variables from antecedent 1 and 2
+      if(length(fuzzyAnt1) > 1){
+        selected1 <- runif(length(fuzzyAnt1)) < 0.5
+      } else {
+        selected1 <- TRUE
+      }
+      
+      if(length(fuzzyAnt2) > 1){
+        selected2 <- runif(length(fuzzyAnt2)) < 0.5
+      } else {
+        selected2 <- TRUE
+      }
+      
+      #Mix this variables
+      fuzzyAnt1 <- fuzzyAnt1[selected1]
+      fuzzyAnt2 <- fuzzyAnt2[selected2]
+      
+      values1 <- vapply(fuzzyAnt1, function(x){x$var}, integer(1))
+      
+      # Forma muy INEFICIENTE !! 
+      for(x in fuzzyAnt2){
+        found <- which(x$var == values1)
+        if(length(found) > 0){
+          #The variable is in both rules, we need to join it.
+          if(DNF){
+            v2 <- vapply(fuzzyAnt1[[found]][[1]], function(x){x$value}, numeric(1))
+            for(y in x[[1]]){
+              if(!all(y[[2]] == v2)){
+                fuzzyAnt1[[found]]$labels[[length(fuzzyAnt1[[found]]$labels) + 1]] <- y
+              }
+            }
+          } else {
+            if(length(fuzzyAnt1[[found]]$labels) < 1)
+              fuzzyAnt1[[found]]$labels[[length(fuzzyAnt1[[found]]$labels) + 1]] <- y
+          }
+        } else {
+          fuzzyAnt1[[length(fuzzyAnt1) + 1]] <- x
+        }
+      }
+    
+      #Return 
+      fuzzyAnt1
+    }
+  }
+  
+  
+  
+  
+

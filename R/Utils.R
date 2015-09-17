@@ -582,3 +582,74 @@ changeTargetVariable <- function(dataset, posVariable){
   line
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################
+#                                                                    #
+#                   MATHEMATICAL UTILS                               #    
+#                                                                    #
+#                                                                    #
+######################################################################
+
+
+#'
+#' returns an integer between low and high. EXCLUDING high
+#' @param low Lower bound (included)
+#' @param high Upper bound (NOT included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randInt <- function(low, high){
+  floor( low + (high - low) * runif(1) )
+}
+
+
+
+#'
+#' returns an integer between low and high. INCLUDING high
+#' @param low Lower bound (included)
+#' @param high Upper bound (included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randIntClosed <- function(low, high){
+  floor( low + ((high + 1) - low) * runif(1) )
+}
+
+
+
+#'
+#' returns an integer between low and high. EXCLUDING low and high
+#' @param low Lower bound (NOT included)
+#' @param high Upper bound (NOT included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randIntClosed <- function(low, high){
+  floor( (low+1) + (high - (low+1)) * runif(1) )
+}
+
+
+#'
+#' returns a number between low and high. EXCLUDING high
+#' @param low Lower bound (included)
+#' @param high Upper bound (NOT included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randDouble <- function(low, high){
+  low + (high - low) * runif(1) 
+}
+
+
+
+
+
