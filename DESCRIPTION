@@ -1,7 +1,7 @@
 Package: SDR
 Type: Package
 Title: Subgroup Discovery Algorithms for R
-Version: 0.6.0.0
+Version: 0.6.0.9000
 Date: 2015-06-14
 Authors@R: c(person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role = c("aut", "cre")),
     person("Pedro", "Gonzalez", email = "pglez@ujaen.es", role = c("aut", "cph")),

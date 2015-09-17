@@ -573,3 +573,12 @@ changeTargetVariable <- function(dataset, posVariable){
  }
 
 
+
+
+
+# Make a yes/no question to the user
+.yesno <- function(texto){
+  line <- readline(texto)
+  line
+}
+

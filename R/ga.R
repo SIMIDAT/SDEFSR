@@ -1,6 +1,9 @@
 ##############################################################################
 #                                                                            #
 #                        GENETIC ALGORITHMS in R                             #
+#                                                                            #      
+#       This functions are the genectic algorithms used by the EFS           #
+#             algorithms that are available in the package.                  #
 #                                                                            #
 ##############################################################################
 
