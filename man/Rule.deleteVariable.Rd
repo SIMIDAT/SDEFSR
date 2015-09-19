@@ -2,7 +2,7 @@
 % Please edit documentation in R/FuGePSD.R
 \name{Rule.deleteVariable}
 \alias{Rule.deleteVariable}
-\title{This function delete a variable from a rule}
+\title{Delete a random variable from a rule}
 \usage{
 Rule.deleteVariable(rule)
 }
@@ -13,6 +13,6 @@ Rule.deleteVariable(rule)
 A new rule with a random variable in the antecedent removed.
 }
 \description{
-This function delete a variable from a rule
+Delete a random variable from a rule
 }
 

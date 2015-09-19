@@ -2,21 +2,19 @@
 % Please edit documentation in R/FuGePSD.R
 \name{Rule.addVariable}
 \alias{Rule.addVariable}
-\title{Add a new variable to the antecedent of the rule.}
+\title{Add a new random variable to the antecedent of the rule.}
 \usage{
-Rule.addVariable(rule, dataset, DNF)
+Rule.addVariable(rule, dataset)
 }
 \arguments{
 \item{rule}{The rule to work with.}
 
 \item{dataset}{The dataset to get the data.}
-
-\item{DNF}{Rule representation. If TRUE, dnf representation, else, canonica.}
 }
 \value{
 A new rule with an added variable.
 }
 \description{
-Add a new variable to the antecedent of the rule.
+Add a new random variable to the antecedent of the rule.
 }
 

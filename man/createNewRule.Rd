@@ -4,7 +4,7 @@
 \alias{createNewRule}
 \title{Creates a random general rule}
 \usage{
-createNewRule(dataset, tnorm, tconorm, rule_weight, DNF = FALSE)
+createNewRule(dataset, tnorm, tconorm, rule_weight)
 }
 \arguments{
 \item{dataset}{The keel dataset where getting the data}
@@ -14,8 +14,6 @@ createNewRule(dataset, tnorm, tconorm, rule_weight, DNF = FALSE)
 \item{tconorm}{The T-conorm to use: 0 -> maximum T-conorm, 1 -> Probabilistic sum t-conorm}
 
 \item{rule_weight}{The Rule Weighting method: 0 -> Wining Rule, 1 -> Normalized sum, 2 -> Arithmetic mean}
-
-\item{DNF}{If true, Rule representation is DNF, else, canonica.}
 }
 \description{
 It creates a random general rule for a provided dataset with, at most, 50 %% of the variables.

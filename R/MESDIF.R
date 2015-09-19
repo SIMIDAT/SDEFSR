@@ -162,8 +162,8 @@
 #' 
 #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
 #' @param training A \code{keel} class variable with training data.
-#' @param test A \code{keel} class variable with training data.
-#' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
+#' @param test A \code{keel} class variable with test data.
+#' @param output character vector with the paths where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
 #' @param nLabels Number of fuzzy labels defined in the datasets.
 #' @param nEval An integer for set the maximum number of evaluations in the evolutive process.

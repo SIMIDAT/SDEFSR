@@ -1838,3 +1838,107 @@ if(DNFRules) {
 }
 
 
+#'
+#' Obtains the belonging degree of every example of a dataset to a given rule
+#' 
+#' @param regla The rule to compare example. This rule must be in canonica vector representation. (See Rule.toRuleCANRepresentation function)
+#' @param dataset The complete keel dataset object to get the examples
+#' @param noClass a matrix with all examples without the class attribute. One examples PER COLUMN
+#' @param nLabels number of fuzzy Labels that have numerical attributes
+#' @param max_regla maximum value of all attributes ($conjuntos of the keel dataset)
+#' @param cate logical vector indicating which attributes are categorical
+#' @param num logical vector indicating which attributes are numerical
+#' @t_norm The T-norm to use. 0 to Minimum T-norm, 1 to Product T-norm.
+#'
+#' @return a numeric vector with the belonging degree of every example to the given rule.
+#' 
+.fitnessFuGePSD <- function(regla, dataset, noClass, nLabels, max_regla, cate, num, t_norm){
+  
+  
+  if( ! any(is.na(regla))) { #Si la regla no tiene NA se puede evaluar
+    
+    regla <- as.integer(regla)
+    participantes <- logical(length(max_regla))
+    participantes <- .getParticipantes(regla = regla, max_regla = max_regla, DNFRules = FALSE)
+    
+    
+    #If it's not the empty rule
+    if(any(participantes)){
+      
+      cat_particip <- which(cate & participantes)
+      num_particip <- which(num & participantes)
+      
+      max_regla_cat <- max_regla[cat_particip]
+      max_regla_num <- max_regla[num_particip]
+      
+     
+        
+        #Split into numerical variables and categorical ones. (And participate in the rule)
+        if(length(cat_particip) > 0){
+          rule_cat <- regla[cat_particip]
+        }
+        
+        if(length(num_particip) > 0){
+          rule_num <- regla[num_particip]
+          
+          fuzzy_sets <- dataset[["fuzzySets"]][1:nLabels, 1:3, num_particip, drop = F]
+          crispSets <- dataset[["crispSets"]][1:nLabels, 1:2, num_particip, drop = F]
+          #  Get values for xmin, xmedio and xmax for fuzzy computation.   
+          n_matrices <- dim(fuzzy_sets)[3]  
+          
+          xmin <- fuzzy_sets[cbind(rule_num + 1, 1, seq_len(n_matrices))]
+          xmax <- fuzzy_sets[cbind(rule_num + 1, 3, seq_len(n_matrices))]
+          xmedio <- fuzzy_sets[cbind(rule_num + 1, 2, seq_len(n_matrices))]
+          
+          #Get values for xmin and xmax for crisp computation
+          n_matricesCrisp <- dim(crispSets)[3]  
+          xminC <- crispSets[cbind(rule_num + 1, 1, seq_len(n_matricesCrisp))]
+          xmaxC <- crispSets[cbind(rule_num + 1, 2, seq_len(n_matricesCrisp))]
+        }
+        
+      #return
+        Rule.compatibility(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, max_cat = max_regla_cat, max_num = max_regla_num, t_norm = t_norm)
+        
+      
+    }
+  }
+}
+#         values <- .get_values6(gr_perts = gr_perts, nombre_clases = dataset[["class_names"]], dataset = dataset[["data"]], targetClass = targetClass, examples_perClass = dataset[["examplesPerClass"]],cov = dataset[["covered"]], Ns = dataset[["Ns"]], N_vars = n_Vars + 1, por_cubrir = por_cubrir, marcar = marcar, test = test, difuso = difuso)
+#       
+#       #Compute fitness
+#       if(! marcar){
+#         
+#         fitness <- 0
+#         if(is.function(Objetivos[[1]]) && Pesos[1] > 0){ 
+#           fitness <- fitness + (Objetivos[[1]](values) * Pesos[1])
+#         }
+#         if(is.function(Objetivos[[2]]) && Pesos[2] > 0){ 
+#           fitness <- fitness + (Objetivos[[2]](values) * Pesos[2])
+#         }
+#         if(is.function(Objetivos[[3]]) && Pesos[3] > 0) {
+#           fitness <- fitness + (Objetivos[[3]](values) * Pesos[3])
+#         }      
+#         fitness <- fitness / (sum(Pesos))
+#         # cat("Ns:", values[[4]], " - Local Support: ", .LocalSupport(values), " - .confianza:", .confianza(values), " - Support: ", .Csupport(values)," - .coverage:", .coverage(values), " - Fitness: ", fitness, file = "", fill = TRUE)
+#         
+#         fitness #Return
+#       } else {
+#         
+#         values #Return
+#       }
+#       
+#     } else{
+#       0 #Return
+#     }
+#     
+#   } else {
+#     0 #Return
+#   }
+  
+
+
+
+
+
+
+

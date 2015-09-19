@@ -24,12 +24,12 @@
 #' @param tnorm The T-norm to use: 0 -> minimum T-norm, 1 -> product T-norm
 #' @param tconorm The T-conorm to use: 0 -> maximum T-conorm, 1 -> Probabilistic sum t-conorm
 #' @param rule_weight The Rule Weighting method: 0 -> Wining Rule, 1 -> Normalized sum, 2 -> Arithmetic mean
-#' @param DNF If true, Rule representation is DNF, else, canonica.
+#' 
 #' 
 #'
-createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
+createNewRule <- function(dataset, tnorm, tconorm, rule_weight ){
   
-   regla <- structure( list(antecedent = list(),                  # Antecedent part of the rule
+   regla <- structure( list(antecedent = list(),                 # Antecedent part of the rule
                               clas = integer(1),                 # Consecuent
                               weight = numeric(1),               # Weight associated with the rule
                               raw_fitness = numeric(1),          # Raw Fitness associated to the rule
@@ -59,9 +59,9 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
   
   
    # Select Randomly variables of the dataset to create the antecedent (maximum 50 % of the variables are selected)
-  numVarsOfRule <- ceiling(sample.int(dataset$nVars, 1) * 0.5)
+  numVarsOfRule <- ceiling(.randIntClosed(1,dataset$nVars) * 0.5)
   variables <- sample(dataset$nVars, numVarsOfRule)
-  regla$antecedent <- lapply(variables, .createNewFuzzyAntecedent, dataset, DNF)
+  regla$antecedent <- lapply(variables, .createNewFuzzyAntecedent, dataset)
   
   
   # Fill the rest of the data.
@@ -84,10 +84,10 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
 #' 
 #' @param  variable The position of the variable to use.
 #' @param dataset The keel dataset where the function takes the data.
-#' @param DNF If TRUE, DNF representation are used, else, canonical.
 #' 
 #' 
-.createNewFuzzyAntecedent <- function(variable, dataset, DNF = FALSE){
+#' 
+.createNewFuzzyAntecedent <- function(variable, dataset){
   antecedent <- structure(list(labels = list(), 
                                max_label = integer(1), 
                                var = integer(1), 
@@ -104,19 +104,11 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
   
   
   #Select the variable randomly
-  if(!DNF){
-    i <- sample(antecedent$max_label, 1)
+
+    i <- .randIntClosed(1, antecedent$max_label)
     antecedent$labels <- list(list(name = dataset$atributeNames[variable], value = i - 1))
     antecedent$operator <- round(runif(1), digits = 0)
-  } else {
-    numVars <- sample(dataset$conjuntos[variable], 1)
-    values <- sample(0:(dataset$conjuntos[variable] - 1), numVars)
-    antecedent$labels <- lapply(values, function(x, valueName){
-                            list(name = valueName,
-                                 label = x)
-                          }, dataset$atributeNames[variable])
-  }
-  
+
   antecedent
 }
 
@@ -126,7 +118,7 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
 
 
 #'
-#' This function delete a variable from a rule 
+#' Delete a random variable from a rule 
 #' 
 #' @param rule The rule to work with.
 #' 
@@ -135,7 +127,7 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, DNF = FALSE){
 Rule.deleteVariable <- function(rule){
   if(class(rule) == "Rule"){
     #Select the variable to remove in the antecedent
-    variable <- sample(length(rule$antecedent), 1)
+    variable <- .randIntClosed(1, length(rule$antecedent))
     #Remove the antecedent
     rule$antecedent <- rule$antecedent[- variable]
     
@@ -150,7 +142,6 @@ Rule.deleteVariable <- function(rule){
     rule
   }
 }
-
 
 
 
@@ -181,14 +172,13 @@ Rule.clearAntecedent <- function(rule){
 
 
 #'
-#' Add a new variable to the antecedent of the rule.
+#' Add a new random variable to the antecedent of the rule.
 #' 
 #' @param rule The rule to work with.
 #' @param dataset The dataset to get the data.
-#' @param DNF Rule representation. If TRUE, dnf representation, else, canonica.
 #' @return A new rule with an added variable.
 #'
-Rule.addVariable <- function(rule, dataset, DNF){
+Rule.addVariable <- function(rule, dataset){
   if(class(rule) == "Rule"){
     
     nVars <- dataset$nVars
@@ -200,14 +190,13 @@ Rule.addVariable <- function(rule, dataset, DNF){
     
     # Get variables that are now in the rule.
     selected <- logical(nVars)
-    selected[unlist(lapply(old_antecedent, function(x){x$var}))] <- TRUE
+    selected[vapply(old_antecedent, function(x){x$var}, integer(1))] <- TRUE
     
     #From the not selected variables, we pick up one randomly
     notSel <- which(!selected)
     old_antecedent[[length(old_antecedent) + 1]] <- 
       createNewFuzzyAntecedent(variable = notSel[.randIntClosed(1,length(notSel))],
-                               dataset = dataset, 
-                               DNF = DNF)
+                               dataset = dataset)
     rule$antecedent <- old_antecedent
     
     #Return
@@ -217,15 +206,15 @@ Rule.addVariable <- function(rule, dataset, DNF){
   
   
   #'
-  #' Adds a new label to the variable selected in the rule.
+  #' Adds a new random label to the variable selected in the rule.
   #' 
   #'  @param rule The rule to work with
   #'  @param variable the selected variable (is the index of the list $antecedent of the rule)
   #'  @param dataset, the dataset where getting all the data.
-  #'  @param DNF used for rule representation (DNF or canonica)
   #'  
   #'  @return the same rule but with the params reinitialized and marked as non evaluated.
-  Rule.addLabel <- function(rule, variable, dataset, DNF){
+  #'  
+  Rule.addLabel <- function(rule, variable, dataset){
     if(class(rule) == "Rule" & class(dataset) == "keel"){
       
       if(variable > length(rule$antecedent)){
@@ -237,18 +226,16 @@ Rule.addVariable <- function(rule, dataset, DNF){
       
       selected <- logical(fuzzyAnt$max_label)
       #Find a label that is not in the rule yet.
-      selected[unlist(lapply(fuzzyAnt$labels, function(x){x$value})) + 1] <- TRUE
+      selected[fuzzyAnt[[1]][[1]][[2]]] <- TRUE
       if(! all(selected)){
          labelSelected <- sample(which(!selected), 1)
         
         #Add the label to the fuzzy Antecedent
-        if(!DNF){
+      
           if(length(fuzzyAnt$labels) < 1){
             fuzzyAnt$labels <- list(list(name = dataset$atributeNames[datasetVar], value = labelSelected - 1))
           }
-        } else {
-          fuzzyAnt$labels[[length(fuzzyAnt$labels) + 1]] <- list(name = dataset$atributeNames[datasetVar], value = labelSelected - 1)
-        }
+     
       }
       
       rule$antecedent[[variable]] <- fuzzyAnt
@@ -283,11 +270,13 @@ Rule.addVariable <- function(rule, dataset, DNF){
       selected <- logical(fuzzyAnt$max_label)
       
       #Find a label that is not in the rule yet.
-      selected[unlist(lapply(fuzzyAnt$labels, function(x){x$value})) + 1] <- 
+      if(length(fuzzyAnt$labels) > 0)
+        selected[fuzzyAnt[[1]][[1]][[2]]] <- TRUE
+      
       if(!all(selected)){
         labelSelected <- sample(which(!selected), 1) - 1
         #Select a label and change it.
-        fuzzyAnt$labels[[.randIntClosed(1, length(fuzzyAnt$labels))]]$value <- labelSelected
+        fuzzyAnt[[1]][[1]][[2]] <- labelSelected
       }
       
       rule$antecedent[[variable]] <- fuzzyAnt
@@ -305,19 +294,24 @@ Rule.addVariable <- function(rule, dataset, DNF){
   
   
   #'
-  #' Create a new rule by changing mixing the antecedent part of two rules.
+  #' Create a new rule by mixing the antecedent part of two rules.
   #' 
   #' @param rule1 A rule
   #' @param rule2 Another rule
-  #' @param DNF Representation of rules, DNF (TRUE) or canonica (FALSE)
   #' 
   #' @return a list with the antecedents mixed. (This list would be the $antecedent part of another rule)
   #' 
-  Rule.exchangeVariables <- function(rule1, rule2, DNF = FALSE){
+  Rule.exchangeVariables <- function(rule1, rule2){
     if(class(rule1) == "Rule" & class(rule2) == "Rule"){
      
-      fuzzyAnt1 <- rule1$antecedent
-      fuzzyAnt2 <- rule2$antecedent
+      #Select the parent randomly
+      if(runif(1) < 0.5){
+        fuzzyAnt1 <- rule1$antecedent
+        fuzzyAnt2 <- rule2$antecedent
+      } else {
+        fuzzyAnt1 <- rule2$antecedent
+        fuzzyAnt2 <- rule1$antecedent
+      }
       
       #Select randomly variables from antecedent 1 and 2
       if(length(fuzzyAnt1) > 1){
@@ -341,19 +335,9 @@ Rule.addVariable <- function(rule, dataset, DNF){
       # Forma muy INEFICIENTE !! 
       for(x in fuzzyAnt2){
         found <- which(x$var == values1)
-        if(length(found) > 0){
-          #The variable is in both rules, we need to join it.
-          if(DNF){
-            v2 <- vapply(fuzzyAnt1[[found]][[1]], function(x){x$value}, numeric(1))
-            for(y in x[[1]]){
-              if(!all(y[[2]] == v2)){
-                fuzzyAnt1[[found]]$labels[[length(fuzzyAnt1[[found]]$labels) + 1]] <- y
-              }
-            }
-          } else {
-            if(length(fuzzyAnt1[[found]]$labels) < 1)
-              fuzzyAnt1[[found]]$labels[[length(fuzzyAnt1[[found]]$labels) + 1]] <- y
-          }
+        if(length(found) > 0){  # FuzzyAnt1 now has this variable. We try to mix them.
+            if(length(fuzzyAnt1[[found]][[1]]) < 1)
+              fuzzyAnt1[[found]][[1]][[1]] <- x[[1]][[1]]
         } else {
           fuzzyAnt1[[length(fuzzyAnt1) + 1]] <- x
         }
@@ -366,5 +350,119 @@ Rule.addVariable <- function(rule, dataset, DNF){
   
   
   
+  #' 
+  #'  Evaluate a rule over a dataset
+  #'  
+  #'  @param rule The rule we want to evaluate (Class "Rule").
+  #'  @param dataset The keel dataset object with the examples to compare with the rule (Class "keel")
+  #'  @param categoricalValues a logical vector indicating which attributes in the dataset are categorical
+  #'  @param numericalValues a logical vector indicating which attributes in the dataset are numerical
+  #'  @param t_norm The T-norm to use. 0 for minimum t-norm, 1 for product t-norm (default: 1)
+  #' 
+  #' @return The rule evaluated.
+  Rule.evaluate <- function(rule, dataset, categoricalValues, numericalValues, t_norm = 1){
+    if(class(rule) == "Rule" & class(dataset) == "keel"){
+       #De momento probamos esto:
+      correctly_matching_examples_by_clas <- integer(length(yeast$class_names)) # For calculate significance
+      compatibility_matching_examples <- numeric(1)
+      matching_examples <- integer(1)
+      compatibility_correctly_matching_examples <- numeric(1)
+      correctly_matching_examples <- integer(1)
+      
+      
+      data <- .separar(dataset) #ESTO ES UNA SANGRIA DE TIEMPO !!
+      data <- matrix(unlist(data), nrow = length(data[[1]]), ncol = length(data))
+      
+      # Debemos hacer algo similar a fit13 pero sin llamar a getValues(), que use comparaCAN o DNF, ya que nos devuelve el grado de pertenencia de cada regla.
+      # Quizá deberíamos hacer un comparaCAN10 y un comparaDNF5 ya que no nos permite la utilización de otra T-norma y T-conorma
+      # que no sea el mínimo y el máximo, respectivamente.
+      
+      perts <- .fitnessFuGePSD(regla = Rule.toCANVectorRepresentation(rule, dataset), 
+                               dataset = dataset, 
+                               noClass = data,
+                               nLabels = 3, 
+                               max_regla = dataset$conjuntos,
+                               cate = categoricalValues, 
+                               num = numericalValues,
+                               t_norm = t_norm)
+      
+      
+      #Calculate covered examples.
+      covered <- which(perts > 0)  # Que pasa si no se cubre a ningun ejemplo?
+      classes <- unlist(.getClassAttributes(dataset$data[covered]))
+      correctly_matching_examples_by_clas[as.integer(names(table(classes + 1)))] <- table(classes + 1)
+      matching_examples <- length(covered)
+      compatibility_matching_examples <- sum(perts[covered])
+      
+      corr_covered <- covered[which(classes == rule$clas)]
+      compatibility_correctly_matching_examples <- sum(perts[corr_covered])
+      correctly_matching_examples <- length(corr_covered)
+      rule$ideal <- length(corr_covered)  #Number of ideal covered examples for token competition procedure
+      
+      #Mark tokens of the rule
+      rule$tokens[corr_covered] <- TRUE
+      
+      #Calculate quality measures
+      rule$qm_Cov <- matching_examples / dataset$Ns
+      rule$qm_Sup <- correctly_matching_examples / dataset$Ns
+      rule$qm_Sens <- correctly_matching_examples / dataset$examplesPerClass[[rule$clas + 1]]
+      if(matching_examples > 0){
+        rule$qm_Cnf_n <- correctly_matching_examples / matching_examples
+      } else {
+        rule$qm_Cnf_n <- 0
+      }
+      
+      if(compatibility_correctly_matching_examples > 0){
+        rule$qm_Cnf_f <- compatibility_correctly_matching_examples / compatibility_matching_examples
+      } else {
+        rule$qm_Cnf_f <- 0
+      }
+      
+      rule$qm_Unus <- rule$qm_Cov * (rule$qm_Cnf_n - (dataset$examplesPerClass[[rule$clas + 1]] / dataset$Ns))
+        
+      #Significance computation
+      by_class <- which(correctly_matching_examples_by_clas > 0)
+      values <- unlist(dataset$examplesPerClass[by_class])
+      rule$qm_Sig <- 2 * sum(correctly_matching_examples_by_clas[by_class] * log10(values / (values * rule$qm_Cov) ))
+      
+      #Assing fitness and weights
+      rule$raw_fitness <- rule$qm_Cnf_f
+      rule$penalized_fitness <- -1
+      
+      #Aqui tenemos que asignar el peso de la regla
+      
+      #Set rule as evaluated
+      rule$evaluated <- TRUE
+      
+      #Return
+      rule
+    }
+  }
   
+  
+  
+  
+  #'
+  #' Converts a rule antecedent to a CANONICA vector representation
+  #' 
+  #' The function converts a rule into a CANONICA vector representation for ease the evaluation.
+  #' The evaluation of a rule with a vetor representation can be evaluated througth functions
+  #' of evaluation of rule (.fit13 or .fitnessMESDIF) that are available inside the package SDR
+  #' 
+  #' @param rule The rule that we want to evaluate.
+  #' @param dataset The keel dataset which rule refers to.
+  #' 
+  #' @return a matrix with one column to use easily with fitness functions of this package
+  #' 
+  Rule.toCANVectorRepresentation <- function(rule, dataset){
+    vector <- dataset$conjuntos
+    
+    vars <- vapply(rule$antecedent, function(x) x$var, integer(1))
+    values <- vapply(rule$antecedent, function(x) x$labels[[1]][[2]], numeric(1))
+    
+    
+    vector[vars] <- values
+    
+    as.matrix(vector)
+  }
 

@@ -2,9 +2,9 @@
 % Please edit documentation in R/FuGePSD.R
 \name{Rule.addLabel}
 \alias{Rule.addLabel}
-\title{Adds a new label to the variable selected in the rule.}
+\title{Adds a new random label to the variable selected in the rule.}
 \usage{
-Rule.addLabel(rule, variable, dataset, DNF)
+Rule.addLabel(rule, variable, dataset)
 }
 \arguments{
 \item{rule}{The rule to work with}
@@ -12,13 +12,11 @@ Rule.addLabel(rule, variable, dataset, DNF)
 \item{variable}{the selected variable (is the index of the list $antecedent of the rule)}
 
 \item{dataset,}{the dataset where getting all the data.}
-
-\item{DNF}{used for rule representation (DNF or canonica)}
 }
 \value{
 the same rule but with the params reinitialized and marked as non evaluated.
 }
 \description{
-Adds a new label to the variable selected in the rule.
+Adds a new random label to the variable selected in the rule.
 }
 

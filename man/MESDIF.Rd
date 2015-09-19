@@ -15,9 +15,9 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
 
 \item{training}{A \code{keel} class variable with training data.}
 
-\item{test}{A \code{keel} class variable with training data.}
+\item{test}{A \code{keel} class variable with test data.}
 
-\item{output}{character vector with the paths of where store information file, rules file and test quality measures file, respectively.}
+\item{output}{character vector with the paths where store information file, rules file and test quality measures file, respectively.}
 
 \item{seed}{An integer to set the seed used for generate random numbers.}
 
