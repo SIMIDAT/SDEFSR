@@ -1848,7 +1848,7 @@ if(DNFRules) {
 #' @param max_regla maximum value of all attributes ($conjuntos of the keel dataset)
 #' @param cate logical vector indicating which attributes are categorical
 #' @param num logical vector indicating which attributes are numerical
-#' @t_norm The T-norm to use. 0 to Minimum T-norm, 1 to Product T-norm.
+#' @param The T-norm to use. 0 to Minimum T-norm, 1 to Product T-norm.
 #'
 #' @return a numeric vector with the belonging degree of every example to the given rule.
 #' 

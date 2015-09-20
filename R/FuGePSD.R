@@ -351,27 +351,35 @@ Rule.addVariable <- function(rule, dataset){
   
   
   #' 
-  #'  Evaluate a rule over a dataset
+  #'  Evaluate a single rule. 
   #'  
   #'  @param rule The rule we want to evaluate (Class "Rule").
   #'  @param dataset The keel dataset object with the examples to compare with the rule (Class "keel")
+  #'  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separar for this task and convert the list into a matrix)
   #'  @param categoricalValues a logical vector indicating which attributes in the dataset are categorical
   #'  @param numericalValues a logical vector indicating which attributes in the dataset are numerical
   #'  @param t_norm The T-norm to use. 0 for minimum t-norm, 1 for product t-norm (default: 1)
-  #' 
+  #'  @param ruleWeight An integer with the rule weighting method. \itemize{
+  #'         \item 0 -> Classic Certainty Factor weight
+  #'         \item 1 -> Penalized Certainty Factor weight II
+  #'         \item 2 > Penalized Certainty Factor weight IV
+  #'         \item 3 -> No Rule Weight
+  #'         }
   #' @return The rule evaluated.
-  Rule.evaluate <- function(rule, dataset, categoricalValues, numericalValues, t_norm = 1){
+  #' 
+  Rule.evaluate <- function(rule, dataset, data, categoricalValues, numericalValues, t_norm = 1, ruleWeight = 0){
     if(class(rule) == "Rule" & class(dataset) == "keel"){
        #De momento probamos esto:
-      correctly_matching_examples_by_clas <- integer(length(yeast$class_names)) # For calculate significance
+      correctly_matching_examples_by_clas <- integer(length(dataset$class_names)) # For calculate significance
+      compatibility_matching_examples_by_clas <- numeric(length(dataset$class_names))
       compatibility_matching_examples <- numeric(1)
       matching_examples <- integer(1)
       compatibility_correctly_matching_examples <- numeric(1)
       correctly_matching_examples <- integer(1)
       
       
-      data <- .separar(dataset) #ESTO ES UNA SANGRIA DE TIEMPO !!
-      data <- matrix(unlist(data), nrow = length(data[[1]]), ncol = length(data))
+      #data <- .separar(dataset) # ESTO ES UNA SANGRIA DE TIEMPO !! HAY QUE QUITARLO DE AQUI Y LLEVARLO A UN NIVEL SUPERIOR.
+      #data <- matrix(unlist(data), nrow = length(data[[1]]), ncol = length(data))
       
       # Debemos hacer algo similar a fit13 pero sin llamar a getValues(), que use comparaCAN o DNF, ya que nos devuelve el grado de pertenencia de cada regla.
       # Quizá deberíamos hacer un comparaCAN10 y un comparaDNF5 ya que no nos permite la utilización de otra T-norma y T-conorma
@@ -389,10 +397,15 @@ Rule.addVariable <- function(rule, dataset){
       
       #Calculate covered examples.
       covered <- which(perts > 0)  # Que pasa si no se cubre a ningun ejemplo?
-      classes <- unlist(.getClassAttributes(dataset$data[covered]))
+      classes <- unlist(.getClassAttributes(dataset$data[covered])) # Esto también lo podríamos llevar a un nivel superior. (Estudiar)
       correctly_matching_examples_by_clas[as.integer(names(table(classes + 1)))] <- table(classes + 1)
       matching_examples <- length(covered)
       compatibility_matching_examples <- sum(perts[covered])
+      
+      #Calculate compatibility per class (for rule weigth)
+      for(i in seq_len(length(classes))){
+        compatibility_matching_examples_by_clas[classes[i] + 1] <- compatibility_matching_examples_by_clas[classes[i] + 1] + perts[covered[i]]
+      }
       
       corr_covered <- covered[which(classes == rule$clas)]
       compatibility_correctly_matching_examples <- sum(perts[corr_covered])
@@ -430,7 +443,32 @@ Rule.addVariable <- function(rule, dataset){
       rule$penalized_fitness <- -1
       
       #Aqui tenemos que asignar el peso de la regla
-      
+      if(ruleWeight == 0){ #Classis Certainty Factor weight
+        total <- sum(compatibility_matching_examples_by_clas)
+        if(total != 0){
+           rule$ruleWeight <- compatibility_matching_examples_by_clas[rule$clas + 1] / total
+        } else {
+          rule$ruleWeight <- 0
+        }
+      }  else if(ruleWeight == 1){ #Penalized Certainty Factor weight II
+        total <- sum(compatibility_matching_examples_by_clas)
+        if(total != 0){
+          suma <- (total - compatibility_matching_examples_by_clas[rule$clas + 1]) / (length(dataset$class_names) - 1)
+          rule$ruleWeight <- (compatibility_matching_examples_by_clas[rule$clas + 1] - suma) / total
+        } else {
+          rule$ruleWeight <- 0
+        }
+      } else if(ruleWeight == 2){ #Penalized Certainty Factor weight II
+        total <- sum(compatibility_matching_examples_by_clas)
+        if(total != 0){
+          suma <- total - compatibility_matching_examples_by_clas[rule$clas + 1] 
+          rule$ruleWeight <- (compatibility_matching_examples_by_clas[rule$clas + 1] - suma) / total
+        } else {
+          rule$ruleWeight <- 0
+        }
+      } else {
+        rule$ruleWeight <- 1
+      }
       #Set rule as evaluated
       rule$evaluated <- TRUE
       
