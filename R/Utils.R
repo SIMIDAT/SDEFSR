@@ -716,5 +716,7 @@ changeTargetVariable <- function(dataset, posVariable){
 
 
 
-
+.between <- function(min, value, max) {
+  value >= min & value < max
+}
 

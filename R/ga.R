@@ -1022,6 +1022,233 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 
 
 
+
+
+
+#
+#
+#  FuGePSD Genetic Algorithm
+#
+#
+
+.gaFuGePSD <- function(type,           # Type of execution (1 for One vs All, != 1 for normal execution)
+                       dataset,        # keel object asociated to this genetic Algorithm (training file)
+                       selection ,     # Selection function !
+                       crossover ,     # Crossover function !
+                       mutation ,      # mutation function
+                       popSize = 50,      #size of the population
+                       pcrossover = 0.8,  #Crossover Probability
+                       pmutation = 0.1,   #Mutation Probability
+                       pinsertion = 0.05,    #Insertion Probability
+                       pdropping = 0.05,     #Dropping Probability
+                       selectionSize = 2, #Tournament selection size
+                       AllClass = TRUE,   #ALL_CLASS Attribute
+                       T_norm = 1,        # T-norm used
+                       ruleWeight = 0 ,    # Rule Weighting method to use
+                       frm = 0,           # Fuzzy Reasoning Method to use
+                       maxiter = 100,    #Max generations to run this genetic Algorithm.
+                       weightsGlobalFitness = c(0.25, 0.25, 0.25, 0.25), #Weights Used in population Global Evaluation
+                       seed = .randInt(0, 20000000)
+                      )
+{
+  #First of all, we must check types of all attributes
+  if(class(dataset) != "keel")
+    stop("'dataset' must be a keel dataset object.")
+  if(! is.function(selection))
+    stop("'selection' must be function.")
+  if(! is.function(crossover))
+    stop("'crossover' must be function.")
+  if(! is.function(mutation))
+    stop("'mutation' must be function.")  
+  if(popSize <= 0)
+    stop("'popSize' must be greater than zero.")
+ 
+  if(selectionSize < 2)
+    stop("'selectionSize' must be greater than 2.")
+  if(! is.logical(AllClass))
+    stop("'AllClass' must be a logical value.")
+  if(maxiter < 1)
+    stop("'maxiter' must be greater than zero")
+
+  if(length(weightsGlobalFitness) != 4)
+    stop("length of 'weightsGlobalFitness' must be 4")
+  
+  suma <- sum(pcrossover, pmutation, pinsertion, pdropping)
+  if(suma != 1 ){
+    pcrossover <- pcrossover / suma
+    pmutation <- pmutation / suma
+    pinsertion <- pinsertion / suma
+    pdropping <- pdropping / suma
+  }
+  
+  #Once checked, the evolutive process can start
+  if(type == 0){
+    #Execution One Vs all
+    
+  } else {
+    #Normal execution and Return
+    executionPSD( clas = NULL,
+                  dataset,        
+                  selection ,    
+                  crossover ,     
+                  mutation ,      
+                  popSize,      
+                  pcrossover, 
+                  pmutation ,  
+                  pinsertion,    
+                  pdropping ,     
+                  selectionSize, 
+                  AllClass,   
+                  T_norm,       
+                  ruleWeight,    
+                  frm,           
+                  maxiter,   
+                  weightsGlobalFitness,
+                  seed)
+  }
+  
+}
+
+
+
+executionPSD <- function(clas = NULL,   # number of the class to generate rules.
+                       dataset,        # keel object asociated to this genetic Algorithm (training file)
+                       selection ,     # Selection function !
+                       crossover ,     # Crossover function !
+                       mutation ,      # mutation function
+                       popSize = 50,      #size of the population
+                       pcrossover = 0.8,  #Crossover Probability
+                       pmutation = 0.1,   #Mutation Probability
+                       pinsertion = 0.05,    #Insertion Probability
+                       pdropping = 0.05,     #Dropping Probability
+                       selectionSize = 2, #Tournament selection size
+                       AllClass = TRUE,   #ALL_CLASS Attribute
+                       T_norm = 1,        # T-norm used
+                       ruleWeight = 0 ,    # Rule Weighting method to use
+                       frm = 0,           # Fuzzy Reasoning Method to use
+                       maxiter = 100,    #Max generations to run this genetic Algorithm.
+                       weightsGlobalFitness = c(0.25, 0.25, 0.25, 0.25), #Weights Used in population Global Evaluation
+                       seed = .randInt(0, 20000000)
+){
+  populationFitness <- bestPopulationFitness <- numeric(1)
+  exampleClass <- unlist(.getClassAttributes(dataset$data))
+  
+  #get categorical and numerical variables
+  categorical <- dataset$atributeTypes == "c"
+  categorical <- categorical[-length(categorical)]
+  numerical <- !categorical
+  
+  datasetNoClass <- matrix(unlist(.separar(dataset)), nrow = dataset$nVars, ncol = dataset$Ns)
+  tokensGlobal <- logical()
+  bestPop <- vector(mode = "list", length = popSize)
+  
+  #Init population
+  pop <- lapply(seq_len(popSize), function(x, dataset, tnorm, tconorm, rule_weight, clase){
+    createNewRule(dataset, tnorm, tconorm, rule_weight, clase)
+  }, dataset, T_norm, T_norm, ruleWeight, clas)
+  
+  #evaluate initial population individuals
+  pop <- lapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight)
+  
+  #evaluate the whole population
+  populationFitness <- Pop.evaluate(pop, dataset, datasetNoClass, exampleClass, frm, categorical, numerical, T_norm, weightsGlobalFitness)
+  
+  #best population is now initial population.
+  bestPop <- pop
+  bestPopulationFitness <- populationFitness
+  cat(paste("Global Fitness obtained in generation [0]:", bestPopulationFitness, "\n", sep = " "))
+  
+  
+  
+  #Init the evolutive process
+  for(generation in seq_len(maxiter - 1)){
+    #First, create a join population with twice length of population. Then add pop to joinPop
+    joinPop <- vector(mode = "list", length = length(pop) * 2)
+    joinPop[seq_len(length(pop))] <- pop
+    
+    #Now we need to generate an offspring population length equal to pop length.
+    #This offspring population is generated via genetic operators.
+    
+    dados <- runif(length(pop))
+    first_parents <- vapply(X = seq_len(length(pop)), 
+                            FUN = function(x, pop, tam){
+                                  tournamentSelection(pop, tam)}, numeric(1), pop, selectionSize)
+    
+    #Specify the genetic operator to apply according to their probability in 'dados'
+    cruzan <- first_parents[which(dados < pcrossover)]
+    mutan <- first_parents[which(.between(pcrossover, dados, pcrossover + pmutation))]
+    insertan <- first_parents[which(.between(pcrossover + pmutation, dados, pcrossover + pmutation + pinsertion))]
+    dropean <- first_parents[which(pcrossover + pmutation + pinsertion <= dados)]
+    
+    posJoinPop <- length(pop) + 1
+    #Make crossovers
+    for(i in cruzan){
+      second_parent <- sample(seq_len(length(pop))[-i], size = 1)
+      joinPop[[posJoinPop]] <- FuGePSD_crossover(rule1 = pop[[i]], rule2 = pop[[second_parent]], nvars = dataset$nVars + 1)
+      posJoinPop <- posJoinPop + 1  
+    }
+    
+    #Make mutations 
+    for(i in mutan){
+      joinPop[[posJoinPop]] <- FuGePSD_Mutation(pop[[i]], dataset)
+      posJoinPop <- posJoinPop + 1
+    }
+    
+    #Make insertions
+    for(i in insertan){
+      if(length(pop[[i]][[1]]) == dataset[[16]]){ 
+        #If we cannot add more variables, we introduce a rule with an empty antecedent.
+        joinPop[[posJoinPop]] <- Rule.clearAntecedent(pop[[i]])
+      } else {
+        #Add a random variable
+        joinPop[[posJoinPop]] <- Rule.addVariable(pop[[i]], dataset)
+      }
+      posJoinPop <- posJoinPop + 1
+    }
+    
+    #Make droppings
+    for(i in dropean){
+      if(length(pop[[i]][[1]]) == 1){
+        #We cannot delete more variables, return an empty rule
+        joinPop[[posJoinPop]] <- Rule.clearAntecedent(pop[[i]])
+      } else {
+        joinPop[[posJoinPop]] <- Rule.deleteVariable(pop[[i]])
+      }
+      posJoinPop <- posJoinPop + 1
+    }
+    
+    #Evaluate joinPop.
+    joinPop <- lapply(joinPop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight)
+    
+    #Apply Token Competition
+    pop <- tokenCompetition(joinPop, dataset)
+    
+    #Evaluate Global Fitness
+    populationFitness <- Pop.evaluate(pop, dataset, datasetNoClass, exampleClass, frm, categorical, numerical, T_norm, weightsGlobalFitness)
+    
+    #Substitute best population if actual if better.
+    if(bestPopulationFitness < populationFitness){
+      bestPopulationFitness <- populationFitness
+      bestPop <- pop
+      cat(paste("Global Fitness obtained in generation [", generation, "]: ", bestPopulationFitness, "\n", sep = ""))
+    }
+  }
+  
+  #Order bestPop by conf_f (desc. order)
+  fuzzy_conf <- vapply(X = bestPop, FUN = function(x){x$qm_Cnf_f}, numeric(1))
+  sens <- vapply(X = bestPop, FUN = function(x){x$qm_Sens}, numeric(1))
+  orden <- order(fuzzy_conf, decreasing = TRUE)
+  fuzzy_conf <- fuzzy_conf[orden]
+  sens <- sens[orden]
+  
+  bestPop <- bestPop[orden]
+  
+  #Return 
+  list(bestPop = bestPop, conf = fuzzy_conf, sensitivity = sens)
+
+}
+
+
 #-------------------------------------------------------------------------------
 # ---  THis part is part of the definition of the "ga" class done in the GA Package
 #--------------------------------------------------------------------------------

@@ -53,15 +53,130 @@ read.keel <- function(file, nLabels = 3) {
   categorical_values <- vector(mode = "list", length = num_atribs)
   
   #Procesamos @relation
-  relation_pos <-
-    grep(pattern = "@relation", x = properties, fixed = TRUE)
+  relation_pos <- grep(pattern = "@relation", x = properties, fixed = TRUE) #NOTA: Es mejor usar pmatch ! 77x faster!
   if (length(relation_pos) == 0)
     stop("No '@relation' field provided, this is not a KEEL format dataset. Aborting load... ")
   relacion <- properties[[relation_pos]][2]
   
   #Procesamos el resto de atributos
-  atributes <-
-    properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
+  atributes <- properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
+  aux <- vector(mode = "list", length = 5)
+  
+  if (length(atributes) == 0)
+    stop(
+      "No '@input' or '@output' fields found, this is not a KEEL format dataset. Aborting load..."
+    )
+  
+  for (i in seq_len(length(atributes))) {
+    aux <- .processLine(line = atributes[[i]])
+    
+    atribs_names[i] <- aux[[1]]
+    atribs_types[i] <- aux[[2]]
+    atribs_min[i] <- aux[[3]]
+    atribs_max[i] <- aux[[4]]
+    categorical_values[[i]] <- aux[[5]]
+  }
+  
+  
+  #Preparacion de los datos
+  if (Sys.info()[1] != "Windows")
+    data <-
+    parallel::mclapply(
+      X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1
+    )
+  else
+    #In windows mclapply doesnt work
+    data <-
+    parallel::mclapply(
+      X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1
+    )
+  
+  
+  #Preparacion del resto de atributos del dataset
+  
+  covered <- logical(length = length(data))
+  fuzzySets <-
+    .create_fuzzyIntervals(
+      min = atribs_min, max = atribs_max, num_sets = nLabels, types = atribs_types
+    )
+  crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
+  classNames <- categorical_values[[length(categorical_values)]]
+  clValues <- unlist(lapply(data, '[', length(atributes)))
+  examplesPerClass <-
+    lapply(
+      X = seq_len(length(classNames)) - 1, FUN = function(x, data)
+        sum(data == x), clValues
+    )
+  names(examplesPerClass) <- classNames
+  
+  conjuntos <-
+    .dameConjuntos(data_types = atribs_types, max = atribs_max, n_labels = nLabels)
+  
+  lostData <- FALSE #Quitar esto
+  
+  lista <- list(
+    relation = relacion,
+    atributeNames = atribs_names,
+    atributeTypes = atribs_types,
+    min = atribs_min,
+    max = atribs_max,
+    nVars = length(atribs_min) - 1,
+    data = data,
+    class_names = classNames,
+    examplesPerClass = examplesPerClass,
+    lostData = lostData,
+    covered = covered,
+    fuzzySets = fuzzySets,
+    crispSets = crispSets,
+    conjuntos = conjuntos,
+    categoricalValues = categorical_values,
+    Ns = length(data)
+  )
+  
+  
+  class(lista) <- "keel"
+  lista
+  
+}
+
+read.keel2 <- function(file, nLabels = 3) {
+  if (nLabels < 1)
+    stop("Number of fuzzy sets ('nLabels') must be greater than zero.")
+  
+  if(missing(file))
+    stop("'file' is a mandatory argument of the function.")
+  
+  if(class(file) != "character")
+    stop("'file' must be a character string.")
+  
+  data <- .readFile(file)
+  value <- pmatch("@data", data) -1
+  
+  if (is.na(value))
+    stop("No '@data' field found, this is not a KEEL format dataset. Aborting load...")
+  
+  properties <- data[1:value]
+  data <- data[(value + 2):length(data)]
+  
+  # Preparacion de las propiedades de los datos
+  properties <- lapply(X = properties, FUN = .preprocessHeader)
+  
+  num_atribs <-
+    length(properties) - 3 # Obviamos valor de @relation, @inputs y @outputs
+  atribs_names <- character(num_atribs)
+  atribs_types <- character(num_atribs)
+  atribs_min <- numeric(num_atribs)
+  atribs_max <- numeric(num_atribs)
+  categorical_values <- vector(mode = "list", length = num_atribs)
+  
+  #Procesamos @relation
+  relation_pos <- grep("@relation", x = properties, fixed = TRUE, useBytes = TRUE) #NOTA: Es mejor usar pmatch ! 77x faster!
+  if (length(relation_pos) == 0)
+    stop("No '@relation' field provided, this is not a KEEL format dataset. Aborting load... ")
+  relacion <- properties[[relation_pos]][2]
+  
+  #Procesamos el resto de atributos
+  atributes <- properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
   aux <- vector(mode = "list", length = 5)
   
   if (length(atributes) == 0)
@@ -142,8 +257,6 @@ read.keel <- function(file, nLabels = 3) {
 }
 
 
-
-
 #
 #
 #  Reads a parameter file for an implemented algorithm
@@ -190,34 +303,57 @@ read.keel <- function(file, nLabels = 3) {
   pCob <- grep(pattern = "porcCob", x = data, fixed = TRUE)
   dom <- grep(pattern = "StrictDominance", x = data, fixed = TRUE)
   miCf <- grep(pattern = "minCnf", x = data, fixed = TRUE)
+  #FuGePSD Parametros
+  nLabels <- grep(pattern = "Number of Labels", x = data, fixed = TRUE)
+  tnorm <- grep(pattern = "T-norm/T-conorm for the Computation of the Compatibility Degree", x = data, fixed = TRUE)
+  ruleWeight <- grep(pattern = "Rule Weight", x = data, fixed = TRUE)
+  frm <- grep(pattern = "Fuzzy Reasoning Method", x = data, fixed = TRUE)
+  numGens <- grep(pattern = "Number of Generations", x = data, fixed = TRUE)
+  tamPop <- grep(pattern = "Initial Number of Fuzzy Rules (0 for 5*n_var)", x = data, fixed = TRUE)
+  alphaFitness <- grep(pattern = "Alpha Raw Fitness", x = data, fixed = TRUE)
+  crossProb <- grep(pattern = "Crossover probability", x = data, fixed = TRUE)
+  mutProb <- grep(pattern = "Mutation probability", x = data, fixed = TRUE)
+  insProb <- grep(pattern = "Insertion probability", x = data, fixed = TRUE)
+  dropProb <- grep(pattern = "Dropping Condition probability", x = data, fixed = TRUE)
+  tsSize <- grep(pattern = "Tournament Selection Size", x = data, fixed = TRUE)
+  gfw1 <- grep(pattern = "Global Fitness Weight 1", x = data, fixed = TRUE)
+  gfw2 <- grep(pattern = "Global Fitness Weight 2", x = data, fixed = TRUE)
+  gfw3 <- grep(pattern = "Global Fitness Weight 3", x = data, fixed = TRUE)
+  gfw4 <- grep(pattern = "Global Fitness Weight 4", x = data, fixed = TRUE)
+  allClass <- grep(pattern = "All Class", x = data, fixed = TRUE)
+  executionType <- grep(pattern = "Type of Execution", x = data, fixed = TRUE)
   #--------------------------------------------------------
   
   if (length(alg) == 0)
-    stop("Param file error: 'Algorithm' not especified. ")
+    stop("Param file error: 'algorithm' not especified. ")
+  algoritmo <- data[[alg]][2]
   if (length(iData) == 0)
     stop("Param file error: 'inputData' not especified. ")
   if (length(oData) == 0)
     stop("Param file error: 'outputData' not especified. ")
   if (length(seed) == 0)
-    stop("Param file error: 'Seed' not especified. ")
-  if (length(labels) == 0)
-    stop("Param file error: 'nLabels' not especified. ")
-  if (length(evals) == 0)
-    stop("Param file error: 'nEval' not especified. ")
-  if (length(len) == 0)
-    stop("Param file error: 'popLength' not especified. ")
-  if (length(cross) == 0)
-    stop("Param file error: 'crossProb' not especified. ")
-  if (length(mut) == 0)
-    stop("Param file error: 'mutProb' not especified. ")
-  if (length(rep) == 0)
-    stop("Param file error: 'RulesRep' not especified. ")
-  if (length(tC) == 0)
-    stop("Param file error: 'targetClass' not especified. ")
+    stop("Param file error: 'seed' not especified. ")
   
-  algoritmo <- data[[alg]][2]
-  if (!any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD")))
-    stop("Param file error: 'Algorithm' must be \"SDIGA\", \"MESDIF\" or \"NMEEFSD\" ")
+  if(any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD"))){
+    if (length(labels) == 0)
+      stop("Param file error: 'nLabels' not especified. ")
+    if (length(evals) == 0)
+      stop("Param file error: 'nEval' not especified. ")
+    if (length(len) == 0)
+      stop("Param file error: 'popLength' not especified. ")
+    if (length(cross) == 0)
+      stop("Param file error: 'crossProb' not especified. ")
+    if (length(mut) == 0)
+      stop("Param file error: 'mutProb' not especified. ")
+    if (length(rep) == 0)
+      stop("Param file error: 'RulesRep' not especified. ")
+    if (length(tC) == 0)
+      stop("Param file error: 'targetClass' not especified. ")
+  }
+
+  if (!any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD", "FUGEPSD")))
+    stop("Param file error: 'Algorithm' must be \"SDIGA\", \"MESDIF\", \"NMEEFSD\" or \"FUGEPSD\"  ")
+  
   #General parameters
   #datos de entrada
   input_data <- character(2) # Dos inputs, training y tes
@@ -239,13 +375,20 @@ read.keel <- function(file, nLabels = 3) {
     strsplit(x = input_string, split = " ", fixed = TRUE)[[1]]
   
   semilla <- as.integer(data[[seed]][2])
-  n_intervals <- as.integer (data[[labels]][2])
-  n_evals <- as.integer (data[[evals]][2])
-  popLenght <- as.integer(data[[len]][2])
-  crossProb <- as.double(data[[cross]][2])
-  prob_mutacion <- as.double(data[[mut]][2])
-  rule_type <- data[[rep]][2]
-  target <- data[[tC]][2]
+  
+  if(length(input_data) > 2){ #If the are more than 2 input files we warning the user.
+    warning("More than two input files have been specified. Only the first two will be used !")
+  }
+  
+  if(any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD"))){
+    n_intervals <- as.integer (data[[labels]][2])
+    n_evals <- as.integer (data[[evals]][2])
+    popLenght <- as.integer(data[[len]][2])
+    crossProb <- as.double(data[[cross]][2])
+    prob_mutacion <- as.double(data[[mut]][2])
+    rule_type <- data[[rep]][2]
+    target <- data[[tC]][2]
+  }
   
   #SDIGA own parameters
   if (algoritmo == "SDIGA") {
@@ -343,6 +486,72 @@ read.keel <- function(file, nLabels = 3) {
     lista <-
       list(
         algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target, StrictDominance = dominance, diversity = diversity, porcCob = porcCob, reInitPob = reInit, minConf = minConf, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3
+      )
+    
+  }
+  
+  
+  #FuGePSD Own Parameters
+  if(algoritmo == "FUGEPSD"){
+    if(length(nLabels) == 0)
+      stop("'Number of Labels' not specified.")
+    if(length(tnorm) == 0)
+      stop("'T-norm/T-conorm for the Computation of the Compatibility Degree' not specified")
+    if(length(ruleWeight) == 0)
+      stop("'Rule Weight' not specified.")
+    if(length(frm) == 0)
+      stop("'Fuzzy Reasoning Method' not specified.")
+    if(length(numGens) == 0)
+      stop("'Number of Generations' not specified.")
+    if(length(tamPop) == 0)
+      stop("'Initial Number of Fuzzy Rules (0 for 5*n_var)' not specified.")
+    if(length(alphaFitness) == 0)
+      stop("'Alpha Raw Fitness' not specified.")
+    if(length(crossProb) == 0)
+      stop("'Crossover probability' not specified.")
+    if(length(mutProb) == 0)
+      stop("'Mutation probability' not specified.")
+    if(length(insProb) == 0)
+      stop("'Insertion probability' not specified.")
+    if(length(dropProb) == 0)
+      stop("'Dropping Condition probability' not specified.")
+    if(length(tsSize) == 0)
+      stop("'Tournament Selection Size' not specified.")
+    if(length(gfw1) == 0)
+      stop("'Global Fitness Weight 1' not specified.")
+    if(length(gfw2) == 0)
+      stop("'Global Fitness Weight 2' not specified.")
+    if(length(gfw3) == 0)
+      stop("'Global Fitness Weight 3' not specified.")
+    if(length(gfw4) == 0)
+      stop("'Global Fitness Weight 4' not specified.")
+    if(length(allClass) == 0)
+      stop("'All Class' not specified.")
+    if(length(executionType) == 0)
+      stop("'Type of Execution' not specified.")
+    
+    lista <- list(algorithm = algoritmo, 
+                  inputData = input_data, 
+                  outputData = output_data, 
+                  seed = semilla, 
+                  nLabels = as.integer(data[[nLabels]][2]), 
+                  nGens = as.integer(data[[numGens]][2]), 
+                  popLength = as.integer(data[[tamPop]][2]), 
+                  crossProb = as.double(data[[crossProb]][2]), 
+                  mutProb = as.double(data[[mutProb]][2]),
+                  insPro = as.double(data[[insProb]][2]),
+                  dropProb = as.double(data[[dropProb]][2]),
+                  frm = tolower(data[[frm]][2]),
+                  tnorm = tolower(data[[tnorm]][2]),
+                  ruleWeight = tolower(data[[ruleWeight]][2]),
+                  tournamentSize = as.integer(data[[tsSize]][2]),
+                  allClass = data[[allClass]][2],
+                  alphaFitness = as.double(data[[alphaFitness]][2]),
+                  executionType = as.integer(data[[executionType]][2]),
+                  gfw1 = as.double(data[[gfw1]][2]),
+                  gfw2 = as.double(data[[gfw2]][2]),
+                  gfw3 = as.double(data[[gfw3]][2]),
+                  gfw4 = as.double(data[[gfw4]][2])
       )
     
   }
@@ -655,14 +864,8 @@ read.keel <- function(file, nLabels = 3) {
 #
 #
 .preprocessHeader <- function(line) {
-  line <-
-    sub(
-      pattern = " {", replacement = " ", x = line, fixed = TRUE
-    )
-  line <-
-    sub(
-      pattern = "{", replacement = " ", x = line, fixed = TRUE
-    )
+  line <- sub(pattern = " {", replacement = " ", x = line, fixed = TRUE)
+  line <- sub(pattern = "{", replacement = " ", x = line, fixed = TRUE)
   line <-
     sub(
       pattern = "}", replacement = "", x = line, fixed = TRUE
@@ -769,16 +972,22 @@ read.keel <- function(file, nLabels = 3) {
 #
 #
 # This function reads an entire file in a block and the it is splitted by the \n character.
-# It is a 50 % faster than using scan()
+# It is a 8X faster than using scan()
 #
+# Thanks to F. Charte! 
 #
 .readFile <- function(file) {
-  contents <- readChar(file, file.info(file)$size)
+  con <- file(file, "rb")
+  if(!isOpen(con))
+    open(con, "rb")
+  
+  contents <- readChar(con, file.info(file)$size, useBytes = TRUE)
+  close(con)
   
   #Return
-  strsplit(x = contents, split = "\n", fixed = TRUE)[[1]]
+  strsplit(x = contents, split = "\n", fixed = TRUE, useBytes = TRUE)[[1]]
+ 
 }
-
 
 
 #' Saves a \code{keel} dataset into a KEEL dataset format file.

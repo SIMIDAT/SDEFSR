@@ -4,7 +4,7 @@
 \alias{createNewRule}
 \title{Creates a random general rule}
 \usage{
-createNewRule(dataset, tnorm, tconorm, rule_weight)
+createNewRule(dataset, tnorm, tconorm, rule_weight, clase = NULL)
 }
 \arguments{
 \item{dataset}{The keel dataset where getting the data}

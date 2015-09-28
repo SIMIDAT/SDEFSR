@@ -1,4 +1,4 @@
-algorithm = GPCOACH 
+algorithm = FUGEPSD
 inputData = "iris-10-1tra.soyyo.dat" "iris-10-1tra.soyyo.dat" "iris-10-1tst.soyyo.dat"
 outputData = "iris_ej1.soyyo.tra" "iris_ej1.soyyo.tst" "iris-aux1_ej1.soyyo.txt" "iris-aux2_ej1.soyyo.txt"
 seed = 2328897

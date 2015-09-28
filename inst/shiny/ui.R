@@ -9,7 +9,7 @@ library(shiny)
 
 shinyUI(fluidPage(
   
-  titlePanel(h1("Execute Subgroup Discovery Algorithms with R ", id = "textoPrincipal", align = "center"),windowTitle = "Execute EFS algorithms with R"), 
+  titlePanel(h1("Execute Subgroup Discovery Algorithms with R ", id = "textoPrincipal", align = "center"),windowTitle = "Execute Subgroup Discovery Algorithms with R"), 
   br(),
   sidebarLayout(
     sidebarPanel( 
