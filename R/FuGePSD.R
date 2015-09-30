@@ -111,7 +111,7 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
   
   #Select the variable randomly
 
-    i <- .randIntClosed(1, antecedent$max_label)
+    i <- sample(antecedent$max_label, size = 1)
     antecedent$labels <- list(list(name = dataset$atributeNames[variable], value = i - 1))
     antecedent$operator <- round(runif(1), digits = 0)
 
@@ -138,12 +138,11 @@ Rule.deleteVariable <- function(rule){
     rule$antecedent <- rule$antecedent[- variable]
     
     #Reset the values, because it is a new rule
-    rule$weight <- 0
-    rule$raw_fitness <- 0
+    rule[c(3:5, 8,10, 13:19)] <- 0
     rule$evaluated <- FALSE
-    rule$ideal <- 0L
     rule$level <- 1L
     
+  
     #Return 
     rule
   }
@@ -165,11 +164,11 @@ Rule.clearAntecedent <- function(rule){
     rule$antecedent <- list()
     
     #Reset the values, because it is a new rule
-    rule$weight <- 0
-    rule$raw_fitness <- 0
+    rule[c(3:5, 8,10, 13:19)] <- 0
     rule$evaluated <- FALSE
-    rule$ideal <- 0L
     rule$level <- 1L
+    
+    
     
     #Return
     rule
@@ -204,6 +203,13 @@ Rule.addVariable <- function(rule, dataset){
       .createNewFuzzyAntecedent(variable = notSel[.randIntClosed(1,length(notSel))],
                                dataset = dataset)
     rule$antecedent <- old_antecedent
+    
+    #RESET VALUES, it is a new rule
+    rule[c(3:5, 8,10, 13:19)] <- 0
+    rule$evaluated <- FALSE
+    rule$level <- 1L
+    
+    
     
     #Return
     rule
@@ -246,11 +252,11 @@ Rule.addVariable <- function(rule, dataset){
       
       rule$antecedent[[variable]] <- fuzzyAnt
       #Reset the values, because it is a new rule
-      rule$weight <- 0
-      rule$raw_fitness <- 0
+      rule[c(3:5, 8,10, 13:19)] <- 0
       rule$evaluated <- FALSE
-      rule$ideal <- 0L
       rule$level <- 1L
+      
+      
       #return
       rule
     }
@@ -287,11 +293,11 @@ Rule.addVariable <- function(rule, dataset){
       
       rule$antecedent[[variable]] <- fuzzyAnt
       #Reset the values, because it is a new rule
-      rule$weight <- 0
-      rule$raw_fitness <- 0
+      rule[c(3:5, 8,10, 13:19)] <- 0
       rule$evaluated <- FALSE
-      rule$ideal <- 0L
       rule$level <- 1L
+     
+      
       #return
       rule
       
@@ -413,6 +419,7 @@ Rule.addVariable <- function(rule, dataset){
         rule$ideal <- length(corr_covered)  #Number of ideal covered examples for token competition procedure
         
         #Mark tokens of the rule
+        rule$tokens <- logical(dataset[[16]])
         rule$tokens[corr_covered] <- TRUE
         
         #Calculate quality measures
@@ -567,6 +574,13 @@ Rule.addVariable <- function(rule, dataset){
         new_rule$antecedent <- Rule.exchangeVariables(rule1, rule2)
     }
     
+    #Reset values of new_rule, this is a new rule
+    new_rule[c(3:5, 8,10, 13:19)] <- 0
+    new_rule$evaluated <- FALSE
+    new_rule$level <- 1L
+   
+    
+    
     #return 
     new_rule
   }
@@ -578,11 +592,19 @@ Rule.addVariable <- function(rule, dataset){
   #' Make a subgroup discovery task using the FuGePSD algorithm.
   #'
   FUGEPSD <- function(paramFile){
+    #Catch start time
+    init_time <- as.numeric(Sys.time())
+    
+    #Start of the algorithm
     parametros <- .read.parametersFile2(paramFile)
     
     training <- read.keel(parametros$inputData[1], parametros$nLabels)
     test <- read.keel(parametros$inputData[2], parametros$nLabels)
-
+    
+    categorical <- training$atributeTypes == "c"
+    categorical <- categorical[-length(categorical)]
+    numerical <- !categorical
+    
     #Parse parameters
     
     if(parametros$tnorm == "minimum/maximum"){
@@ -632,16 +654,86 @@ Rule.addVariable <- function(rule, dataset){
                seed = parametros[[4]])
     
     
+    AllClass <- as.logical(parametros[[16]])
+    exampleClass <- unlist(.getClassAttributes(test$data))
+    datasetNoClass <- matrix(unlist(.separar(test)), nrow = test$nVars, ncol = test$Ns)
+    
+    ###################
+    #  TESTING RULES  #
+    ###################
+    
     
     #Now we have the best population obtained by the evolutionary process. Then, we apply 0.6, 0.7, 0.8 and 0.9
-    #filters of fuzzy confidence
+    #filters of fuzzy confidence.
     bestPop <- pop[[1]]
+    lapply(seq_len(length(bestPop)), function(x){bestPop[[x]]$evaluated <<- FALSE; invisible()})
+    classes <- vapply(bestPop, function(x){x$clas}, integer(1)) + 1L
+    filtros <- c(0.6, 0.7, 0.8, 0.9)
     
-    pop_06 <- bestPop[which(pop[[2]] >= 0.6 & pop[[3]] >= 0.6)]
-    pop_07 <- bestPop[which(pop[[2]] >= 0.7 & pop[[3]] >= 0.6)]
-    pop_08 <- bestPop[which(pop[[2]] >= 0.8 & pop[[3]] >= 0.6)]
-    pop_09 <- bestPop[which(pop[[2]] >= 0.9 & pop[[3]] >= 0.6)]
-    
+    #SCREENING FUNCTION
+   for(f in filtros){
+     examples_class <- logical(length(training$class_names))
+     pasan_filtro <- which(pop[[2]] >= f & pop[[3]] >= 0.6)
+     new_pop <- bestPop[pasan_filtro]
+     
+     if(length(new_pop) > 0){
+       examples_class[classes[pasan_filtro]] <- TRUE
+     }
+     
+     if(!all(examples_class) & AllClass){
+       cl <- which(!examples_class)
+       cl <- which(classes %in% cl)
+       pos <- which(pop[[3]][cl] >= 0.6)
+       posi <- na.exclude(pmatch(which(!examples_class), classes[pos]))
+       new_pop[(length(new_pop) + 1):(length(new_pop) + length(posi))] <- bestPop[pos[posi]]
+       examples_class[classes[pos[posi]]] <- TRUE
+     }
+     
+     #Verify the use of parameter ALL_CLASS
+     if(AllClass){
+       if(!all(examples_class)){
+       #As the bestPop is ordered by fuzzy confidence, we take the best rule in terms of confidence for 
+       #each class that are not in the new population yet.
+       pos <- pmatch(which(!examples_class), classes)
+       new_pop[(length(new_pop) + 1):(length(new_pop) + length(pos))] <- bestPop[pos]
+       }
+     } else {
+       #If ! ALL_CLASS and new_pop is empty, the algorithm returns the best of the population.
+       if(length(new_pop) == 0){
+         new_pop <- bestPop[[1]]
+       }
+     }
+     
+     #Order new_pop by class
+     new_classes <- vapply(new_pop, function(x){x$clas}, integer(1))
+     new_pop <- new_pop[order(new_classes)]
+     
+     #Evalute population against test data
+     testGlobalFitness <- Pop.evaluate(pop = bestPop, dataset = test, examplesNoClass = datasetNoClass, exampleClass = exampleClass, frm = parametros[[12]], categorical = categorical, numerical = numerical, t_norm = parametros[[13]], weights = c(parametros[[19]], parametros[[20]], parametros[[21]], parametros[[22]]) )
+     new_pop <- lapply(new_pop, Rule.evaluate, test, datasetNoClass, categorical, numerical, parametros[[13]], parametros[[14]])
+     
+     #Print results in files.
+     contador <- 1
+     
+     #Change the name of the output file by the following: $fileName$_filtro_AllClass.txt for rules file with filter 'filtro'
+     #                                                     $fileName$_filtro_AllClass_QM.txt
+     ruleFileName <- paste(substr(parametros$outputData[2], 1, regexpr("\\.[^\\.]*$", parametros$outputData[2]) - 1),
+                                "_f", paste(substr(as.character(f), 1, 1) , substr(as.character(f), 3, 3) , sep = ""), "_", 
+                                AllClass, ".txt", sep = "")
+     
+     testQMFileName <- paste(substr(parametros$outputData[2], 1, regexpr("\\.[^\\.]*$", parametros$outputData[2]) - 1),
+                           "_f", paste(substr(as.character(f), 1, 1) , substr(as.character(f), 3, 3) , sep = ""), "_", 
+                           AllClass, "_QM", ".txt", sep = "")
+      
+      cat("\n\n---- FILTER: ", f, " ----\n\n", sep = "")
+     
+      writeRuleFile(new_pop, training, ruleFileName)
+      cat("\n QUALITY MEASURES OF THE RULES GENERATED: \n\n")
+      writeTestQMFile(new_pop, testQMFileName, test$Ns)
+   
+   }
+   
+   cat("\n\nAlgorithm finished. \nExecution time: ", parseTime(as.numeric(Sys.time()), init_time), sep = "")
     
   }
   
@@ -789,3 +881,93 @@ tokenCompetition <- function(pop, dataset){
   #Return the populations with deleted individuals
   pop[which(fitness > 0)]
 }
+
+
+
+
+
+#
+# Writes rules into a human-readable format into a file.
+#
+writeRuleFile <- function(pop, dataset, fileName){
+  contador <- 1
+  RulesLine <- ""
+  sumVars <- 0
+  numRules <- length(pop)
+  
+  for(regla in pop){
+     #Make the human-readable rule representation
+     ruleRep <- sapply(regla$antecedent, function(x){paste(x$labels[[1]]$name, " IS L_", x$labels[[1]]$value, sep = "")})
+     ruleRep <- paste(ruleRep, collapse = " AND ")
+     RulesLine <- paste(RulesLine, contador,": IF ", ruleRep, " THEN ", dataset$class_names[regla$clas + 1], " with Rule Weight: ", regla$ruleWeight, "\n", sep = "")
+     sumVars <- sumVars + length(regla$antecedent)
+     contador <- contador + 1
+  }
+  
+  finalLine <- paste("@Number of rules: ", numRules, "\n@Average number of variables: ", round(sumVars / numRules, 2), "\n\n", RulesLine, sep = "")
+  
+  cat(finalLine) #Prints in the console
+  cat(finalLine, file = fileName) #Prints in the file
+  
+  invisible()
+}
+
+
+writeTestQMFile <- function(pop, fileName, numExamples){
+  #Get classes of the rules.
+  sum_nVars <- numeric(1)
+  sum_Cov <- numeric(1)
+  sum_Sig <- numeric(1)
+  sum_Unus <- numeric(1)
+  sum_Sens <- numeric(1)
+  tokens <- logical(numExamples)  #For total Support Calculation.
+  sum_ConfN <- numeric(1)
+  sum_ConfF <- numeric(1)
+  
+  nRules <- length(pop)
+  contador <- 1
+  Salida <- ""
+  for(regla in pop){
+    sum_nVars <- sum_nVars + length(regla$antecedent)
+    sum_Cov <- sum_Cov + regla$qm_Cov
+    sum_Sig <- sum_Sig + regla$qm_Sig
+    sum_Unus <- sum_Unus + regla$qm_Unus
+    sum_Sens <- sum_Sens + regla$qm_Sens
+    sum_ConfN <- sum_ConfN + regla$qm_Cnf_n
+    sum_ConfF <- sum_ConfF + regla$qm_Cnf_f
+    
+    tokens[which(regla$tokens)] <- TRUE
+    
+   #Rule QM
+   Salida <-  paste(Salida, paste("Rule ", contador, ":", sep = ""),
+         paste("\t - N_vars:", length(regla$antecedent), sep = " "),
+         paste("\t - Coverage:", round(regla$qm_Cov, 6), sep = " "),
+         paste("\t - Significance:", round(regla$qm_Sig, 6), sep = " "),
+         paste("\t - Unusualness:", round(regla$qm_Unus, 6), sep = " "),
+         paste("\t - Sensitivity:", round(regla$qm_Sens, 6), sep = " "),
+         paste("\t - Support:", round(regla$qm_Sup, 6), sep = " "),
+         paste("\t - FConfidence:", round(regla$qm_Cnf_f,6), sep = " "),
+         paste("\t - CConfidence:", round(regla$qm_Cnf_n, 6), sep = " "),
+         sep = "\n"
+    )
+   contador <- contador + 1
+  }
+  
+  #Global 
+  Salida <- paste(Salida, "Global:",
+       paste("\t - N_rules:", nRules, sep = " "),
+       paste("\t - N_vars:", round(sum_nVars / nRules, 6), sep = " "),
+       paste("\t - Coverage:", round(sum_Cov / nRules, 6), sep = " "),
+       paste("\t - Significance:", round(sum_Sig / nRules, 6), sep = " "),
+       paste("\t - Unusualness:", round(sum_Unus / nRules, 6), sep = " "),
+       paste("\t - Sensitivity:", round(sum_Sens / nRules, 6), sep = " "),
+       paste("\t - Support:", round(sum(tokens) / numExamples, 6), sep = " "),
+       paste("\t - FConfidence:", round(sum_ConfF / nRules, 6), sep = " "),
+       paste("\t - CConfidence:", round(sum_ConfN / nRules, 6), sep = " "),
+       sep = "\n"
+  )
+  #Print exit
+  cat(Salida) # On console
+  cat(Salida, file = fileName) #On file.
+  
+  }

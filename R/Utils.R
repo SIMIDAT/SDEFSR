@@ -720,3 +720,52 @@ changeTargetVariable <- function(dataset, posVariable){
   value >= min & value < max
 }
 
+
+
+#'
+#' returns a number between low and high. Including high and EXCLUDING excluded
+#' @param low Lower bound (included)
+#' @param high Upper bound (NOT included)
+#' @param excluded. The number to exclude, it does not check if it is in the range [low,high]
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randIntExcluded <- function(low, high, excluded){
+  number <- .randIntClosed(low, high)
+  while(number == excluded){
+    number <- .randIntClosed(low, high)
+  }
+  number
+}
+
+
+
+
+#
+# Parse a time differente to "x hours, y minutes and z seconds"
+#
+# @param End time in UNIX int format (i.e. as.numeric(Sys.time()))
+# @param initial Initial time in Unis format.
+#
+# @return A human-readable string with time difference.
+#
+parseTime <- function(actual, initial){
+  dif <- actual - initial
+  horas <- 0
+  minutos <- 0
+  segundos <- 0
+  
+  if(dif >= 3600){
+    horas <- floor(dif / 3600)
+    dif <- dif %% 3600
+  }
+  
+  if(dif >= 60){
+    minutos <- floor(dif / 60)
+    segundos <- dif %% 60
+  } else {
+    segundos <- dif
+  }
+  
+  
+  paste(horas, " hours, ", minutos, " minutes and ", round(segundos, 2) , " seconds.", sep = "")
+}

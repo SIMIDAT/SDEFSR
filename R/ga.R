@@ -1139,7 +1139,6 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
   numerical <- !categorical
   
   datasetNoClass <- matrix(unlist(.separar(dataset)), nrow = dataset$nVars, ncol = dataset$Ns)
-  tokensGlobal <- logical()
   bestPop <- vector(mode = "list", length = popSize)
   
   #Init population
@@ -1147,9 +1146,12 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
     createNewRule(dataset, tnorm, tconorm, rule_weight, clase)
   }, dataset, T_norm, T_norm, ruleWeight, clas)
   
-  #evaluate initial population individuals
-  pop <- lapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight)
-  
+  #evaluate initial population individuals (In parallel for Linux)
+  if(length(pop) >= 20 & Sys.info()[1] == "Linux"){
+    pop <- parallel::mclapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight, mc.cores = parallel::detectCores())
+  } else {
+   pop <- lapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight)
+  }
   #evaluate the whole population
   populationFitness <- Pop.evaluate(pop, dataset, datasetNoClass, exampleClass, frm, categorical, numerical, T_norm, weightsGlobalFitness)
   
@@ -1176,14 +1178,14 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
     
     #Specify the genetic operator to apply according to their probability in 'dados'
     cruzan <- first_parents[which(dados < pcrossover)]
-    mutan <- first_parents[which(.between(pcrossover, dados, pcrossover + pmutation))]
+    mutan <- first_parents[which(pcrossover <= dados & dados <= (pcrossover + pmutation))]
     insertan <- first_parents[which(.between(pcrossover + pmutation, dados, pcrossover + pmutation + pinsertion))]
     dropean <- first_parents[which(pcrossover + pmutation + pinsertion <= dados)]
     
     posJoinPop <- length(pop) + 1
     #Make crossovers
     for(i in cruzan){
-      second_parent <- sample(seq_len(length(pop))[-i], size = 1)
+      second_parent <- .randIntExcluded(1, length(pop), i)
       joinPop[[posJoinPop]] <- FuGePSD_crossover(rule1 = pop[[i]], rule2 = pop[[second_parent]], nvars = dataset$nVars + 1)
       posJoinPop <- posJoinPop + 1  
     }
@@ -1196,7 +1198,7 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
     
     #Make insertions
     for(i in insertan){
-      if(length(pop[[i]][[1]]) == dataset[[16]]){ 
+      if(length(pop[[i]][[1]]) == dataset[[6]]){ 
         #If we cannot add more variables, we introduce a rule with an empty antecedent.
         joinPop[[posJoinPop]] <- Rule.clearAntecedent(pop[[i]])
       } else {
@@ -1232,6 +1234,8 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
       bestPop <- pop
       cat(paste("Global Fitness obtained in generation [", generation, "]: ", bestPopulationFitness, "\n", sep = ""))
     }
+    
+    #cat("\r", (generation / (maxiter-1)) * 100, "% Completed.", sep = "")
   }
   
   #Order bestPop by conf_f (desc. order)
