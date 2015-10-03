@@ -254,7 +254,7 @@
 #'         \item Significance -> \code{sign}
 #'       }
 #'     
-#'     If you dont want to use a objetive value you must specify \code{null}
+#'     If you dont want to use a objective value you must specify \code{null}
 #' 
 #' 
 #' @return The algorithm shows in the console the following results:
@@ -318,6 +318,7 @@
 #'         )
 #'  }
 #' 
+#' @export
 MESDIF <- function(paramFile = NULL,
                    training = NULL, 
                    test = NULL, 

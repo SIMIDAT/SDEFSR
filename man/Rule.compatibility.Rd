@@ -2,7 +2,7 @@
 % Please edit documentation in R/Utils.R
 \name{Rule.compatibility}
 \alias{Rule.compatibility}
-\title{Return the compatibilities degrees of a rule with all instances of a given dataset.}
+\title{Return the compatibility degrees of a rule with all instances of a given dataset.}
 \usage{
 Rule.compatibility(ejemplo, rule_cat, rule_num, catParticip, numParticip, xmin,
   xmedio, xmax, n_matrices, max_cat, max_num, t_norm)
@@ -37,6 +37,6 @@ A vector with length 'number of examples' indicating their compatibility degree.
 }
 \description{
 The rules passed to this functions MUST have a vector representation in CANONICA form. This function
-was made for used mainly for the FuGePSD algorithm.
+was made for being used mainly for the FuGePSD algorithm.
 }
 

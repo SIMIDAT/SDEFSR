@@ -29,6 +29,8 @@
 #'
 #'        read.keel(file = "C:\KEELFile.txt", nLabels = 7)
 #'     }
+#'     
+#' @export
 read.keel <- function(file, nLabels = 3) {
   if (nLabels < 1)
     stop("Number of fuzzy sets ('nLabels') must be greater than zero.")
@@ -139,122 +141,7 @@ read.keel <- function(file, nLabels = 3) {
   
 }
 
-read.keel2 <- function(file, nLabels = 3) {
-  if (nLabels < 1)
-    stop("Number of fuzzy sets ('nLabels') must be greater than zero.")
-  
-  if(missing(file))
-    stop("'file' is a mandatory argument of the function.")
-  
-  if(class(file) != "character")
-    stop("'file' must be a character string.")
-  
-  data <- .readFile(file)
-  value <- pmatch("@data", data) -1
-  
-  if (is.na(value))
-    stop("No '@data' field found, this is not a KEEL format dataset. Aborting load...")
-  
-  properties <- data[1:value]
-  data <- data[(value + 2):length(data)]
-  
-  # Preparacion de las propiedades de los datos
-  properties <- lapply(X = properties, FUN = .preprocessHeader)
-  
-  num_atribs <-
-    length(properties) - 3 # Obviamos valor de @relation, @inputs y @outputs
-  atribs_names <- character(num_atribs)
-  atribs_types <- character(num_atribs)
-  atribs_min <- numeric(num_atribs)
-  atribs_max <- numeric(num_atribs)
-  categorical_values <- vector(mode = "list", length = num_atribs)
-  
-  #Procesamos @relation
-  relation_pos <- grep("@relation", x = properties, fixed = TRUE, useBytes = TRUE) #NOTA: Es mejor usar pmatch ! 77x faster!
-  if (length(relation_pos) == 0)
-    stop("No '@relation' field provided, this is not a KEEL format dataset. Aborting load... ")
-  relacion <- properties[[relation_pos]][2]
-  
-  #Procesamos el resto de atributos
-  atributes <- properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
-  aux <- vector(mode = "list", length = 5)
-  
-  if (length(atributes) == 0)
-    stop(
-      "No '@input' or '@output' fields found, this is not a KEEL format dataset. Aborting load..."
-    )
-  
-  for (i in seq_len(length(atributes))) {
-    aux <- .processLine(line = atributes[[i]])
-    
-    atribs_names[i] <- aux[[1]]
-    atribs_types[i] <- aux[[2]]
-    atribs_min[i] <- aux[[3]]
-    atribs_max[i] <- aux[[4]]
-    categorical_values[[i]] <- aux[[5]]
-  }
-  
-  
-  #Preparacion de los datos
-  if (Sys.info()[1] != "Windows")
-    data <-
-    parallel::mclapply(
-      X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1
-    )
-  else
-    #In windows mclapply doesnt work
-    data <-
-    parallel::mclapply(
-      X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1
-    )
-  
-  
-  #Preparacion del resto de atributos del dataset
-  
-  covered <- logical(length = length(data))
-  fuzzySets <-
-    .create_fuzzyIntervals(
-      min = atribs_min, max = atribs_max, num_sets = nLabels, types = atribs_types
-    )
-  crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
-  classNames <- categorical_values[[length(categorical_values)]]
-  clValues <- unlist(lapply(data, '[', length(atributes)))
-  examplesPerClass <-
-    lapply(
-      X = seq_len(length(classNames)) - 1, FUN = function(x, data)
-        sum(data == x), clValues
-    )
-  names(examplesPerClass) <- classNames
-  
-  conjuntos <-
-    .dameConjuntos(data_types = atribs_types, max = atribs_max, n_labels = nLabels)
-  
-  lostData <- FALSE #Quitar esto
-  
-  lista <- list(
-    relation = relacion,
-    atributeNames = atribs_names,
-    atributeTypes = atribs_types,
-    min = atribs_min,
-    max = atribs_max,
-    nVars = length(atribs_min) - 1,
-    data = data,
-    class_names = classNames,
-    examplesPerClass = examplesPerClass,
-    lostData = lostData,
-    covered = covered,
-    fuzzySets = fuzzySets,
-    crispSets = crispSets,
-    conjuntos = conjuntos,
-    categoricalValues = categorical_values,
-    Ns = length(data)
-  )
-  
-  
-  class(lista) <- "keel"
-  lista
-  
-}
+
 
 
 #
@@ -264,11 +151,7 @@ read.keel2 <- function(file, nLabels = 3) {
 #
 .read.parametersFile2 <- function(file) {
   data <- .readFile(file)
-  data <-
-    gsub(
-      pattern = "\r", replacement = "", x = data, fixed = TRUE
-    ) #Remove weird characters
-  
+ 
   data <- strsplit(x = data, split = " = ")
   
   
@@ -309,8 +192,7 @@ read.keel2 <- function(file, nLabels = 3) {
   ruleWeight <- grep(pattern = "Rule Weight", x = data, fixed = TRUE)
   frm <- grep(pattern = "Fuzzy Reasoning Method", x = data, fixed = TRUE)
   numGens <- grep(pattern = "Number of Generations", x = data, fixed = TRUE)
-  tamPop <- grep(pattern = "Initial Number of Fuzzy Rules (0 for 5*n_var)", x = data, fixed = TRUE)
-  alphaFitness <- grep(pattern = "Alpha Raw Fitness", x = data, fixed = TRUE)
+  tamPop <- grep(pattern = "Initial Number of Fuzzy Rules", x = data, fixed = TRUE)
   crossProb <- grep(pattern = "Crossover probability", x = data, fixed = TRUE)
   mutProb <- grep(pattern = "Mutation probability", x = data, fixed = TRUE)
   insProb <- grep(pattern = "Insertion probability", x = data, fixed = TRUE)
@@ -321,7 +203,6 @@ read.keel2 <- function(file, nLabels = 3) {
   gfw3 <- grep(pattern = "Global Fitness Weight 3", x = data, fixed = TRUE)
   gfw4 <- grep(pattern = "Global Fitness Weight 4", x = data, fixed = TRUE)
   allClass <- grep(pattern = "All Class", x = data, fixed = TRUE)
-  executionType <- grep(pattern = "Type of Execution", x = data, fixed = TRUE)
   #--------------------------------------------------------
   
   if (length(alg) == 0)
@@ -505,8 +386,6 @@ read.keel2 <- function(file, nLabels = 3) {
       stop("'Number of Generations' not specified.")
     if(length(tamPop) == 0)
       stop("'Initial Number of Fuzzy Rules (0 for 5*n_var)' not specified.")
-    if(length(alphaFitness) == 0)
-      stop("'Alpha Raw Fitness' not specified.")
     if(length(crossProb) == 0)
       stop("'Crossover probability' not specified.")
     if(length(mutProb) == 0)
@@ -527,8 +406,7 @@ read.keel2 <- function(file, nLabels = 3) {
       stop("'Global Fitness Weight 4' not specified.")
     if(length(allClass) == 0)
       stop("'All Class' not specified.")
-    if(length(executionType) == 0)
-      stop("'Type of Execution' not specified.")
+  
     
     lista <- list(algorithm = algoritmo, 
                   inputData = input_data, 
@@ -546,8 +424,8 @@ read.keel2 <- function(file, nLabels = 3) {
                   ruleWeight = tolower(data[[ruleWeight]][2]),
                   tournamentSize = as.integer(data[[tsSize]][2]),
                   allClass = data[[allClass]][2],
-                  alphaFitness = as.double(data[[alphaFitness]][2]),
-                  executionType = as.integer(data[[executionType]][2]),
+                  alphaFitness = 0,
+                  executionType = 1,
                   gfw1 = as.double(data[[gfw1]][2]),
                   gfw2 = as.double(data[[gfw2]][2]),
                   gfw3 = as.double(data[[gfw3]][2]),
@@ -971,8 +849,8 @@ read.keel2 <- function(file, nLabels = 3) {
 
 #
 #
-# This function reads an entire file in a block and the it is splitted by the \n character.
-# It is a 8X faster than using scan()
+# This function reads an entire file in a block and the it is splitted by the \n or \r character.
+# It is 8X faster than using scan()
 #
 # Thanks to F. Charte! 
 #
@@ -985,7 +863,7 @@ read.keel2 <- function(file, nLabels = 3) {
   close(con)
   
   #Return
-  strsplit(x = contents, split = "\n", fixed = TRUE, useBytes = TRUE)[[1]]
+  strsplit(x = contents, split = "\\\r\n|\\\r|\\\n", fixed = FALSE, useBytes = TRUE)[[1]]
  
 }
 
@@ -1014,7 +892,8 @@ read.keel2 <- function(file, nLabels = 3) {
 #'
 #' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
-#'
+#' 
+#' 
 save.keel <- function(dataset, file) {
   #First, we need to ask the user if he want to save the file
   
@@ -1162,7 +1041,7 @@ save.keel <- function(dataset, file) {
 #' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #'
-#'
+#' 
 addKeelRegister <- function(items, dataset) {
   if (class(dataset) != "keel") {
     stop("Provided dataset is not of class 'keel'.")

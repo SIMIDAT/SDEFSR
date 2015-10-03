@@ -1178,8 +1178,8 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
     
     #Specify the genetic operator to apply according to their probability in 'dados'
     cruzan <- first_parents[which(dados < pcrossover)]
-    mutan <- first_parents[which(pcrossover <= dados & dados <= (pcrossover + pmutation))]
-    insertan <- first_parents[which(.between(pcrossover + pmutation, dados, pcrossover + pmutation + pinsertion))]
+    mutan <- first_parents[which(pcrossover <= dados & dados < (pcrossover + pmutation))]
+    insertan <- first_parents[which((pcrossover + pmutation) <= dados & dados < (pcrossover + pmutation + pinsertion))]
     dropean <- first_parents[which(pcrossover + pmutation + pinsertion <= dados)]
     
     posJoinPop <- length(pop) + 1
@@ -1897,7 +1897,7 @@ if(DNFRules) {
           xmaxC <- crispSets[cbind(rule_num + 1, 2, seq_len(n_matricesCrisp))]
         }
         
-        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat, max_regla_num)
+        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat)
         
       } else { # DNF RULES (FALTA EL TRATAMIENTO DE VARIABLES CATEGORICAS)
         
@@ -2006,7 +2006,7 @@ if(DNFRules) {
           xmaxC <- crispSets[cbind(rule_num + 1, 2, seq_len(n_matricesCrisp))]
         }
         
-        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat, max_regla_num)
+        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat)
         
       } else { # DNF RULES
         

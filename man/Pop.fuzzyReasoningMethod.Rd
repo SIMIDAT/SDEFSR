@@ -14,13 +14,13 @@ Pop.fuzzyReasoningMethod(pop, dataset, examplesNoClass, frm, categorical,
 
 \item{examplesNoClass}{matrix with all examples of the dataset without the class attribute. One examples per column.}
 
-\item{frm.}{An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.}
+\item{frm}{An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.}
 
-\item{categorical.}{Logical vector indicating which attributes of the dataset are categorical.}
+\item{categorical}{Logical vector indicating which attributes of the dataset are categorical.}
 
-\item{numerical.}{Logical vector indicating which attributes of the dataset are numerical.}
+\item{numerical}{Logical vector indicating which attributes of the dataset are numerical.}
 
-\item{t_norm.}{The t_norm to use. 0 for minimum t-norm. 1 for product t-norm.}
+\item{t_norm}{The t_norm to use. 0 for minimum t-norm. 1 for product t-norm.}
 }
 \value{
 a vector indicating the class predicted for each example.

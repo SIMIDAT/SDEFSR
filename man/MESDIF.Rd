@@ -142,7 +142,7 @@ This function sets as target variable the last one that appear in the KEEL file.
         \item Significance -> \code{sign}
       }
 
-    If you dont want to use a objetive value you must specify \code{null}
+    If you dont want to use a objective value you must specify \code{null}
 }
 \examples{
 MESDIF( paramFile = NULL,

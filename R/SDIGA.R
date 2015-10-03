@@ -226,7 +226,7 @@
 #'       lSearch = "yes",
 #'       targetClass = "positive")
 #'       }
-#' 
+#' @export
 SDIGA <- function(parameters_file = NULL, 
                   training = NULL, 
                   test = NULL, 

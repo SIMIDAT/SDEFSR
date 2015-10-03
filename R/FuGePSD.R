@@ -7,7 +7,7 @@
               # Reference: A fuzzy genetic programming-based algorithm for subgroup       #
               # discovery and the application to one problem of pathogenesis of acute     #
               # sore throat conditions in humans, Carmona, C.J., Ruiz-Rodado V., del      #
-              # Jesus M.J., Weber A., Grootveld M., González P., and Elizondo D. ,        #
+              # Jesus M.J., Weber A., Grootveld M., Gonzalez P., and Elizondo D. ,        #
               # Information Sciences, Volume 298, p.180-197, (2015)                       #
               #                                                                           #
               #       Written on R by: Angel M. Garcia <amgv0009@red.ujaen.es>            #
@@ -24,9 +24,10 @@
 #' @param tnorm The T-norm to use: 0 -> minimum T-norm, 1 -> product T-norm
 #' @param tconorm The T-conorm to use: 0 -> maximum T-conorm, 1 -> Probabilistic sum t-conorm
 #' @param rule_weight The Rule Weighting method: 0 -> Wining Rule, 1 -> Normalized sum, 2 -> Arithmetic mean
+#' @param clase Integer specifying the creation of a rule for the given class number. By default \code{'NULL'}, makes a rule with a random class in the consecuent.
 #' 
+#' @return  A new \code{'Rule'} object
 #' 
-#'
 createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
   
    regla <- structure( list(antecedent = list(),                 # Antecedent part of the rule
@@ -383,14 +384,7 @@ Rule.addVariable <- function(rule, dataset){
         compatibility_correctly_matching_examples <- numeric(1)
         correctly_matching_examples <- integer(1)
         
-        
-        #data <- .separar(dataset) # ESTO ES UNA SANGRIA DE TIEMPO !! HAY QUE QUITARLO DE AQUI Y LLEVARLO A UN NIVEL SUPERIOR.
-        #data <- matrix(unlist(data), nrow = length(data[[1]]), ncol = length(data))
-        
-        # Debemos hacer algo similar a fit13 pero sin llamar a getValues(), que use comparaCAN o DNF, ya que nos devuelve el grado de pertenencia de cada regla.
-        # Quizá deberíamos hacer un comparaCAN10 y un comparaDNF5 ya que no nos permite la utilización de otra T-norma y T-conorma
-        # que no sea el mínimo y el máximo, respectivamente.
-        
+        #Get compatibility
         perts <- .fitnessFuGePSD(regla = Rule.toCANVectorRepresentation(rule, dataset), 
                                  dataset = dataset, 
                                  noClass = data,
@@ -399,11 +393,11 @@ Rule.addVariable <- function(rule, dataset){
                                  cate = categoricalValues, 
                                  num = numericalValues,
                                  t_norm = t_norm)
-        
+       
         
         #Calculate covered examples.
         covered <- which(perts > 0)  # Que pasa si no se cubre a ningun ejemplo?
-        classes <- unlist(.getClassAttributes(dataset$data[covered])) # Esto también lo podríamos llevar a un nivel superior. (Estudiar)
+        classes <- unlist(.getClassAttributes(dataset$data[covered]))
         correctly_matching_examples_by_clas[as.integer(names(table(classes + 1)))] <- table(classes + 1)
         matching_examples <- length(covered)
         compatibility_matching_examples <- sum(perts[covered])
@@ -518,7 +512,9 @@ Rule.addVariable <- function(rule, dataset){
   #' It makes a tournament selection for the FuGePSD algorithm with variable tournament size.
   #' 
   #' @param pop The rule population
-  #' @param tamToutnament The size of the tornament (>= 2)
+  #' @param tamTournament The size of the tornament (>= 2)
+  #' 
+  #' @return the index in \code{'pop'} of the best individual in the tournament.
   #' 
   tournamentSelection <- function(pop, tamTournament){
     if(tamTournament < 2)
@@ -531,13 +527,13 @@ Rule.addVariable <- function(rule, dataset){
     individuals[which(rawFitnessIndividuals == max(rawFitnessIndividuals))][1]
   }
   
-  #
-  # Perfom the mutation operator for FuGePSD algorithm.
-  # 
-  # @param rule The rule object to be mutated.
-  # @param dataset a keel object associated with the rule.
-  # @return a new rule object with the rule mutated.
-  #
+  #'
+  #' Perfom the mutation operator for FuGePSD algorithm.
+  #' 
+  #' @param rule The rule object to be mutated.
+  #' @param dataset a keel object associated with the rule.
+  #' @return a new rule object with the rule mutated.
+  #'
   FuGePSD_Mutation <- function(rule, dataset){
  
     #select a random variable to mute.
@@ -555,14 +551,14 @@ Rule.addVariable <- function(rule, dataset){
     new_rule
   }
   
-  # 
-  # Performs the FuGePSD crossover function.
-  # 
-  # @param rule1 a rule object
-  # @param rule2 another rule object.
-  # @param nvars number of variables in the dataset INCLUDING class variable.
-  # @return a new rule object.
-  #
+  #' 
+  #' Performs the FuGePSD crossover function.
+  #' 
+  #' @param rule1 a rule object
+  #' @param rule2 another rule object.
+  #' @param nvars number of variables in the dataset INCLUDING class variable.
+  #' @return a new rule object.
+  #'
   FuGePSD_crossover <- function(rule1, rule2, nvars){
     new_rule <- rule1
     if( .randIntClosed(1, nvars) >= nvars ){
@@ -589,17 +585,227 @@ Rule.addVariable <- function(rule, dataset){
   
   
   #'
-  #' Make a subgroup discovery task using the FuGePSD algorithm.
+  #' @title Fuzzy Genetic Programming-based learning for Subgroup Discovery (FuGePSD) Algorithm.
+  #' @description Make a subgroup discovery task using the FuGePSD algorithm.
+  #' 
+  #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
+  #' @param training A \code{keel} class variable with training data.
+  #' @param test A \code{keel} class variable with test data.
+  #' @param output Character vector with the paths where store information file, rules file and test quality measures file, respectively. For rules and quality measures files, the algorithm generate 4 files, each one with the results of a given filter of fuzzy confidence.
+  #' @param seed An integer to set the seed used for generate random numbers.
+  #' @param t_norm A string with the t-norm to use when computing the compatibilty degree of the rules. Use \code{'Minimum/Maximum'} to specify the minimum t-norm, if not, we use product t-norm that is the default method. 
+  #' @param ruleWeight String with the method to calculate the rule weight. Possible values are: 
+  #' \itemize{
+  #'  \item \code{Certainty_Factor}: It uses the Classic Certainty Factor Weight method.
+  #'  \item \code{Average_Penalized_Certainty_Factor}: It uses Penalized Certainty Factor weight II by Ishibuchi.
+  #'  \item \code{No_Weights}: There are no weight calculation.
+  #'  \item Default: If none of this are specificied, the default method is Penalized Certainty Factor Weight IV by Ishibuchi.
+  #'      }
+  #' @param frm A string specifying the Fuzzy Reasoning Method to use. Possible Values are:
+  #' \itemize{
+  #'  \item \code{Normalized_Sum}: It uses the Normalized Sum or Additive Combination Fuzzy Reasoning Method.
+  #'  \item \code{Arithmetic_Mean}: It uses the Arithmetic Mean Fuzzy Reasoning Method.
+  #'  \item Default: By default, Winning Rule Fuzzy Reasoning Method are selected.
+  #' }
+  #' @param numGenerations An integer to set the number of generations to perfom before stop the evolutionary process.
+  #' @param numberOfInitialRules An integer to set the number individuals or rules in the initial population.
+  #' @param crossProb Sets the crossover probability. We recommend a number in [0,1].
+  #' @param mutProb Sets the mutation probability. We recommend a number in [0,1].
+  #' @param insProb Sets the insertion probability. We recommend a number in [0,1].
+  #' @param dropProb Sets the dropping probability. We recommend a number in [0,1].
+  #' @param tournamentSize Sets the number of individuals that will be chosen in the tournament selection procedure. This number must be greater than or equal to 2.
+  #' @param globalFitnessWeights A numeric vector of length 4 specifying the weights used in the computation of the Global Fitness Parameter. 
+  #' @param ALL_CLASS if TRUE, the algorithm returns, at least, the best rule for each target class, even if it does not pass the filters. If FALSE, it only returns, at least, the best rule if there are not rules that passes the filters.
+  #' 
+  #' 
+  #'  @details This function sets as target variable the last one that appear in the KEEL file or object. If you want 
+  #'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
+  #'     The target variable MUST be categorical, if it is not, throws an error.
+  #'     
+  #'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+  #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
+  #'     if you want to use a parameters file.
+  #'     
+  #'  @return The algorithm shows in console the following results:
+  #'  \enumerate{
+  #'    \item Information about the parameters used in the algorithm.
+  #'    \item Results for each filter:
+  #'      \enumerate{
+  #'        \item Rules generated that passes the filter.
+  #'        \item The test quality measures for each rule in that filter.
+  #'      }
+  #'  }
+  #'  Also, this results are saved in a file with rules and other with the quality measures, one file per filter.
+  #'  
+  #'  @section How does this algorithm work?:
+  #'  This algorithm performs a EFS based on a genetic programming algorithm. This algorithm starts with an initial 
+  #'  population generated in a random manner where individuals are represented through the "chromosome = individual"
+  #'  approach includind both antecedent and consequent of the rule. The representation of the consequent has the advantage
+  #'  of getting rules for all target class with only one execution of the algorithm.  
+  #'  
+  #'  The algorithm employs a cooperative-competition approach were rules of the population cooperate and compete between them in order to 
+  #'  obtain the optimal solution. So this algorithm performs to evaluation, one for individual rules to competition and other for the total population 
+  #'  for cooperation.  
+  #'  
+  #'  The algorithm evolves generating an offspring population of the same size than initial generated by the application of the
+  #'  genetic operators over the main population. Once applied, both populations are joined a token competition is performed in order to 
+  #'  mantain the diversity of the rules generated. Also, this token competition reduce the population sice deleting those rules that are not competitive.  
+  #'  
+  #'  After the evolutionary process a screening function is applied over the best population. This screening function filter the rules that have a minimium
+  #'  level of confidence and sensitivity. Those levels are 0.6 for sensitivy and four filters of 0.6, 0.7, 0.8 and 0.9 for fuzzy confidence are performed.  
+  #'  
+  #'  Also, the user can force the algorithm return at least one rule for all target class values, even if not pass the screening function. This 
+  #'  behaviour is specified by the ALL_CLASS parameter.
+  #'  
+  #'  
+  #'  @section Parameters file structure:
+  #'   The \code{paramFile} argument points to a file which has the neccesary parameters to execute FuGePSD.
+  #'   This file \strong{must} be, at least, this parameters (separated by a carriage return):
+  #'   \itemize{
+  #'     \item \code{algorithm}  Specify the algorithm to execute. In this case. "MESDIF"
+  #'     \item \code{inputData}  Specify two paths of KEEL files for training and test. In case of specify only the name of the file, the path will be the working directory.
+  #'     \item \code{seed}  Sets the seed for the random number generator
+  #'     \item \code{nLabels}  Sets the number of fuzzy labels to create when reading the files
+  #'     \item \code{nEval}  Set the maximun number of \strong{evaluations of rules} for stop the genetic process
+  #'     \item \code{popLength}  Sets number of individuals of the main population
+  #'     \item \code{eliteLength}  Sets number of individuals of the elite population. Must be less than \code{popLength}  
+  #'     \item \code{crossProb}  Crossover probability of the genetic algorithm. Value in [0,1]
+  #'     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
+  #'     \item \code{Obj1} Sets the objetive number 1. 
+  #'     \item \code{Obj2} Sets the objetive number 2. 
+  #'     \item \code{Obj3} Sets the objetive number 3. 
+  #'     \item \code{Obj4} Sets the objetive number 4.
+  #'     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
+  #'     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.} Use \code{null} to search for every value of the target variable
+  #'   }
+  #'   
+  #'   An example of parameter file could be:
+  #'  \preformatted{
+  #'  algorithm = FUGEPSD
+  #'  inputData = "banana-5-1tra.dat" "banana-5-1tst.dat"
+  #'  outputData = "Parameters_INFO.txt" "Rules.txt" "TestMeasures.txt"
+  #'  seed = 23783
+  #'  Number of Labels = 3
+  #'  T-norm/T-conorm for the Computation of the Compatibility Degree = Normalized_Sum
+  #'  Rule Weight = Certainty_Factor
+  #'  Fuzzy Reasoning Method = Normalized_Sum
+  #'  Number of Generations = 300
+  #'  Initial Number of Fuzzy Rules = 100
+  #'  Crossover probability = 0.5
+  #'  Mutation probability = 0.2
+  #'  Insertion probability = 0.15
+  #'  Dropping Condition probability = 0.15
+  #'  Tournament Selection Size = 2 
+  #'  Global Fitness Weight 1 = 0.7
+  #'  Global Fitness Weight 2 = 0.1 
+  #'  Global Fitness Weight 3 = 0.05
+  #'  Global Fitness Weight 4 = 0.2
+  #'  All Class = true}
   #'
-  FUGEPSD <- function(paramFile){
+  #' @references 
+  #' A fuzzy genetic programming-based algorithm for subgroup discovery and the application to one problem of pathogenesis of acute sore throat conditions in humans, Carmona, C.J., Ruiz-Rodado V., del Jesus M.J., Weber A., Grootveld M., Gonzalez P., and Elizondo D. , Information Sciences, Volume 298, p.180-197, (2015)    
+  #'  
+  #' @examples 
+  #' FUGEPSD(training = habermanTra,
+  #'          test = habermanTst,
+  #'          output = c("parametersFile.txt", "rulesFile.txt", "testQM.txt"),
+  #'          seed = 23783,
+  #'          t_norm = "Minimum/Maximum",
+  #'          ruleWeight = "Certainty_Factor",
+  #'          frm = "Normalized_Sum",
+  #'          numGenerations = 50,
+  #'          numberOfInitialRules = 15,
+  #'          crossProb = 0.5,
+  #'          mutProb = 0.2,
+  #'          insProb = 0.15,
+  #'          dropProb = 0.15,
+  #'          tournamentSize = 2,
+  #'          globalFitnessWeights = c(0.7, 0.1, 0.3, 0.2),
+  #'          ALL_CLASS = TRUE)
+  #' \dontrun{
+  #' Execution with a parameters file called 'ParamFile.txt' in the working directory:
+  #' 
+  #' FUGEPSD("ParamFile.txt")
+  #' 
+  #' }
+  #' 
+  #' @author Written on R by Angel M. Garcia <amgv0009@@red.ujaen.es>
+  #'  
+  #' @export
+  #' 
+  FUGEPSD <- function(paramFile = NULL,
+                      training = NULL,
+                      test = NULL,
+                      output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
+                      seed = 0,
+                      t_norm = "product_t-norm",
+                      ruleWeight = "Certainty_Factor",
+                      frm = "Normalized_Sum",
+                      numGenerations = 300,
+                      numberOfInitialRules = 100,
+                      crossProb = 0.5,
+                      mutProb = 0.2,
+                      insProb = 0.15,
+                      dropProb = 0.15,
+                      tournamentSize = 2,
+                      globalFitnessWeights = c(0.7, 0.1, 0.05, 0.2),
+                      ALL_CLASS = TRUE
+                      ){
     #Catch start time
     init_time <- as.numeric(Sys.time())
     
-    #Start of the algorithm
-    parametros <- .read.parametersFile2(paramFile)
+    if(is.null(paramFile)){
+      #Generate our parameters file
+      if(class(training) != "keel" | class(test) != "keel")
+        stop("Training or test or both object must be 'keel' class.")
+      if(training[[1]] != test[[1]] )
+        stop("datasets ('training' and 'test') does not have the same relation name.")
+      if(length(output) != 3 )
+        stop("You must specify three files to save the results.")
+      if(length(globalFitnessWeights) != 4)
+        stop("'globalFitnessWeights' must be a length 4 vector.")
+      if(tournamentSize < 2)
+        stop("'tournamentSize' must be greater than or equal to 2.")
+      parametros <- list(algorithm = "FUGEPSD", 
+                    inputData = c(as.character(substitute(training)), as.character(substitute(test))),
+                    outputData = output, 
+                    seed = seed, 
+                    nLabels = dim(training$fuzzySets)[1], 
+                    nGens = numGenerations, 
+                    popLength = numberOfInitialRules, 
+                    crossProb = crossProb, 
+                    mutProb = mutProb,
+                    insPro = insProb,
+                    dropProb = dropProb,
+                    frm = tolower(frm),
+                    tnorm = tolower(t_norm),
+                    ruleWeight = tolower(ruleWeight),
+                    tournamentSize = tournamentSize,
+                    allClass = ALL_CLASS,
+                    alphaFitness = 0,
+                    executionType = 1,
+                    gfw1 = globalFitnessWeights[1],
+                    gfw2 = globalFitnessWeights[2],
+                    gfw3 = globalFitnessWeights[3],
+                    gfw4 = globalFitnessWeights[1])
+      
+      #Print parameters in console
+      printFuGePSDParameters(parametros, training, FALSE)
+    } else {
+      #Start of the algorithm
+      parametros <- .read.parametersFile2(paramFile)
+      
+      training <- read.keel(parametros$inputData[1], parametros$nLabels)
+      test <- read.keel(parametros$inputData[2], parametros$nLabels)
+      
+      #Print parameters in console
+      printFuGePSDParameters(parametros, training, FALSE)
+    }
     
-    training <- read.keel(parametros$inputData[1], parametros$nLabels)
-    test <- read.keel(parametros$inputData[2], parametros$nLabels)
+    #Check if the last variable is categorical.
+    if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
+      stop("Target variable is not categorical.")
+    
     
     categorical <- training$atributeTypes == "c"
     categorical <- categorical[-length(categorical)]
@@ -632,6 +838,7 @@ Rule.addVariable <- function(rule, dataset){
     }
     set.seed(parametros$seed)
     
+    cat("\n\nSearching Rules for all classes...\n\n")
     
     #Execute the genetic algorithm
     pop <- .gaFuGePSD(type = parametros[[18]],
@@ -685,8 +892,10 @@ Rule.addVariable <- function(rule, dataset){
        cl <- which(classes %in% cl)
        pos <- which(pop[[3]][cl] >= 0.6)
        posi <- na.exclude(pmatch(which(!examples_class), classes[pos]))
-       new_pop[(length(new_pop) + 1):(length(new_pop) + length(posi))] <- bestPop[pos[posi]]
-       examples_class[classes[pos[posi]]] <- TRUE
+       if(length(posi) > 0){
+         new_pop[(length(new_pop) + 1):(length(new_pop) + length(posi))] <- bestPop[pos[posi]]
+         examples_class[classes[pos[posi]]] <- TRUE
+       }
      }
      
      #Verify the use of parameter ALL_CLASS
@@ -733,7 +942,7 @@ Rule.addVariable <- function(rule, dataset){
    
    }
    
-   cat("\n\nAlgorithm finished. \nExecution time: ", parseTime(as.numeric(Sys.time()), init_time), sep = "")
+   cat("\n\nAlgorithm finished. \nExecution time: ", parseTime(as.numeric(Sys.time()), init_time),  "\n\n", sep = "")
     
   }
   
@@ -744,10 +953,10 @@ Rule.addVariable <- function(rule, dataset){
 #' @param pop A list with all rule object that define the population
 #' @param dataset the keel object with the dataset information.
 #' @param examplesNoClass matrix with all examples of the dataset without the class attribute. One examples per column.
-#' @param frm. An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
-#' @param categorical. Logical vector indicating which attributes of the dataset are categorical.
-#' @param numerical. Logical vector indicating which attributes of the dataset are numerical.
-#' @param t_norm. The t_norm to use. 0 for minimum t-norm. 1 for product t-norm.
+#' @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
+#' @param categorical Logical vector indicating which attributes of the dataset are categorical.
+#' @param numerical Logical vector indicating which attributes of the dataset are numerical.
+#' @param t_norm The t_norm to use. 0 for minimum t-norm. 1 for product t-norm.
 #' 
 #' @return a vector indicating the class predicted for each example.
 #'
@@ -818,7 +1027,21 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
 }
   
 
-  
+#'
+#'  Evaluates the entire population for the Global Fitness computation procedure.
+#'  
+#'  @param pop A list of 'Rule' objects.
+#'  @param dataset A 'keel' object with all the information of the dataset we are working
+#'  @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separar for this task and convert the list into a matrix)
+#'  @param exampleClass Vector with the classes of all examples of the dataset
+#'  @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
+#'  @param categorical A logical vector indicating which attributes of the dataset are categorical.
+#'  @param numerical A logical vector indicating which attributes of the dataset are numerical.
+#'  @param t_norm An integer specifying the t-norm to use. 0 for minimum t_norm, other value for product t-norm.
+#'  @param weights A numeric vector of length 4 indicating the weights used to calculate the global fitness of this population.
+#'  
+#'  @return A number which indicate the global fitness for this population.
+#'  
 Pop.evaluate <- function(pop, dataset, examplesNoClass, exampleClass, frm, categorical, numerical, t_norm, weights){
   nLabels <- dim(dataset$fuzzySets)[1]
   
@@ -848,7 +1071,14 @@ Pop.evaluate <- function(pop, dataset, examplesNoClass, exampleClass, frm, categ
 
 
 
-
+#'
+#' Runs a token competition procedure.
+#' 
+#' @param pop A list of 'Rule' objects.
+#' @param dataset A 'keel' object with all the information about the dataset we are working.
+#' 
+#' @return A list of 'Rule' objects with that rules that pass this token competition procedure.
+#' 
 tokenCompetition <- function(pop, dataset){
   
   #Order pop by raw fitness
@@ -886,9 +1116,16 @@ tokenCompetition <- function(pop, dataset){
 
 
 
-#
-# Writes rules into a human-readable format into a file.
-#
+#'
+#' Writes rules into a human-readable format into a file.
+#'
+#' @param pop A list of 'Rule' objects with the population we want to save.
+#' @param dataset A 'keel' object with all the information about the dataset the rules are pointing.
+#' @param fileName String with the path to store the rules.
+#' 
+#' @details 
+#' This function overwrites if the file specified by \code{fileName} exists. Be careful!
+#' 
 writeRuleFile <- function(pop, dataset, fileName){
   contador <- 1
   RulesLine <- ""
@@ -912,7 +1149,16 @@ writeRuleFile <- function(pop, dataset, fileName){
   invisible()
 }
 
-
+#'
+#' Writes rules into a human-readable format into a file.
+#'
+#' @param pop A list of 'Rule' objects with the population we want to save.
+#' @param fileName String with the path to store the rules.
+#' @param numExamples An integer with the number of examples in the test file.
+#' 
+#' @details 
+#' This function overwrites if the file specified by \code{fileName} exists. Be careful!
+#' 
 writeTestQMFile <- function(pop, fileName, numExamples){
   #Get classes of the rules.
   sum_nVars <- numeric(1)
@@ -970,4 +1216,46 @@ writeTestQMFile <- function(pop, fileName, numExamples){
   cat(Salida) # On console
   cat(Salida, file = fileName) #On file.
   
+  invisible()
   }
+
+
+
+
+#'
+#' Prints parameters information aboute the execution of the algorithm in console and in the output file 
+#' specified by this parameters.
+#' 
+#' @param parameters A list with all neccesary parameters.
+#' @param dataset A \code{keel} object with all the information about the dataset.
+#' @param inputFromFiles A logical indicating if the input datasets are given from a file or from an object in the R environment.
+#' 
+printFuGePSDParameters <- function(parameters, dataset, inputFromFiles = TRUE){
+  line <- paste("\n------------------------------------------------------\n", 
+      "Algorithm: FuGePSD\n",
+      "Relation: ", dataset[[1]], "\n",
+      "Training file: ", parameters$inputData[1], if(!inputFromFiles) " object\n",
+      "Test file: ", parameters$inputData[2], if(!inputFromFiles) " object\n",
+      "Seed: ", parameters$seed, "\n",
+      "Number of Labels: ", parameters$nLabels, "\n",
+      "Number of Generations: ", parameters$nGens, "\n",
+      "Initial Number of Rules: ", parameters$popLength, "\n",
+      "Crossover Probability: ", parameters$crossProb, "\n",
+      "Mutation Probability: ", parameters$mutProb, "\n",
+      "Insertion Probability: ", parameters$insPro, "\n",
+      "Dropping Condition Probability: ", parameters$dropProb, "\n",
+      "Fuzzy Reasoning Method: ", parameters$frm, "\n",
+      "T-norm/T-conorm for the Computation of the Compatibility Degree: ", parameters$tnorm, "\n",
+      "Rule Weight: ", parameters$ruleWeight, "\n",
+      "Tournament Selection Size: ", parameters$tournamentSize, "\n",
+      "Global Fitness Weight 1: ", parameters$gfw1, "\n",
+      "Global Fitness Weight 2: ", parameters$gfw2, "\n",
+      "Global Fitness Weight 3: ", parameters$gfw3, "\n",
+      "Global Fitness Weight 4: ", parameters$gfw4, "\n",
+      "All Class: ", parameters$allClass, "\n",
+      "-----------------------------------------------------------\n\n", sep = "")
+ 
+  cat(line)  #Print in console
+  cat(line, file = parameters$outputData[1])
+  
+}

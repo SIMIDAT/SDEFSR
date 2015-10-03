@@ -9,7 +9,10 @@ tournamentSelection(pop, tamTournament)
 \arguments{
 \item{pop}{The rule population}
 
-\item{tamToutnament}{The size of the tornament (>= 2)}
+\item{tamTournament}{The size of the tornament (>= 2)}
+}
+\value{
+the index in \code{'pop'} of the best individual in the tournament.
 }
 \description{
 It makes a tournament selection for the FuGePSD algorithm with variable tournament size.

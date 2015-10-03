@@ -162,7 +162,7 @@ The multi-objective approach is based on a niches schema based on the dominance 
   
 \begin{figure}[htbp]
   \centering 
-  \includegraphics{MESDIFSchema.png}
+  \includegraphics{MESDIFSchema.PNG}
   \caption{MESDIF operations schema}
   \label{MESDIFEsquema}
 \end{figure}
@@ -221,7 +221,7 @@ The evolutionary process follows this steps
 
 \begin{figure}[hbtp]
   \centering
-  \includegraphics{NMEEFSchema.png}
+  \includegraphics{NMEEFSchema.PNG}
   \caption{Operation schema of NMEEF-SD}
   \label{procesoNMEEF}
 \end{figure}
@@ -332,7 +332,7 @@ Once we select the dataset, automatically it shows a graph with information abou
 
 \begin{figure}[hbtp]
   \centering
-  \includegraphics[width=0.8\linewidth]{Interfaz1.png}
+  \includegraphics[width=0.8\linewidth]{Interfaz1.PNG}
   \caption{Initial screen of the SDR user interface.}
   \label{pantallaInicial}
 \end{figure}
@@ -349,7 +349,7 @@ When loaded a dataset we can do a lot of things, in Figure \ref{pantalla2} we ca
 
 \begin{figure}[hbtp]
   \centering
-  \includegraphics[width=0.8\linewidth]{Interfaz2.png}
+  \includegraphics[width=0.8\linewidth]{Interfaz2.PNG}
   \caption{Screen of the user interface once loaded a dataset.}
   \label{pantalla2}
 \end{figure}

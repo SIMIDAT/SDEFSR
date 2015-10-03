@@ -527,7 +527,7 @@
 #'                targetClass = "null"
 #'                )
 #'      }
-#'               
+#'  @export       
 NMEEF_SD <- function(paramFile = NULL, 
                      training = NULL, 
                      test = NULL, 

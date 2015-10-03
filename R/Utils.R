@@ -13,10 +13,10 @@
 
 
 #'
-#' Return the compatibilities degrees of a rule with all instances of a given dataset.
+#' Return the compatibility degrees of a rule with all instances of a given dataset.
 #' 
 #' The rules passed to this functions MUST have a vector representation in CANONICA form. This function
-#' was made for used mainly for the FuGePSD algorithm. 
+#' was made for being used mainly for the FuGePSD algorithm. 
 #' 
 #' @param ejemplo The instances of the dataset, a matrix with one example PER COLUMN and without the CLASS ATTRIBUTE.
 #' @param rule_cat Part of the rule with the categorical values.
@@ -364,6 +364,7 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 #'     modifyFuzzyCrispIntervals(habermanTra, 2)
 #'     modifyFuzzyCrispIntervals(habermanTra, 15)
 #'
+#'@export
 
 modifyFuzzyCrispIntervals <- function(dataset, nLabels){
     if(nLabels < 1)
@@ -400,6 +401,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' changeTargetVariable(habermanTra, 1)
 #' }
 #' 
+#' @export
 changeTargetVariable <- function(dataset, posVariable){
   if(class(dataset) != "keel") stop("The provided 'dataset' is not a keel class")
   #if(posVariable >= dataset$nVars + 1) stop("posVariable is the same of the actual variable or is out of range")
@@ -687,6 +689,7 @@ changeTargetVariable <- function(dataset, posVariable){
 #' @param high Upper bound (included)
 #' @return a uniform-distributed integer value in [low, high)
 #' 
+#' 
 .randIntClosed <- function(low, high){
   floor( low + ((high + 1) - low) * runif(1) )
 }
@@ -716,12 +719,6 @@ changeTargetVariable <- function(dataset, posVariable){
 
 
 
-.between <- function(min, value, max) {
-  value >= min & value < max
-}
-
-
-
 #'
 #' returns a number between low and high. Including high and EXCLUDING excluded
 #' @param low Lower bound (included)
@@ -740,14 +737,14 @@ changeTargetVariable <- function(dataset, posVariable){
 
 
 
-#
-# Parse a time differente to "x hours, y minutes and z seconds"
-#
-# @param End time in UNIX int format (i.e. as.numeric(Sys.time()))
-# @param initial Initial time in Unis format.
-#
-# @return A human-readable string with time difference.
-#
+#'
+#' Parse a time differente to "x hours, y minutes and z seconds"
+#'
+#' @param actual End time in UNIX int format (i.e. as.numeric(Sys.time()))
+#' @param initial Initial time in Unis format.
+#'
+#' @return A human-readable string with time difference.
+#'
 parseTime <- function(actual, initial){
   dif <- actual - initial
   horas <- 0
