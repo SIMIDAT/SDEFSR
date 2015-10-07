@@ -23,17 +23,16 @@ shinyUI(fluidPage(
        br(), br(),
       # ---- Algorithm Selection -----
       p(h4("2.- Select a method: ")),
-      selectInput("algoritmo", label = "Choose an algorithm", choices = c("SDIGA", "NMEEF-SD", "MESDIF" ) ),
+      selectInput("algoritmo", label = "Choose an algorithm", choices = c("SDIGA", "NMEEF-SD", "MESDIF", "FuGePSD" ) ),
       helpText(h6("Note: This algorithms may take a lot of time (hours) executing on large datasets, please, be patient. ")),
-      sliderInput("nLabels", "Number of fuzzy labels: ", value = 3, min = 1, max = 10, step = 1),
-      selectInput("rulesRep", "Type of rules: ", choices = c("Canonical", "DNF (Disyuntive Normal Form)")),
-      numericInput("nEval", "Number of Evaluations:", value = 10000, min = 0, max = Inf, step = 1),
-      sliderInput("popSize", "Number of individuals in population: ", value = 100, min = 2, max = 500, step = 1),
-      sliderInput("mutProb", label = "Mutation Probability: ", min = 0, max = 1, value = 0.01, step = 0.01) ,
-      
+     
       
       conditionalPanel("input.algoritmo == 'SDIGA'",
-                       
+                       sliderInput("nLabels", "Number of fuzzy labels: ", value = 3, min = 1, max = 10, step = 1),
+                       selectInput("rulesRep", "Type of rules: ", choices = c("Canonical", "DNF (Disyuntive Normal Form)")),
+                       numericInput("nEval", "Number of Evaluations:", value = 10000, min = 0, max = Inf, step = 1),
+                       sliderInput("popSize", "Number of individuals in population: ", value = 100, min = 2, max = 500, step = 1),
+                       sliderInput("mutProb", label = "Mutation Probability: ", min = 0, max = 1, value = 0.01, step = 0.01) ,
                        sliderInput("minConf", "Minimum Confidence", value = 0.6, min = 0, max = 1, step = 0.01),
                        selectInput("Obj1","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Crisp Support"),
                        sliderInput("w1", "Weigth 1: ", value = 0.7, min = 0, max = 1, step = 0.01 ),
@@ -44,6 +43,11 @@ shinyUI(fluidPage(
                        checkboxInput("lSearch", "Perfom Local Search", value = TRUE)
                        ),
       conditionalPanel("input.algoritmo == 'NMEEF-SD'",
+                       sliderInput("nLabels", "Number of fuzzy labels: ", value = 3, min = 1, max = 10, step = 1),
+                       selectInput("rulesRep", "Type of rules: ", choices = c("Canonical", "DNF (Disyuntive Normal Form)")),
+                       numericInput("nEval", "Number of Evaluations:", value = 10000, min = 0, max = Inf, step = 1),
+                       sliderInput("popSize", "Number of individuals in population: ", value = 100, min = 2, max = 500, step = 1),
+                       sliderInput("mutProb", label = "Mutation Probability: ", min = 0, max = 1, value = 0.01, step = 0.01) ,
                        sliderInput("crossProb", label = "Crossover Probability: ", min = 0, max = 1, value = 0.6, step = 0.01),
                        sliderInput("minConf", "Minimum Confidence", value = 0.6, min = 0, max = 1, step = 0.01),
                        checkboxInput("reInitPob", "Use re-initialize operator", value = TRUE),
@@ -56,6 +60,11 @@ shinyUI(fluidPage(
                        checkboxInput("strictDominance", "Comparison using strict dominance", value = TRUE)
                        ),
       conditionalPanel("input.algoritmo == 'MESDIF'", 
+                       sliderInput("nLabels", "Number of fuzzy labels: ", value = 3, min = 1, max = 10, step = 1),
+                       selectInput("rulesRep", "Type of rules: ", choices = c("Canonical", "DNF (Disyuntive Normal Form)")),
+                       numericInput("nEval", "Number of Evaluations:", value = 10000, min = 0, max = Inf, step = 1),
+                       sliderInput("popSize", "Number of individuals in population: ", value = 100, min = 2, max = 500, step = 1),
+                       sliderInput("mutProb", label = "Mutation Probability: ", min = 0, max = 1, value = 0.01, step = 0.01) ,
                        sliderInput("crossProb", label = "Crossover Probability: ", min = 0, max = 1, value = 0.6, step = 0.01),
                        sliderInput("elitePop", "Size of elite population: ", min = 1, max = 30, value = 3, step = 1),
                        selectInput("Obj1M","Objetive 1", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"), selected = "Crisp Support"),
@@ -63,6 +72,24 @@ shinyUI(fluidPage(
                        selectInput("Obj3M","Objetive 3", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness")),
                        selectInput("Obj4M","Objetive 4", c("null", "Crisp Support", "Crisp Confidence", "Fuzzy Support", "Fuzzy Confidence", "Coverage", "Significance", "Unusualness"))
                        
+                       ),
+      conditionalPanel("input.algoritmo == 'FuGePSD'",
+                       sliderInput("nLabels", "Number of fuzzy labels: ", value = 3, min = 1, max = 10, step = 1),
+                       sliderInput("popSize", "Number of Initial Rules: ", value = 100, min = 2, max = 500, step = 1),
+                       numericInput("nEval", "Number of Generation:", value = 300, min = 0, max = Inf, step = 1),
+                       sliderInput("crossProb", label = "Crossover Probability: ", min = 0, max = 1, value = 0.5, step = 0.01),
+                       sliderInput("mutProb", label = "Mutation Probability: ", min = 0, max = 1, value = 0.2, step = 0.01) ,
+                       sliderInput("insProb", label = "Insertion Probability: ", min = 0, max = 1, value = 0.15, step = 0.01) ,
+                       sliderInput("dropProb", label = "Dropping Condition Probability: ", min = 0, max = 1, value = 0.15, step = 0.01),
+                       selectInput("tnorm", label = "T-norm for the Computation of the Compatibility Degree: ", choices = c("Minimum/Maximum", "Product"), selected = "Product"),
+                       selectInput("ruleWeight", label = "Rule Weight Method: ", choices = c("Penalized Certainty Factor", "Average_Penalized_Certainty_Factor", "No_Weights", "Certainty_Factor")),
+                       selectInput("frm", label = "Fuzzy Reasoning Method: ", choices = c("Winning_Rule", "Normalized_Sum", "Arithmetic_Mean")),
+                       numericInput("tournamentSize", label = "Tournament Selection Size: ", value = 2, min = 2, max = 30, step = 1),
+                       sliderInput("gfw1", label = "Global Fitness Weight 1: ", value = 0.7, min = 0, max = 1, step = 0.01),
+                       sliderInput("gfw2", label = "Global Fitness Weight 2: ", value = 0.1, min = 0, max = 1, step = 0.01),
+                       sliderInput("gfw3", label = "Global Fitness Weight 3: ", value = 0.05, min = 0, max = 1, step = 0.01),
+                       sliderInput("gfw4", label = "Global Fitness Weight 4: ", value = 0.2, min = 0, max = 1, step = 0.01),
+                       checkboxInput("allClass", label = "ALL_CLASS", value = TRUE)
                        ),
       numericInput("seed", "Specify a seed:", value = 0, min = 0, max = Inf, step = 1),
       br(),

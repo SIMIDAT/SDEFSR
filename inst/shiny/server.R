@@ -307,7 +307,7 @@ shinyServer(function(input, output, session) {
   })
   
   
-  #EJECUTAR ALGORITMO
+  #EJECUTAR ALGORITMO 
 
   observe({
     input$ejecutar
@@ -351,7 +351,7 @@ shinyServer(function(input, output, session) {
     seed <- isolate(input$seed)
     #------------------------------------------------------
     
-  
+
     
     # Preparation of specific parameters and execution of the algoritm.
     switch(algorithm,
@@ -445,6 +445,9 @@ shinyServer(function(input, output, session) {
                       porcCob = porcCob,
                       StrictDominance = strictDominance,
                       targetClass = targetValue)
+           },
+           "FuGePSD" = {
+             # /**/
            }
     )
     
@@ -474,6 +477,11 @@ shinyServer(function(input, output, session) {
   output$resultados <- renderDataTable({
     
     input$ejecutar
+    
+    algoritmo <- isolate(input$algoritmo)
+    if(algoritmo == "FuGePSD"){
+       
+    } else {
       if(file.exists("rulesFile.txt")){
       #get and parse the results
       contents <- readChar("rulesFile.txt", file.info("rulesFile.txt")$size)
@@ -495,6 +503,7 @@ shinyServer(function(input, output, session) {
       colnames(rules) <- c("Num Rule", "Rule")
      
       as.data.frame(rules)
+      }
     }
 }, escape = FALSE, options = list(pageLength = 10))
   
@@ -518,23 +527,28 @@ shinyServer(function(input, output, session) {
   
   output$medidas <- renderDataTable({
     input$ejecutar
-    if(file.exists("testQualityMeasures.txt")){
-      #get and process results
-      contents <- readChar("testQualityMeasures.txt", file.info("testQualityMeasures.txt")$size)
-      contents <- as.numeric(unlist( strsplit(contents, "\n", fixed = TRUE) ) )
+    algoritmo <- isolate(input$algoritmo)
+    if(algoritmo == "FuGePSD"){
       
-      mat <- matrix(contents, ncol = 10, byrow = TRUE)
-      aux <- mat[seq_len(nrow(mat) - 1) , 1:9]
-      mat[seq_len(nrow(mat) - 1) , 2:10] <- aux
-      mat[seq_len(nrow(mat) - 1) , 1] <- NA
-      colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Accuracy", "CSupport", "FSupport", "CConfidence", "FConfidence")
-      rownames(mat) <- c( seq_len((length(contents) / 10 - 1)), "Global: ")
-      file.remove("testQualityMeasures.txt")
-      
-      #Show results as html
-      #as.table(mat)
-      as.data.frame(mat, stringsAsFactors = FALSE)
-     
+    } else {
+      if(file.exists("testQualityMeasures.txt")){
+        #get and process results
+        contents <- readChar("testQualityMeasures.txt", file.info("testQualityMeasures.txt")$size)
+        contents <- as.numeric(unlist( strsplit(contents, "\n", fixed = TRUE) ) )
+        
+        mat <- matrix(contents, ncol = 10, byrow = TRUE)
+        aux <- mat[seq_len(nrow(mat) - 1) , 1:9]
+        mat[seq_len(nrow(mat) - 1) , 2:10] <- aux
+        mat[seq_len(nrow(mat) - 1) , 1] <- NA
+        colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Accuracy", "CSupport", "FSupport", "CConfidence", "FConfidence")
+        rownames(mat) <- c( seq_len((length(contents) / 10 - 1)), "Global: ")
+        file.remove("testQualityMeasures.txt")
+        
+        #Show results as html
+        #as.table(mat)
+        as.data.frame(mat, stringsAsFactors = FALSE)
+       
+      }
     }
   })
 

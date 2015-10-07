@@ -713,7 +713,7 @@ Rule.addVariable <- function(rule, dataset){
   #'          t_norm = "Minimum/Maximum",
   #'          ruleWeight = "Certainty_Factor",
   #'          frm = "Normalized_Sum",
-  #'          numGenerations = 50,
+  #'          numGenerations = 20,
   #'          numberOfInitialRules = 15,
   #'          crossProb = 0.5,
   #'          mutProb = 0.2,
@@ -909,7 +909,7 @@ Rule.addVariable <- function(rule, dataset){
      } else {
        #If ! ALL_CLASS and new_pop is empty, the algorithm returns the best of the population.
        if(length(new_pop) == 0){
-         new_pop <- bestPop[[1]]
+         new_pop[[1]] <- bestPop[[1]]
        }
      }
      
