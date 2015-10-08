@@ -384,7 +384,7 @@ MESDIF <- function(paramFile = NULL,
     stop("Target variable is not categorical.")
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
-  if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")
+ 
   
   if(tolower(parametros$RulesRep) == "can"){
     DNF = FALSE
@@ -508,21 +508,6 @@ MESDIF <- function(paramFile = NULL,
        file = parametros$outputData[3], sep = "\n", append = TRUE
   )
   
-  
-  #Medidas de calidad globales (Save in testMeasures File)
-  cat(
-    nrow(reglas),
-    round(sumNvars / n_reglas, 6),
-    round(sumCov / n_reglas, 6),
-    round(sumSign / n_reglas, 6),
-    round(sumUnus / n_reglas, 6),
-    round(sumAccu / n_reglas, 6),
-    round(sum(test[["covered"]] / test[["Ns"]]), 6),
-    round(sumFsup / n_reglas, 6),
-    round(sumFconf / n_reglas, 6),
-    round(sumCconf / n_reglas, 6),
-    file = "testQualityMeasures.txt", sep = "\n", append = TRUE
-  )
   #---------------------------------------------------
   
 }

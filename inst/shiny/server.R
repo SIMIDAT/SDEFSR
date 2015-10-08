@@ -395,7 +395,7 @@ shinyServer(function(input, output, session) {
              Obj1 <- .getObjetives(isolate(input$Obj1M))
              Obj2 <- .getObjetives(isolate(input$Obj2M))
              Obj3 <- .getObjetives(isolate(input$Obj3M))
-             Obj4 <- .getObjetives(isolate(input$Obj3M))
+             Obj4 <- .getObjetives(isolate(input$Obj4M))
              crossProb <- isolate(input$crossProbM)
              
             
@@ -615,21 +615,20 @@ shinyServer(function(input, output, session) {
         as.data.frame(mat, stringsAsFactors = FALSE)
       }
     } else {
-      if(file.exists("testQualityMeasures.txt")){
+      if(file.exists("testQM.txt")){
         #get and process results
-        contents <- readChar("testQualityMeasures.txt", file.info("testQualityMeasures.txt")$size)
-        contents <- as.numeric(unlist( strsplit(contents, "\n", fixed = TRUE) ) )
+        contents <- readChar("testQM.txt", file.info("testQM.txt")$size)
+        contents <- gsub(x = contents, pattern = "[^0-9.]+",replacement = " ")
+        contents <- strsplit(x = contents, split = " ", fixed = TRUE)[[1]][-1]
+        contents <- as.numeric(contents)
+       
         
         mat <- matrix(contents, ncol = 10, byrow = TRUE)
-        aux <- mat[seq_len(nrow(mat) - 1) , 1:9]
-        mat[seq_len(nrow(mat) - 1) , 2:10] <- aux
+
         mat[seq_len(nrow(mat) - 1) , 1] <- NA
         colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Accuracy", "CSupport", "FSupport", "CConfidence", "FConfidence")
-        rownames(mat) <- c( seq_len((length(contents) / 10 - 1)), "Global: ")
-        file.remove("testQualityMeasures.txt")
-        
-        #Show results as html
-        #as.table(mat)
+      
+        file.remove("testQM.txt")
         as.data.frame(mat, stringsAsFactors = FALSE)
        
       }
