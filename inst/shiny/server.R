@@ -396,6 +396,7 @@ shinyServer(function(input, output, session) {
              Obj2 <- .getObjetives(isolate(input$Obj2M))
              Obj3 <- .getObjetives(isolate(input$Obj3M))
              Obj4 <- .getObjetives(isolate(input$Obj3M))
+             crossProb <- isolate(input$crossProbM)
              
             
              # Execute the algorithm
@@ -448,6 +449,31 @@ shinyServer(function(input, output, session) {
            },
            "FuGePSD" = {
              # /**/
+             t_norm <- isolate(input$tnorm)
+             ruleWeight <- isolate(input$ruleWeight)
+             frm <- isolate(input$frm)
+             insProb <- isolate(input$insProb)
+             dropProb <- isolate(input$dropProb)
+             tSize <- isolate(input$tournamentSize)
+             gfw <- c(isolate(input$gfw1), isolate(input$gfw2), isolate(input$gfw3), isolate(input$gfw4) )
+             allClass <- isolate(input$allClass)
+             
+             SDR::FUGEPSD(paramFile = NULL,
+                          training = dataTra,
+                          test = dataTst,
+                          seed = seed,
+                          t_norm = t_norm,
+                          ruleWeight = ruleWeight,
+                          frm = frm,
+                          numGenerations = nEvals,
+                          numberOfInitialRules = popSize,
+                          crossProb = crossProb,
+                          mutProb = mutProb,
+                          insProb = insProb,
+                          dropProb = dropProb,
+                          tournamentSize = tSize,
+                          globalFitnessWeights = gfw,
+                          ALL_CLASS = allClass)
            }
     )
     
@@ -469,7 +495,19 @@ shinyServer(function(input, output, session) {
 
   
   
-  
+  observe({
+    algo <- input$algoritmo
+    if(algo == "FuGePSD"){
+      updateNumericInput(session, "nEval", label = "Number of generations", value = 300, min = 1, max = Inf, step = 1)
+      updateSelectInput(session, "rulesRep", "Type of rules: ", choices = c("Canonical"))
+    } else if(algo %in% c("SDIGA", "MESDIF")){
+      updateNumericInput(session, "nEval", label = "Number of evaluations", value = 10000, min = 1, max = Inf, step = 1)
+      updateSelectInput(session, "rulesRep", "Type of rules: ", choices = c("Canonical", "DNF (Disyuntive Normal Form)"))
+    } else if (algo == "NMEEF-SD"){
+      updateNumericInput(session, "nEval", label = "Number of evaluations", value = 10000, min = 1, max = Inf, step = 1)
+      updateSelectInput(session, "rulesRep", "Type of rules: ", choices = c("Canonical"))
+    }
+  })
   
   
   # RESULTADOS 
@@ -480,7 +518,32 @@ shinyServer(function(input, output, session) {
     
     algoritmo <- isolate(input$algoritmo)
     if(algoritmo == "FuGePSD"){
-       
+      file <- which(c(file.exists("rulesFile_f06_TRUE.txt"), file.exists("rulesFile_f06_FALSE.txt")))
+      file <- c("rulesFile_f06_TRUE.txt", "rulesFile_f06_FALSE.txt")[file]
+      contents <- readChar(file, file.info(file)$size)
+      contents <- gsub(pattern = "[0-9]+:", replacement = "", x = contents)
+      contents <- strsplit(x = contents, split = "\n", fixed = TRUE)[[1]]
+      contents <- contents[- c(1,2,3)]
+      #Eliminate the "with rule weight":
+      contents <- gsub(pattern = "\\bwith Rule Weight\\b:", replacement = "", x = contents)
+      reglas <- gsub(pattern = "[[:blank:]]{2}-?[0-9.]+", replacement = "", x = contents)
+      weigths <- strsplit(paste(contents, collapse = " "), split = "  ")[[1]]
+      weigths <- weigths[which(seq_len(length(weigths)) %% 2 == 0)]
+      mat <- matrix(NA, nrow = length(reglas), ncol = 3)
+      colnames(mat) <- c("Num Rule", "Rule", "Weight")
+      mat[,1] <- as.character(seq_len(length(reglas)))
+      mat[,2] <- reglas
+      mat[,3] <- weigths
+      
+      junk <- dir(".", "[^QM].txt")
+      options <- which(junk == "optionsFile.txt")
+      if(length(options) > 0)
+        junk <- junk[- options]
+      
+      file.remove(junk)
+      
+      as.data.frame(mat)
+      
     } else {
       if(file.exists("rulesFile.txt")){
       #get and parse the results
@@ -529,7 +592,28 @@ shinyServer(function(input, output, session) {
     input$ejecutar
     algoritmo <- isolate(input$algoritmo)
     if(algoritmo == "FuGePSD"){
-      
+      if(file.exists("rulesFile_f06_TRUE_QM.txt") || file.exists("rulesFile_f06_FALSE_QM.txt")){
+        #get and process results
+        file <- which(c(file.exists("rulesFile_f06_TRUE_QM.txt"), file.exists("rulesFile_f06_FALSE_QM.txt")))
+        file <- c("rulesFile_f06_TRUE_QM.txt", "rulesFile_f06_FALSE_QM.txt")[file]
+        contents <- readChar(file, file.info(file)$size)
+        contents <- gsub(x = contents, pattern = "[^0-9.]+",replacement = " ")
+        contents <- strsplit(x = contents, split = " ", fixed = TRUE)[[1]][-1]
+        contents <- as.numeric(contents)
+        
+        mat <- matrix(contents, ncol = 9, byrow = TRUE)
+        mat[seq_len(nrow(mat) - 1) , 1] <- NA
+        colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Sensitivity", "Support", "FConfidence", "CConfidence")
+        rownames(mat) <- c( seq_len((length(contents) / 9 - 1)), "Global: ")
+        
+        junk <- dir(".", "[*QM].txt")
+    
+        file.remove(junk)
+        
+        #Show results as html
+        #as.table(mat)
+        as.data.frame(mat, stringsAsFactors = FALSE)
+      }
     } else {
       if(file.exists("testQualityMeasures.txt")){
         #get and process results

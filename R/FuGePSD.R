@@ -903,7 +903,7 @@ Rule.addVariable <- function(rule, dataset){
        if(!all(examples_class)){
        #As the bestPop is ordered by fuzzy confidence, we take the best rule in terms of confidence for 
        #each class that are not in the new population yet.
-       pos <- pmatch(which(!examples_class), classes)
+       pos <- na.exclude(pmatch(which(!examples_class), classes))
        new_pop[(length(new_pop) + 1):(length(new_pop) + length(pos))] <- bestPop[pos]
        }
      } else {
