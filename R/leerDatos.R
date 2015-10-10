@@ -1,9 +1,9 @@
 #'
-#' Reads a KEEL format file
+#' Reads a KEEL data format file or an ARFF data format file.
 #'
-#' This function reads a KEEL dataset file and store the information
-#'   in a \code{keel} class. This function also create fuzzy sets definitions
-#'   for execute in SDIGA, MESDIF or NMEEF-SD algorithms
+#' This function reads a KEEL (.dat) or ARFF (.arff) dataset file and store the information
+#'   in a \code{keel} class. This function also create fuzzy sets definitions for numeric variables
+#'   for execute in SDIGA, MESDIF, NMEEF-SD and FuGePSD algorithms
 #'
 #' @param file The path of the file in KEEL format
 #' @param nLabels The number of fuzzy labels to create on numerical variables.
@@ -17,127 +17,146 @@
 #'    \item{ @@data: Starting tag of the data}
 #' }
 #'    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
-#'
-#' @author Angel M. Garcia <amgv0009@@red.ujaen.es>
+#' ARFF file format is a well-know dataset format from WEKA data mining tool.
+#' 
+#' @author Angel M. Garcia <amgv0009@@red.ujaen.es> 
+#'    
 #' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
+#' 
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #'
 #' @examples
 #'     \dontrun{
 #'        Reads a KEEL dataset from a file.
-#'        read.keel(file = "C:\KEELFile.txt")
+#'        read.keel(file = "C:\KEELFile.dat")
 #'
-#'        read.keel(file = "C:\KEELFile.txt", nLabels = 7)
+#'        read.keel(file = "C:\KEELFile.dat", nLabels = 7)
+#'        
+#'      Reads an ARFF dataset from a file.
+#'        read.keel(file = "C:\ARFFFile.arff")
+#'
+#'        read.keel(file = "C:\ARFFFile.arff", nLabels = 7)
 #'     }
 #'     
 #' @export
 read.keel <- function(file, nLabels = 3) {
   if (nLabels < 1)
     stop("Number of fuzzy sets ('nLabels') must be greater than zero.")
-  
-  data <- .readFile(file)
-  value <- which(data == "@data") - 1
-  if (length(value) == 0)
-    stop("No '@data' field found, this is not a KEEL format dataset. Aborting load...")
-  properties <- data[1:value]
-  data <- data[(value + 2):length(data)]
-  
-  # Preparacion de las propiedades de los datos
-  
-  properties <- lapply(X = properties, FUN = .preprocessHeader)
-  
-  num_atribs <-
-    length(properties) - 3 # Obviamos valor de @relation, @inputs y @outputs
-  atribs_names <- character(num_atribs)
-  atribs_types <- character(num_atribs)
-  atribs_min <- numeric(num_atribs)
-  atribs_max <- numeric(num_atribs)
-  categorical_values <- vector(mode = "list", length = num_atribs)
-  
-  #Procesamos @relation
-  relation_pos <- grep(pattern = "@relation", x = properties, fixed = TRUE) #NOTA: Es mejor usar pmatch ! 77x faster!
-  if (length(relation_pos) == 0)
-    stop("No '@relation' field provided, this is not a KEEL format dataset. Aborting load... ")
-  relacion <- properties[[relation_pos]][2]
-  
-  #Procesamos el resto de atributos
-  atributes <- properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
-  aux <- vector(mode = "list", length = 5)
-  
-  if (length(atributes) == 0)
-    stop(
-      "No '@input' or '@output' fields found, this is not a KEEL format dataset. Aborting load..."
-    )
-  
-  for (i in seq_len(length(atributes))) {
-    aux <- .processLine(line = atributes[[i]])
-    
-    atribs_names[i] <- aux[[1]]
-    atribs_types[i] <- aux[[2]]
-    atribs_min[i] <- aux[[3]]
-    atribs_max[i] <- aux[[4]]
-    categorical_values[[i]] <- aux[[5]]
+  if(length(file) > 1){
+    stop(paste(substitute(file), "must be of length 1."))
   }
+  #Detect extension
+  ext <- regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]]
   
-  
-  #Preparacion de los datos
-  if (Sys.info()[1] != "Windows")
-    data <-
-    parallel::mclapply(
-      X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1
+  if(ext == ".dat"){
+    data <- .readFile(file)
+    value <- which(data == "@data") - 1
+    if (length(value) == 0)
+      stop("No '@data' field found, this is not a KEEL format dataset. Aborting load...")
+    properties <- data[1:value]
+    data <- data[(value + 2):length(data)]
+    
+    # Preparacion de las propiedades de los datos
+    
+    properties <- lapply(X = properties, FUN = .preprocessHeader)
+    
+    num_atribs <-
+      length(properties) - 3 # Obviamos valor de @relation, @inputs y @outputs
+    atribs_names <- character(num_atribs)
+    atribs_types <- character(num_atribs)
+    atribs_min <- numeric(num_atribs)
+    atribs_max <- numeric(num_atribs)
+    categorical_values <- vector(mode = "list", length = num_atribs)
+    
+    #Procesamos @relation
+    relation_pos <- grep(pattern = "@relation", x = properties, fixed = TRUE) #NOTA: Es mejor usar pmatch ! 77x faster!
+    if (length(relation_pos) == 0)
+      stop("No '@relation' field provided, this is not a KEEL format dataset. Aborting load... ")
+    relacion <- properties[[relation_pos]][2]
+    
+    #Procesamos el resto de atributos
+    atributes <- properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
+    aux <- vector(mode = "list", length = 5)
+    
+    if (length(atributes) == 0)
+      stop(
+        "No '@input' or '@output' fields found, this is not a KEEL format dataset. Aborting load..."
+      )
+    
+    for (i in seq_len(length(atributes))) {
+      aux <- .processLine(line = atributes[[i]])
+      
+      atribs_names[i] <- aux[[1]]
+      atribs_types[i] <- aux[[2]]
+      atribs_min[i] <- aux[[3]]
+      atribs_max[i] <- aux[[4]]
+      categorical_values[[i]] <- aux[[5]]
+    }
+    
+    
+    #Preparacion de los datos
+    if (Sys.info()[1] != "Windows")
+      data <-
+      parallel::mclapply(
+        X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1
+      )
+    else
+      #In windows mclapply doesnt work
+      data <-
+      parallel::mclapply(
+        X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1
+      )
+    
+    
+    #Preparacion del resto de atributos del dataset
+    
+    covered <- logical(length = length(data))
+    fuzzySets <-
+      .create_fuzzyIntervals(
+        min = atribs_min, max = atribs_max, num_sets = nLabels, types = atribs_types
+      )
+    crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
+    classNames <- categorical_values[[length(categorical_values)]]
+    clValues <- unlist(lapply(data, '[', length(atributes)))
+    examplesPerClass <-
+      lapply(
+        X = seq_len(length(classNames)) - 1, FUN = function(x, data)
+          sum(data == x), clValues
+      )
+    names(examplesPerClass) <- classNames
+    
+    conjuntos <-
+      .dameConjuntos(data_types = atribs_types, max = atribs_max, n_labels = nLabels)
+    
+    lostData <- FALSE #Quitar esto
+    
+    lista <- list(
+      relation = relacion,
+      atributeNames = atribs_names,
+      atributeTypes = atribs_types,
+      min = atribs_min,
+      max = atribs_max,
+      nVars = length(atribs_min) - 1,
+      data = data,
+      class_names = classNames,
+      examplesPerClass = examplesPerClass,
+      lostData = lostData,
+      covered = covered,
+      fuzzySets = fuzzySets,
+      crispSets = crispSets,
+      conjuntos = conjuntos,
+      categoricalValues = categorical_values,
+      Ns = length(data)
     )
-  else
-    #In windows mclapply doesnt work
-    data <-
-    parallel::mclapply(
-      X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1
-    )
-  
-  
-  #Preparacion del resto de atributos del dataset
-  
-  covered <- logical(length = length(data))
-  fuzzySets <-
-    .create_fuzzyIntervals(
-      min = atribs_min, max = atribs_max, num_sets = nLabels, types = atribs_types
-    )
-  crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
-  classNames <- categorical_values[[length(categorical_values)]]
-  clValues <- unlist(lapply(data, '[', length(atributes)))
-  examplesPerClass <-
-    lapply(
-      X = seq_len(length(classNames)) - 1, FUN = function(x, data)
-        sum(data == x), clValues
-    )
-  names(examplesPerClass) <- classNames
-  
-  conjuntos <-
-    .dameConjuntos(data_types = atribs_types, max = atribs_max, n_labels = nLabels)
-  
-  lostData <- FALSE #Quitar esto
-  
-  lista <- list(
-    relation = relacion,
-    atributeNames = atribs_names,
-    atributeTypes = atribs_types,
-    min = atribs_min,
-    max = atribs_max,
-    nVars = length(atribs_min) - 1,
-    data = data,
-    class_names = classNames,
-    examplesPerClass = examplesPerClass,
-    lostData = lostData,
-    covered = covered,
-    fuzzySets = fuzzySets,
-    crispSets = crispSets,
-    conjuntos = conjuntos,
-    categoricalValues = categorical_values,
-    Ns = length(data)
-  )
-  
-  
-  class(lista) <- "keel"
-  lista
+    
+    
+    class(lista) <- "keel"
+    lista
+  } else if(ext == ".arff"){
+    keelFromARFF(file, nLabels)
+  } else {
+    stop("Invalid format. Valid formats are: '.arff' or '.dat'")
+  }
   
 }
 
@@ -742,37 +761,14 @@ read.keel <- function(file, nLabels = 3) {
 #
 #
 .preprocessHeader <- function(line) {
-  line <- sub(pattern = " {", replacement = " ", x = line, fixed = TRUE)
-  line <- sub(pattern = "{", replacement = " ", x = line, fixed = TRUE)
-  line <-
-    sub(
-      pattern = "}", replacement = "", x = line, fixed = TRUE
-    )
-  line <-
-    sub(
-      pattern = " [", replacement = " ", x = line, fixed = TRUE
-    )
-  line <-
-    sub(
-      pattern = "[", replacement = " ", x = line, fixed = TRUE
-    )
-  line <-
-    sub(
-      pattern = "]", replacement = "", x = line, fixed = TRUE
-    )
-  line <-
-    gsub(
-      pattern = ", ", replacement = " ", x = line, fixed = TRUE
-    )
-  line <- gsub(pattern = "[ *] ", replacement = " ", x = line)
+  #The regular expression eliminate eliminate the "{}" and "[]" symbols and commas that separate every element inside them
+  regex <-  "[[:blank:]]*\\{|[[:blank:]]*\\}|[[:blank:]]*\\[|[[:blank:]]*\\]|,[[:blank:]]*" 
+  line <- gsub(pattern = regex, replacement = " ", x = line)
+  
   #Return
-  unlist(strsplit(
-    gsub(
-      pattern = ",", replacement = " ", x = line, fixed = TRUE
-    ) , split = " "
-  ))
+  strsplit(line, " ", fixed = TRUE)[[1]]
+  
 }
-
 
 
 
@@ -781,18 +777,12 @@ read.keel <- function(file, nLabels = 3) {
 # This function parses all examples in the @data field
 #
 #
-.processData <- function(data, categoricalValues, types) {
+.processData <- function(data, categoricalValues, types, fromDataFrame = FALSE) {
   line <- data
-  line <-
-    gsub(
-      pattern = ", ", replacement = " ", x = line, fixed = TRUE
-    )
-  line <-
-    gsub(
-      pattern = ",", replacement = " ", x = line, fixed = TRUE
-    )
-  line <- strsplit(x = line, split = " ",fixed = TRUE)[[1]]
-  
+  if(!fromDataFrame){
+    line <- gsub(pattern = ",[[:blank:]]*", replacement = " ", x = line)
+    line <- strsplit(x = line, split = " ",fixed = TRUE)[[1]]
+  }
   cat <- which(types == 'c')
   lc <- line[cat]
   cv <- categoricalValues[cat]
@@ -1149,4 +1139,123 @@ addKeelRegister <- function(items, dataset) {
     TRUE
     
   }
+  
+  
+
+  
 }
+
+
+
+#' 
+#' Reads an ARFF file
+#' 
+#' This function reads an ARFF file and get the subyacent \code{keel} object
+#'
+#' @param file The ARFF file to read.
+#' @param nLabels The number of fuzzy labels to generate. By default 3.
+#' 
+#' 
+#' @return a 'keel' object ready to use with the algorithms that are in the package
+#' 
+keelFromARFF <- function(file, nLabels = 3){
+  options(warn = -1)
+  conjunto <- read_arff(file)
+  
+
+  relation <- strsplit(conjunto[[1]], " ")[[1]][2]
+  
+  #Make attribute names and types
+  atributeNames <- names(conjunto[[2]])
+  categoricos <- regmatches(x = conjunto[[2]], gregexpr(pattern = "[/^{*}/$]", text = conjunto[[2]]))
+  conjunto[[2]] <- gsub(pattern = "[/^{*}/$]", replacement = "", x = conjunto[[2]])
+  categoricos <- unlist(lapply(categoricos, function(x){length(x) > 0}))
+  types <- character(length(categoricos))
+  types[] <- "r"
+  types[which(categoricos)] <- "c"
+  
+  if(types[length(types)] != "c")
+    stop("Last value of the dataset is not categorical. We cannot create a dataset which class is not categorical.")
+  
+  #Get min and max.
+  longitud_categoricos <- regmatches(x = conjunto[[2]], gregexpr(pattern = "[[:alnum:]]*[^(,/$| */$)]", text = conjunto[[2]]))
+  longitud <- unlist(lapply(longitud_categoricos, length))
+  values <- matrix(data = unlist(lapply(conjunto[[3]][,which(!categoricos)], 
+                                        function(x){
+                                          x <- as.numeric(x)
+                                          c(min(na.exclude(x)), max(na.exclude(x)))
+                                          })),
+                   ncol = 2)
+  min <- max <- numeric(length(categoricos))
+  min[which(!categoricos)] <- values[,1]
+  max[which(!categoricos)] <- values[,2]
+  max[which(categoricos)] <- longitud[which(categoricos)]
+ 
+  nVars <- NCOL(conjunto[[3]]) - 1
+  
+  class_names <- longitud_categoricos[[length(longitud_categoricos)]]
+  
+  #Examples per class
+  examplesClass <- unlist(lapply(longitud_categoricos[[length(longitud_categoricos)]], function(x, values){
+    sum(x == values)
+  }, conjunto[[3]][, NCOL(conjunto[[3]])]))
+  names(examplesClass) <- class_names
+  
+  #Ns
+  Ns <- NROW(conjunto[[3]])
+  #Lost Data
+  lostData <- FALSE
+  #Covered
+  covered <- logical(Ns)
+  #Categorical Values
+  longitud_categoricos[which(longitud <= 1)] <- NA
+  
+  #Fuzzy and crisp sets
+  fuzzySets <-
+    .create_fuzzyIntervals(
+      min = min, max = max, num_sets = nLabels, types = types
+    )
+  crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
+  
+  #Conjuntos
+  conjuntos <-
+    .dameConjuntos(data_types = types, max = max, n_labels = nLabels)
+  
+  #DATA
+  if (Sys.info()[1] != "Windows")
+    data <-
+    parallel::mclapply(
+      X = as.data.frame(t(conjunto[[3]]), stringsAsFactors = FALSE), FUN = .processData, longitud_categoricos, types, TRUE, mc.cores = parallel::detectCores()
+    )
+  else
+    #In windows mclapply doesnt work
+    data <-
+    parallel::mclapply(
+      X = as.data.frame(t(conjunto[[3]])), FUN = .processData, longitud_categoricos, types, TRUE, mc.cores = 1
+    )
+  
+  lista <- list(
+    relation = relation,
+    atributeNames = atributeNames,
+    atributeTypes = types,
+    min = min,
+    max = max,
+    nVars = nVars,
+    data = data,
+    class_names = class_names,
+    examplesPerClass = examplesClass,
+    lostData = lostData,
+    covered = covered,
+    fuzzySets = fuzzySets,
+    crispSets = crispSets,
+    conjuntos = conjuntos,
+    categoricalValues = longitud_categoricos,
+    Ns = Ns
+  )
+  class(lista) <- "keel"
+  
+
+  options(warn = 0)
+  lista
+}
+
