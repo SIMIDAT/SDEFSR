@@ -19,7 +19,7 @@ shinyUI(fluidPage( theme = NULL,
        fileInput("tstFile", "Select Test File: "),
        selectInput("targetClassSelect", "Select the target variable:", choices = NA),
        selectInput("targetValueSelect", "Select the target value:", choices = NA),
-       radioButtons("visualizacion", "Visualize dataset info as a: ", c("Pie Chart", "Histogram"), selected = "Pie Chart"),
+       radioButtons("visualizacion", "Visualize dataset info as a: ", c("Pie Chart", "Histogram", "Box Plot"), selected = "Pie Chart"),
        br(), br()
       ),
 

@@ -134,6 +134,7 @@ shinyServer(function(input, output, session) {
     
     
     } else {
+      updateRadioButtons(session, "visualizacion", selected = "Histogram")
       if(categorico){
         posiciones <- NULL
         for(i in input$classNames){
@@ -141,17 +142,21 @@ shinyServer(function(input, output, session) {
           if(length(p) > 0 )
             posiciones <- c(posiciones, p)
         }
+        updateRadioButtons(session, "visualizacion", selected = "Histogram")
         barplot(tabla <- table(data[[15]][[pos]][datos[pos,]+1][posiciones]),
                 main = "Distribution of examples over variables",
                 col = colors
                 )
-      } else {
+      } else if(input$visualizacion == "Histogram") {
         updateRadioButtons(session, "visualizacion", selected = "Histogram")
         hist(x = datos[pos,],
              col = colors,
              main = "Distribution of examples over variables",
              ylab = "Frequency",
              xlab = "Value")
+      } else if(input$visualizacion == "Box Plot"){
+        updateRadioButtons(session, "visualizacion", selected = "Box Plot")
+        boxplot(datos[pos,]) #Ponerlo mas bonito si eso.
       }
     }
     
@@ -167,6 +172,8 @@ shinyServer(function(input, output, session) {
      tryCatch({
     if(rutaTra != paste(input$traFile[,1],input$traFile[,4])){
       file <- input$traFile
+      file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
+      file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
       rutaTra <<- paste(input$traFile[,1],input$traFile[,4])
       dataTra <<- SDR::read.keel(file$datapath, nLabels = input$nLabels)
       updateSelectInput(session = session, 
@@ -202,6 +209,8 @@ shinyServer(function(input, output, session) {
     if(! is.null(input$tstFile)){
       if(rutaTst != paste(input$tstFile[,1], input$tstFile[,4])){
         file <- input$tstFile
+        file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
+        file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
         rutaTst <<- paste(input$tstFile[,1], input$tstFile[,4])
         dataTst <<- SDR::read.keel(file$datapath,nLabels = input$nLabels)
         updateSelectInput(session = session, 
