@@ -1185,7 +1185,7 @@ keelFromARFF <- function(file, nLabels = 3){
                                           x <- as.numeric(x)
                                           c(min(na.exclude(x)), max(na.exclude(x)))
                                           })),
-                   ncol = 2)
+                   ncol = 2, byrow = TRUE)
   min <- max <- numeric(length(categoricos))
   min[which(!categoricos)] <- values[,1]
   max[which(!categoricos)] <- values[,2]
@@ -1257,5 +1257,167 @@ keelFromARFF <- function(file, nLabels = 3){
 
   options(warn = 0)
   lista
+}
+
+
+#'
+#' Creates a \code{keel} object from a \code{data.frame}
+#' 
+#' Creates a \code{keel} object from a \code{data.frame} and create fuzzy labels for numerical variables too.
+#' 
+#' @param data A data.frame object with all neccesary information. See details.
+#' @param relation A string that indicate the name of the relation.
+#' @param nLabels The number of fuzzy labels to use. By default 3.
+#' @param names An optional character vector indicating the name of the attributes.
+#' @param types An optional character vector indicating 'c' if variable is categorical, 'r' if is real and 'e' if it is an integer
+#' @param classNames An optional character vector indicating the values of the target class.
+#' 
+#' @details The information of the data.frame must be stored with instances in rows and variables in columns
+#' If you dont specify any of the optional parameter the function try to obtain them automatically. 
+#' 
+#' For \code{'names'} if it is NA, the function takes the name of the columns by \code{colnames}.
+#' 
+#' For \code{'types'} if it is NA, the function takes the type of an attribute asking the type of the column of the data.frame.
+#' If it is \code{'character'} it is assumed that it is categorical, and if \code{'numeric'} it is assumed that it is a real number.
+#' PLEASE, PAY ATTENTION TO THIS WAY OF WORK. It can cause tranformation errors taking a numeric variable as categorical or vice-versa.
+#' 
+#' For \code{'classNames'} if it is NA, the function returns unique values of the last attribute of the data.frame that is considered the class attribute.
+#' 
+#' @return A \code{keel} object with all the information of the dataset.
+#' 
+#' @examples 
+#' library(SDR)
+#' df <- data.frame(matrix(runif(1000), ncol = 10))
+#' #Add class attribute
+#' df[,11] <- c("0", "1")
+#' keelObject <- keelFromDataFrame(df, "random")
+#' invisible()
+#' 
+#' @seealso \code{\link{read.keel}}
+#' 
+#' @author Angel M Garcia <amgv0009@red.ujaen.es>
+#' 
+#' @export
+keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
+  #check data.frame
+  if(! is.data.frame(data))
+    stop(paste(substitute(data), "must be a data.frame"))
+  #Create the data.frame without factors
+  data <- as.data.frame(data, stringsAsFactors = FALSE)
+  #Check if the last attribute (class attribute) is categorical
+  if(! is.character(.subset2(data, NCOL(data))))
+    stop("Last attribute of the dataset, that define the class attribute, must be categorical.")
+  if(missing(relation))
+    relation <- substitute(data)
+  
+  #Checks parameters
+  checks <- is.na(c(names, types, classNames))
+  
+  if(checks[1]){
+    #Get names from colnames
+    names <- colnames(data)
+  }
+  
+  if(checks[2]){
+    #Try to get the type of the attributes.
+    types <- vapply(data, function(x){
+                            if(is.character(x)){
+                              'c'
+                            } else {
+                              'r'
+                            }
+                              }, character(1))
+  }
+  
+  if(checks[3]){
+    classNames <- unique(.subset2(data, NCOL(data)))
+  }
+  
+  #get Nvars and Ns
+  nVars <- NCOL(data) - 1
+  Ns <- NROW(data)
+  
+  #get min and max
+  min <- max <- numeric(nVars + 1)
+  matriz <- vapply(data, function(x){
+    if(is.numeric(x)){
+      c(min(na.exclude(x)), max(na.exclude(x)))
+    } else {
+      c(0, length(unique(x)))
+    }
+  }, numeric(2))
+  
+  matriz <- matrix(matriz, ncol = 2, byrow = TRUE)
+  min <- matriz[,1]
+  max <- matriz[,2]
+  
+
+  
+  
+  #Lost Data
+  lostData <- FALSE
+  #Covered
+  covered <- logical(Ns)
+  #Categorical Values
+  categoricalValues <- lapply(data, function(x){ if(is.character(x)) unique(x) else NA})
+  
+  #Examples per class
+  examplesClass <- unlist(lapply(categoricalValues[[length(categoricalValues)]], function(x, values){
+    sum(x == values)
+  }, .subset2(data, nVars + 1)))
+  names(examplesClass) <- classNames
+  
+  #Fuzzy and crisp sets
+  fuzzySets <-
+    .create_fuzzyIntervals(
+      min = min, max = max, num_sets = nLabels, types = types
+    )
+  crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
+  
+  #Conjuntos
+  conjuntos <-
+    .dameConjuntos(data_types = types, max = max, n_labels = nLabels)
+  
+  #DATA
+  if(Ns > 150){
+  if (Sys.info()[1] != "Windows")
+    data <-
+    parallel::mclapply(
+      X = as.data.frame(t(data), stringsAsFactors = FALSE), FUN = .processData, categoricalValues, types, TRUE, mc.cores = parallel::detectCores()
+    )
+  else
+    #In windows mclapply doesnt work
+    data <-
+    parallel::mclapply(
+      X = as.data.frame(t(data), stringsAsFactors = FALSE), FUN = .processData, categoricalValues, types, TRUE, mc.cores = 1
+    )
+  } else {
+    data <-
+      lapply(
+        X = as.data.frame(t(data), stringsAsFactors = FALSE), FUN = .processData, categoricalValues, types, TRUE
+      )
+  }
+  lista <- list(
+    relation = relation,
+    atributeNames = names,
+    atributeTypes = types,
+    min = min,
+    max = max,
+    nVars = nVars,
+    data = data,
+    class_names = classNames,
+    examplesPerClass = examplesClass,
+    lostData = lostData,
+    covered = covered,
+    fuzzySets = fuzzySets,
+    crispSets = crispSets,
+    conjuntos = conjuntos,
+    categoricalValues = categoricalValues,
+    Ns = Ns
+  )
+  class(lista) <- "keel"
+  lista
+  
+  
 }
 
