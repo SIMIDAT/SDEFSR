@@ -1,0 +1,143 @@
+Rule 1 :
+	 - N_vars: 2
+	 - Coverage: 0.016129
+	 - Significance: 222.256569
+	 - Unusualness: -0.00026
+	 - Accuracy: 0.333333
+	 - CSupport: 0
+	 - FSupport: 0.005583
+	 - CConfidence: 0
+	 - FConfidence: 0.272727 
+
+Rule 2 :
+	 - N_vars: 3
+	 - Coverage: 0
+	 - Significance: 0
+	 - Unusualness: 0
+	 - Accuracy: 0.5
+	 - CSupport: 0
+	 - FSupport: 0.004399
+	 - CConfidence: 0
+	 - FConfidence: 0.639344 
+
+Rule 3 :
+	 - N_vars: 3
+	 - Coverage: 0
+	 - Significance: 0
+	 - Unusualness: 0
+	 - Accuracy: 0.5
+	 - CSupport: 0
+	 - FSupport: 0
+	 - CConfidence: 0
+	 - FConfidence: 0 
+
+Rule 4 :
+	 - N_vars: 4
+	 - Coverage: 0
+	 - Significance: 0
+	 - Unusualness: 0
+	 - Accuracy: 0.5
+	 - CSupport: 0
+	 - FSupport: 0
+	 - CConfidence: 0
+	 - FConfidence: 0 
+
+Rule 5 :
+	 - N_vars: 4
+	 - Coverage: 0.016129
+	 - Significance: 222.256569
+	 - Unusualness: 0.014308
+	 - Accuracy: 0.666667
+	 - CSupport: 0.016129
+	 - FSupport: 0.033724
+	 - CConfidence: 1
+	 - FConfidence: 0.762829 
+
+Rule 6 :
+	 - N_vars: 2
+	 - Coverage: 0.903226
+	 - Significance: 5.481254
+	 - Unusualness: 0.067118
+	 - Accuracy: 0.758621
+	 - CSupport: 0.693548
+	 - FSupport: 0.664392
+	 - CConfidence: 0.767857
+	 - FConfidence: 0.781182 
+
+Rule 7 :
+	 - N_vars: 2
+	 - Coverage: 0.241935
+	 - Significance: 76.421253
+	 - Unusualness: 0.112123
+	 - Accuracy: 0.823529
+	 - CSupport: 0.209677
+	 - FSupport: 0.188375
+	 - CConfidence: 0.866667
+	 - FConfidence: 0.80704 
+
+Rule 8 :
+	 - N_vars: 3
+	 - Coverage: 0.016129
+	 - Significance: 222.256569
+	 - Unusualness: 0.014308
+	 - Accuracy: 0.666667
+	 - CSupport: 0.016129
+	 - FSupport: 0.033724
+	 - CConfidence: 1
+	 - FConfidence: 0.762829 
+
+Rule 9 :
+	 - N_vars: 3
+	 - Coverage: 0.467742
+	 - Significance: 40.919218
+	 - Unusualness: 0.075702
+	 - Accuracy: 0.741935
+	 - CSupport: 0.354839
+	 - FSupport: 0.328446
+	 - CConfidence: 0.758621
+	 - FConfidence: 0.740308 
+
+Rule 10 :
+	 - N_vars: 4
+	 - Coverage: 0.080645
+	 - Significance: 135.584289
+	 - Unusualness: 0.046306
+	 - Accuracy: 0.714286
+	 - CSupport: 0.064516
+	 - FSupport: 0.060754
+	 - CConfidence: 0.8
+	 - FConfidence: 0.763561 
+
+Rule 11 :
+	 - N_vars: 3
+	 - Coverage: 0.112903
+	 - Significance: 117.464413
+	 - Unusualness: 0.060354
+	 - Accuracy: 0.777778
+	 - CSupport: 0.096774
+	 - FSupport: 0.110413
+	 - CConfidence: 0.857143
+	 - FConfidence: 0.75373 
+
+Rule 12 :
+	 - N_vars: 3
+	 - Coverage: 0.225806
+	 - Significance: 80.136693
+	 - Unusualness: 0.109781
+	 - Accuracy: 0.8125
+	 - CSupport: 0.193548
+	 - FSupport: 0.170677
+	 - CConfidence: 0.857143
+	 - FConfidence: 0.79121 
+
+Global:
+	 - N_rules: 12
+	 - N_vars: 3
+	 - Coverage: 0.173387
+	 - Significance: 93.564736
+	 - Unusualness: 0.041645
+	 - Accuracy: 0.64961
+	 - CSupport: 0.709677
+	 - FSupport: 0.133374
+	 - FConfidence: 0.589563
+	 - CConfidence: 0.575619

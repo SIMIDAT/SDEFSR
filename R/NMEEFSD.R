@@ -202,11 +202,11 @@
     for( i in num_measures){
       measures <- pop[,i]
       #Order measures
-      #indices <- order(measures, decreasing = FALSE)
+      indices <- order(measures, decreasing = FALSE)
       
       #/**/ REMOVE THIS AND USE ORDER
-      indices <- .qsort(measures, 1, length(measures), seq_len(length(measures)))
-      indices <- indices$indices
+      #indices <- .qsort(measures, 1, length(measures), seq_len(length(measures)))
+      #indices <- indices$indices
       #/**/
       
       #Set boundary individuals distance as infinity
@@ -596,7 +596,13 @@ NMEEF_SD <- function(paramFile = NULL,
   #Check if the last variable is categorical.
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
-  
+  #Check number of fuzzy labels, if not the same, change it.
+  if(dim(training$fuzzySets)[1] != nLabels){
+    training <- modifyFuzzyCrispIntervals(training, nLabels)
+  }
+  if(dim(test$fuzzySets)[1] != nLabels){
+    test <- modifyFuzzyCrispIntervals(test, nLabels)
+  }
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
  

@@ -1295,7 +1295,7 @@ keelFromARFF <- function(file, nLabels = 3){
 #' 
 #' @seealso \code{\link{read.keel}}
 #' 
-#' @author Angel M Garcia <amgv0009@red.ujaen.es>
+#' @author Angel M Garcia <amgv0009@@red.ujaen.es>
 #' 
 #' @export
 keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){

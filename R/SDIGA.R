@@ -298,6 +298,13 @@ SDIGA <- function(parameters_file = NULL,
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   
+  #Check number of fuzzy labels, if not the same, change it.
+   if(dim(training$fuzzySets)[1] != nLabels){
+     training <- modifyFuzzyCrispIntervals(training, nLabels)
+   }
+    if(dim(test$fuzzySets)[1] != nLabels){
+      test <- modifyFuzzyCrispIntervals(test, nLabels)
+    }
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
 

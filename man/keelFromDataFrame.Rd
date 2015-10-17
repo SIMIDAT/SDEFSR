@@ -46,4 +46,10 @@ df[,11] <- c("0", "1")
 keelObject <- keelFromDataFrame(df, "random")
 invisible()
 }
+\author{
+Angel M Garcia <amgv0009@red.ujaen.es>
+}
+\seealso{
+\code{\link{read.keel}}
+}
 

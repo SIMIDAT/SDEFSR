@@ -555,9 +555,9 @@ Mu_next <- Mu_next - nGenes
 
 #Replace the worst individuals in the population with the genereted in crossovers and mutations
 
-#orden <- order(AdaptationValue)
-orden <- .qsort(AdaptationValue, left = 1, right = length(AdaptationValue), index = seq_len(length(AdaptationValue)))
-orden <- orden$indices
+orden <- order(AdaptationValue)
+#orden <- .qsort(AdaptationValue, left = 1, right = length(AdaptationValue), index = seq_len(length(AdaptationValue)))
+#orden <- orden$indices
 Pop <- interPop#[orden, , drop = F]
 orden <- c(orden, (popSize+1):NROW(Fitness))
 #Fitness <- Fitness[orden,, drop = F] 
@@ -880,7 +880,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
     f <- na.exclude(Fitness)[,seq_len(nObjs),drop=F]
     n_Ind <- NROW(f)
     for(i in seq_len(n_Ind)){
-      nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,,drop=F], StrictDominance)
+      nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,,drop=F], StrictDominance) #Sangría
       Dominados[i] <- length(which(nd == 1L))
       WhoIDomain[[i]] <- which(nd <= 0L)
     }

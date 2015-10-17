@@ -209,7 +209,8 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
   #Ejemplos cubiertor por la regla de cada clase (Significancia)
   #   tabla <- table( t( dataset[N_vars,coveredFuzzy]) )
   #   cov_examplesFuzzy[ names( tabla )] <- tabla 
-  tabla <- table( t( nombre_clases[ dataset[N_vars,coveredCrisp] + 1] ) )
+  #tabla <- table( t( nombre_clases[ dataset[N_vars,coveredCrisp] + 1] ) )
+  tabla <- improvedTable(dataset, nombre_clases)
   cov_examplesCrisp[names( tabla )] <- tabla 
   
   
@@ -634,9 +635,21 @@ changeTargetVariable <- function(dataset, posVariable){
 #'     
 #' @export
  SDR_GUI <- function(){
-   shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
-   
-   invisible()
+   packages <- installed.packages()[,1]
+   if(! "shiny" %in% packages){
+     if(tolower(.yesno("Package 'shiny' is not installed and must be installed to run this GUI. \nDo you want to install it? (Y/n): "))){
+       install.packages("shiny")
+       shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
+       
+       invisible()
+     } else {
+       cat("Package not installed. Execution aborted.")
+     }
+   } else {
+     shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
+     
+     invisible()
+   }
  }
 
 
@@ -765,4 +778,23 @@ parseTime <- function(actual, initial){
   
   
   paste(horas, " hours, ", minutos, " minutes and ", round(segundos, 2) , " seconds.", sep = "")
+}
+
+
+#'
+#' Improved table creation for .get_values6
+#' 
+#' @param dataset A matrix with the data
+#' @param classNames a vector with the names of the attributes.
+#' 
+#' @return a named vector with the number of instances per class.
+#' 
+improvedTable <- function(dataset, classNames){
+  tabla <-
+    vapply(
+      X = seq_len(length(classNames)) - 1, FUN = function(x, data)
+        sum(data == x), integer(1), dataset[nrow(dataset),]
+    )
+  names(tabla) <- classNames
+  tabla
 }

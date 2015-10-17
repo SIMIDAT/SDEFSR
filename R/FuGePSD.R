@@ -806,6 +806,13 @@ Rule.addVariable <- function(rule, dataset){
     if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
       stop("Target variable is not categorical.")
     
+    #Check number of fuzzy labels, if not the same, change it.
+    if(dim(training$fuzzySets)[1] != nLabels){
+      training <- modifyFuzzyCrispIntervals(training, nLabels)
+    }
+    if(dim(test$fuzzySets)[1] != nLabels){
+      test <- modifyFuzzyCrispIntervals(test, nLabels)
+    }
     
     categorical <- training$atributeTypes == "c"
     categorical <- categorical[-length(categorical)]
