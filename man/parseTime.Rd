@@ -9,7 +9,7 @@ parseTime(actual, initial)
 \arguments{
 \item{actual}{End time in UNIX int format (i.e. as.numeric(Sys.time()))}
 
-\item{initial}{Initial time in Unis format.}
+\item{initial}{Initial time in Unix format.}
 }
 \value{
 A human-readable string with time difference.

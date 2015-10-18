@@ -4,12 +4,10 @@
 \alias{read.keel}
 \title{Reads a KEEL data format file or an ARFF data format file.}
 \usage{
-read.keel(file, nLabels = 3)
+read.keel(file)
 }
 \arguments{
-\item{file}{The path of the file in KEEL format}
-
-\item{nLabels}{The number of fuzzy labels to create on numerical variables.}
+\item{file}{The path of the file in KEEL ".dat" or ARFF format}
 }
 \description{
 This function reads a KEEL (.dat) or ARFF (.arff) dataset file and store the information

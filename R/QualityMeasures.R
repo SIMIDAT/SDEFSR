@@ -126,7 +126,7 @@
   if(cove > 0){
     SumsingClase <- 0
     for(i in 1:length(x[[6]])){
-      if(x[[6]][i] > 0 & x[[7]][i] > 0){
+      if(x[[6]][i] > 0 && x[[7]][i] > 0){
         SumsingClase <- SumsingClase + x[[6]][i] * log10(x = (x[[6]][i] / (x[[7]][[i]] * cove)  ))
       }
     }

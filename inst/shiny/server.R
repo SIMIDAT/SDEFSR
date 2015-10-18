@@ -175,7 +175,7 @@ shinyServer(function(input, output, session) {
       file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
       file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
       rutaTra <<- paste(input$traFile[,1],input$traFile[,4])
-      dataTra <<- SDR::read.keel(file$datapath, nLabels = input$nLabels)
+      dataTra <<- SDR::read.keel(file$datapath)
       updateSelectInput(session = session, 
                         inputId = "targetClassSelect", 
                         label = "Select the target variable", 
@@ -212,7 +212,7 @@ shinyServer(function(input, output, session) {
         file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
         file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
         rutaTst <<- paste(input$tstFile[,1], input$tstFile[,4])
-        dataTst <<- SDR::read.keel(file$datapath,nLabels = input$nLabels)
+        dataTst <<- SDR::read.keel(file$datapath)
         updateSelectInput(session = session, 
                           inputId = "targetClassSelect", 
                           label = "Select the target variable", 
@@ -238,18 +238,6 @@ shinyServer(function(input, output, session) {
     }
   })
   
-   #Observe nLabels
-  observe({ 
-    nLabels <- input$nLabels
-    
-    if(! is.null(dataTra)){
-      dataTra <<- SDR::modifyFuzzyCrispIntervals(dataTra, nLabels)
-    }
-    
-    if(! is.null(dataTst)){
-      dataTst <<- SDR::modifyFuzzyCrispIntervals(dataTst, nLabels)
-    }
-  })
   
   
   

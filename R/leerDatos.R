@@ -5,8 +5,7 @@
 #'   in a \code{keel} class. This function also create fuzzy sets definitions for numeric variables
 #'   for execute in SDIGA, MESDIF, NMEEF-SD and FuGePSD algorithms
 #'
-#' @param file The path of the file in KEEL format
-#' @param nLabels The number of fuzzy labels to create on numerical variables.
+#' @param file The path of the file in KEEL ".dat" or ARFF format
 #'
 #' @details  A KEEL data file must have the following structure:
 #'  \itemize{
@@ -39,9 +38,8 @@
 #'     }
 #'     
 #' @export
-read.keel <- function(file, nLabels = 3) {
-  if (nLabels < 1)
-    stop("Number of fuzzy sets ('nLabels') must be greater than zero.")
+read.keel <- function(file) {
+ 
   if(length(file) > 1){
     stop(paste(substitute(file), "must be of length 1."))
   }
@@ -110,12 +108,9 @@ read.keel <- function(file, nLabels = 3) {
     
     #Preparacion del resto de atributos del dataset
     
-    covered <- logical(length = length(data))
-    fuzzySets <-
-      .create_fuzzyIntervals(
-        min = atribs_min, max = atribs_max, num_sets = nLabels, types = atribs_types
-      )
-    crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
+    covered <- NA
+    fuzzySets <- NA
+    crispSets <- NA
     classNames <- categorical_values[[length(categorical_values)]]
     clValues <- unlist(lapply(data, '[', length(atributes)))
     examplesPerClass <-
@@ -125,8 +120,7 @@ read.keel <- function(file, nLabels = 3) {
       )
     names(examplesPerClass) <- classNames
     
-    conjuntos <-
-      .dameConjuntos(data_types = atribs_types, max = atribs_max, n_labels = nLabels)
+    conjuntos <- NA
     
     lostData <- FALSE #Quitar esto
     
@@ -153,7 +147,7 @@ read.keel <- function(file, nLabels = 3) {
     class(lista) <- "keel"
     lista
   } else if(ext == ".arff"){
-    keelFromARFF(file, nLabels)
+    keelFromARFF(file)
   } else {
     stop("Invalid format. Valid formats are: '.arff' or '.dat'")
   }
@@ -778,7 +772,7 @@ read.keel <- function(file, nLabels = 3) {
 #
 #
 .processData <- function(data, categoricalValues, types, fromDataFrame = FALSE) {
-  line <- data
+  line <- as.character(data)
   if(!fromDataFrame){
     line <- gsub(pattern = ",[[:blank:]]*", replacement = " ", x = line)
     line <- strsplit(x = line, split = " ",fixed = TRUE)[[1]]
@@ -1153,12 +1147,13 @@ addKeelRegister <- function(items, dataset) {
 #' This function reads an ARFF file and get the subyacent \code{keel} object
 #'
 #' @param file The ARFF file to read.
-#' @param nLabels The number of fuzzy labels to generate. By default 3.
+#' 
 #' 
 #' 
 #' @return a 'keel' object ready to use with the algorithms that are in the package
 #' 
-keelFromARFF <- function(file, nLabels = 3){
+keelFromARFF <- function(file){
+  warnPrevio <- getOption("warn")
   options(warn = -1)
   conjunto <- read_arff(file)
   
@@ -1211,21 +1206,19 @@ keelFromARFF <- function(file, nLabels = 3){
   longitud_categoricos[which(longitud <= 1)] <- NA
   
   #Fuzzy and crisp sets
-  fuzzySets <-
-    .create_fuzzyIntervals(
-      min = min, max = max, num_sets = nLabels, types = types
-    )
-  crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
+  fuzzySets <- NA
+  crispSets <- NA
   
   #Conjuntos
-  conjuntos <-
-    .dameConjuntos(data_types = types, max = max, n_labels = nLabels)
+  conjuntos <- NA
+  
   
   #DATA
+  df_aux <- as.data.frame(t(conjunto[[3]]), stringsAsFactors = FALSE)
   if (Sys.info()[1] != "Windows")
     data <-
     parallel::mclapply(
-      X = as.data.frame(t(conjunto[[3]]), stringsAsFactors = FALSE), FUN = .processData, longitud_categoricos, types, TRUE, mc.cores = parallel::detectCores()
+      X = df_aux, FUN = .processData, longitud_categoricos, types, TRUE, mc.cores = parallel::detectCores()
     )
   else
     #In windows mclapply doesnt work
@@ -1254,8 +1247,8 @@ keelFromARFF <- function(file, nLabels = 3){
   )
   class(lista) <- "keel"
   
-
-  options(warn = 0)
+  #Restore option warn of the user.
+  options(warn = warnPrevio)
   lista
 }
 
@@ -1298,7 +1291,7 @@ keelFromARFF <- function(file, nLabels = 3){
 #' @author Angel M Garcia <amgv0009@@red.ujaen.es>
 #' 
 #' @export
-keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
+keelFromDataFrame <- function(data, relation, names = NA, types = NA, classNames = NA){
   #check data.frame
   if(! is.data.frame(data))
     stop(paste(substitute(data), "must be a data.frame"))
@@ -1368,11 +1361,8 @@ keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = N
   names(examplesClass) <- classNames
   
   #Fuzzy and crisp sets
-  fuzzySets <-
-    .create_fuzzyIntervals(
-      min = min, max = max, num_sets = nLabels, types = types
-    )
-  crispSets <- .createCrispIntervals(fuzzyIntervals = fuzzySets)
+  fuzzySets <- NA
+  crispSets <- NA
   
   #Conjuntos
   conjuntos <-

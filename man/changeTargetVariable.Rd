@@ -2,7 +2,7 @@
 % Please edit documentation in R/Utils.R
 \name{changeTargetVariable}
 \alias{changeTargetVariable}
-\title{Change the targetVariable of a KEEL Dataset}
+\title{Change the target Variable of a \code{'keel'} Dataset}
 \usage{
 changeTargetVariable(dataset, posVariable)
 }

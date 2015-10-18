@@ -4,12 +4,10 @@
 \alias{keelFromARFF}
 \title{Reads an ARFF file}
 \usage{
-keelFromARFF(file, nLabels = 3)
+keelFromARFF(file)
 }
 \arguments{
 \item{file}{The ARFF file to read.}
-
-\item{nLabels}{The number of fuzzy labels to generate. By default 3.}
 }
 \value{
 a 'keel' object ready to use with the algorithms that are in the package

@@ -210,7 +210,7 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
   #   tabla <- table( t( dataset[N_vars,coveredFuzzy]) )
   #   cov_examplesFuzzy[ names( tabla )] <- tabla 
   #tabla <- table( t( nombre_clases[ dataset[N_vars,coveredCrisp] + 1] ) )
-  tabla <- improvedTable(dataset, nombre_clases)
+  tabla <- improvedTable(dataset[, coveredCrisp, drop = F], nombre_clases)
   cov_examplesCrisp[names( tabla )] <- tabla 
   
   
@@ -365,7 +365,7 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 #'     modifyFuzzyCrispIntervals(habermanTra, 2)
 #'     modifyFuzzyCrispIntervals(habermanTra, 15)
 #'
-#'@export
+#'
 
 modifyFuzzyCrispIntervals <- function(dataset, nLabels){
     if(nLabels < 1)
@@ -385,7 +385,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 
 
 #'
-#' Change the targetVariable of a KEEL Dataset
+#' Change the target Variable of a \code{'keel'} Dataset
 #' 
 #' Change the actual target variable for another one if it is categorical.
 #' 
@@ -549,7 +549,7 @@ changeTargetVariable <- function(dataset, posVariable){
 
 #
 #
-# Obtain the fuzzy values of a DNF Rules
+# Obtain the fuzzy values of a DNF Rule
 #
 #
 .getFuzzyValues <- function(regla_num, fuzzy,  crisp = FALSE){
@@ -580,8 +580,9 @@ changeTargetVariable <- function(dataset, posVariable){
 
 
 
-
-
+#
+# Normalize a DNF by means of put all the non-participating variables filled with 0's.
+#
 .normalizeDNFRule <- function(regla, max){
   if(!anyNA(regla)){
     for(i in seq_len(length(max) - 1)){ 
@@ -754,7 +755,7 @@ changeTargetVariable <- function(dataset, posVariable){
 #' Parse a time differente to "x hours, y minutes and z seconds"
 #'
 #' @param actual End time in UNIX int format (i.e. as.numeric(Sys.time()))
-#' @param initial Initial time in Unis format.
+#' @param initial Initial time in Unix format.
 #'
 #' @return A human-readable string with time difference.
 #'

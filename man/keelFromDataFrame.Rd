@@ -4,21 +4,20 @@
 \alias{keelFromDataFrame}
 \title{Creates a \code{keel} object from a \code{data.frame}}
 \usage{
-keelFromDataFrame(data, relation, nLabels = 3, names = NA, types = NA,
-  classNames = NA)
+keelFromDataFrame(data, relation, names = NA, types = NA, classNames = NA)
 }
 \arguments{
 \item{data}{A data.frame object with all neccesary information. See details.}
 
 \item{relation}{A string that indicate the name of the relation.}
 
-\item{nLabels}{The number of fuzzy labels to use. By default 3.}
-
 \item{names}{An optional character vector indicating the name of the attributes.}
 
 \item{types}{An optional character vector indicating 'c' if variable is categorical, 'r' if is real and 'e' if it is an integer}
 
 \item{classNames}{An optional character vector indicating the values of the target class.}
+
+\item{nLabels}{The number of fuzzy labels to use. By default 3.}
 }
 \value{
 A \code{keel} object with all the information of the dataset.
