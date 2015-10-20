@@ -390,56 +390,64 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' Change the actual target variable for another one if it is categorical.
 #' 
 #' @param dataset The KEEL dataset class
-#' @param posVariable The position of the variable to set as target Variable.
+#' @param variable The position (or the name) of the variable to set as target Variable.
 #' @return The dataset with the variables changed
 #' 
 #' 
 #' @examples 
 #' changeTargetVariable(carTra, 3)
+#' changeTargetVariable(carTra, "Doors")
 #' \dontrun{
 #' Throws an error because the variable selected is numerical:
 #' 
 #' changeTargetVariable(habermanTra, 1)
 #' }
 #' 
-#' @export
-changeTargetVariable <- function(dataset, posVariable){
-  if(class(dataset) != "keel") stop("The provided 'dataset' is not a keel class")
-  #if(posVariable >= dataset$nVars + 1) stop("posVariable is the same of the actual variable or is out of range")
-  if(dataset[[3]][posVariable] != "c") stop("No categorical variable selected.")
-  if(posVariable <= dataset$nVars){
+#' 
+changeTargetVariable <- function(dataset, variable){
+  if(class(dataset) != "keel") stop( paste("'",substitute(dataset),"' is not a keel class", sep = ""))
+  #if(variable >= dataset$nVars + 1) stop("variable is the same of the actual variable or is out of range")
+  
+  if(is.character(variable)){
+    variable <- which(tolower(dataset$atributeNames) == tolower(variable))
+    if(length(variable) == 0)
+      stop(paste(variable, "is not a variable of this dataset."))
+  }
+  
+  if(dataset[[3]][variable] != "c") stop("No categorical variable selected.")
+  if(variable <= dataset$nVars){
   #Swap variables.
-  dataset$data <- lapply(X = dataset$data , FUN = function(x, posVariable){ 
-                       aux <- x[posVariable]; 
-                       x[posVariable] <- x[length(x)]; 
+  dataset$data <- lapply(X = dataset$data , FUN = function(x, variable){ 
+                       aux <- x[variable]; 
+                       x[variable] <- x[length(x)]; 
                        x[length(x)] <- aux; 
                        x }, 
-                       posVariable)
+                       variable)
   
   #Swap Attribute Names
-  aux <- dataset[[2]][posVariable]
-  dataset[[2]][posVariable] <- dataset[[2]][length(dataset[[2]])]
+  aux <- dataset[[2]][variable]
+  dataset[[2]][variable] <- dataset[[2]][length(dataset[[2]])]
   dataset[[2]][length(dataset[[2]])] <- aux
   
   #swap conjuntos
-  dataset[["conjuntos"]][posVariable] <- dataset[["max"]][dataset[["nVars"]] + 1]
+  dataset[["conjuntos"]][variable] <- dataset[["max"]][dataset[["nVars"]] + 1]
   
   #Swap Min
-  aux <- dataset[[4]][posVariable]
-  dataset[[4]][posVariable] <- dataset[[4]][length(dataset[[4]])]
+  aux <- dataset[[4]][variable]
+  dataset[[4]][variable] <- dataset[[4]][length(dataset[[4]])]
   dataset[[4]][length(dataset[[4]])] <- aux
   
   #Swap Max
-  aux <- dataset[[5]][posVariable]
-  dataset[[5]][posVariable] <- dataset[[5]][length(dataset[[5]])]
+  aux <- dataset[[5]][variable]
+  dataset[[5]][variable] <- dataset[[5]][length(dataset[[5]])]
   dataset[[5]][length(dataset[[5]])] <- aux
   
   #Change class_names Values
-  dataset[["class_names"]] <- dataset[["categoricalValues"]][[posVariable]]
+  dataset[["class_names"]] <- dataset[["categoricalValues"]][[variable]]
   
   #Swap categorical Values
-  aux <- dataset[["categoricalValues"]][[posVariable]]
-  dataset[["categoricalValues"]][[posVariable]] <- dataset[["categoricalValues"]][[length(dataset[["categoricalValues"]])]]
+  aux <- dataset[["categoricalValues"]][[variable]]
+  dataset[["categoricalValues"]][[variable]] <- dataset[["categoricalValues"]][[length(dataset[["categoricalValues"]])]]
   dataset[["categoricalValues"]][[length(dataset[["categoricalValues"]])]] <- aux
   
   #Calculate new value for examplesPerClass
@@ -638,8 +646,9 @@ changeTargetVariable <- function(dataset, posVariable){
  SDR_GUI <- function(){
    packages <- installed.packages()[,1]
    if(! "shiny" %in% packages){
-     if(tolower(.yesno("Package 'shiny' is not installed and must be installed to run this GUI. \nDo you want to install it? (Y/n): "))){
+     if(tolower(.yesno("Package 'shiny' is not installed and must be installed to run this GUI. Do you want to install it? (Y/n): ")) == "y"){
        install.packages("shiny")
+       cat("Launching interface...")
        shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
        
        invisible()
@@ -798,4 +807,64 @@ improvedTable <- function(dataset, classNames){
     )
   names(tabla) <- classNames
   tabla
+}
+
+
+
+#' S3 function to summary a keel object
+#' 
+#' Summary relevant data of a \code{keel} dataset.
+#' 
+#' @param object A \code{keel} class.
+#' 
+#' @details This function show important information about the \code{keel} dataset for the user. Note that it does not 
+#' show all the information available. The rest is only for the algorithms. The values that appear are accesible by the
+#' \code{$} operator, e.g. dataset$relation or dataset$examplesPerClass.
+#' 
+#'@examples 
+#'  
+#'summary(carTra) 
+#' 
+#'@export
+summary.keel <- function(object){
+  cat(paste("Summary of the keel object: '", substitute(object),"'", sep = ""),
+      paste("\t- relation:", object$relation),
+      paste("\t- nVars:", object$nVars),
+      paste("\t- Ns:", object$Ns),
+      paste("\t- attributeNames:", paste(object$atributeNames, collapse = ", ")),
+      paste("\t- class_names:", paste(object$class_names, collapse = ", ")),
+      paste("\t- examplesPerClass:" ,paste(unlist(object$examplesPerClass), collapse = ", "))
+      , sep = "\n")
+}
+
+
+
+#'  S3 function to print in console the contents of the dataset
+#'  
+#'  This function shows the matrix of data uncoded.
+#'  
+#'  @param object The \code{keel} object to view
+#' 
+#'  @details This function show the matix of data. Internally, a \code{keel} object has a list of of examples
+#'  and this examples are coded numerically. This function decode these exameples and convert the list into a matrix.
+#'  
+#'  @return a matrix with the dataset uncoded.
+#'  
+#' @export
+print.keel <- function(object){
+  data <- lapply(object$data,
+                 function(x, categoricos)
+                   vapply(seq_len(length(x)), function(i, ejemplo, cateValues){
+                     if(is.na(cateValues[[i]][1])){
+                       as.character(ejemplo[i])
+                     } else{
+                       cateValues[[i]][ejemplo[i] + 1]
+                     }
+                   }, character(1), x, categoricos)
+                 
+                 , object$categoricalValues
+                 
+  )
+  
+  matrix(data = unlist(data), ncol = object$nVars + 1, byrow = TRUE, dimnames = list(NULL,object$atributeNames))
 }

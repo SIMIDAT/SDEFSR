@@ -710,6 +710,7 @@ Rule.addVariable <- function(rule, dataset){
   #'          test = habermanTst,
   #'          output = c("parametersFile.txt", "rulesFile.txt", "testQM.txt"),
   #'          seed = 23783,
+  #'          nLabels = 3,
   #'          t_norm = "Minimum/Maximum",
   #'          ruleWeight = "Certainty_Factor",
   #'          frm = "Normalized_Sum",
@@ -738,6 +739,7 @@ Rule.addVariable <- function(rule, dataset){
                       test = NULL,
                       output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"),
                       seed = 0,
+                      nLabels = 3,
                       t_norm = "product_t-norm",
                       ruleWeight = "Certainty_Factor",
                       frm = "Normalized_Sum",
@@ -749,7 +751,8 @@ Rule.addVariable <- function(rule, dataset){
                       dropProb = 0.15,
                       tournamentSize = 2,
                       globalFitnessWeights = c(0.7, 0.1, 0.05, 0.2),
-                      ALL_CLASS = TRUE
+                      ALL_CLASS = TRUE,
+                      targetVariable = NA
                       ){
     #Catch start time
     init_time <- as.numeric(Sys.time())
@@ -770,7 +773,7 @@ Rule.addVariable <- function(rule, dataset){
                     inputData = c(as.character(substitute(training)), as.character(substitute(test))),
                     outputData = output, 
                     seed = seed, 
-                    nLabels = dim(training$fuzzySets)[1], 
+                    nLabels = nLabels, 
                     nGens = numGenerations, 
                     popLength = numberOfInitialRules, 
                     crossProb = crossProb, 
@@ -787,7 +790,8 @@ Rule.addVariable <- function(rule, dataset){
                     gfw1 = globalFitnessWeights[1],
                     gfw2 = globalFitnessWeights[2],
                     gfw3 = globalFitnessWeights[3],
-                    gfw4 = globalFitnessWeights[1])
+                    gfw4 = globalFitnessWeights[1],
+                    targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
       
       #Print parameters in console
       printFuGePSDParameters(parametros, training, FALSE)
@@ -795,22 +799,26 @@ Rule.addVariable <- function(rule, dataset){
       #Start of the algorithm
       parametros <- .read.parametersFile2(paramFile)
       
-      training <- read.keel(parametros$inputData[1], parametros$nLabels)
-      test <- read.keel(parametros$inputData[2], parametros$nLabels)
+      training <- read.keel(parametros$inputData[1])
+      test <- read.keel(parametros$inputData[2])
       
       #Print parameters in console
       printFuGePSDParameters(parametros, training, FALSE)
     }
-    
+    if(is.na(parametros$targetVariable))
+      parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+    #Change target variable if it is neccesary
+    training <- changeTargetVariable(training, parametros$targetVariable)
+    test <- changeTargetVariable(test, parametros$targetVariable)
     #Check if the last variable is categorical.
     if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
       stop("Target variable is not categorical.")
     
     #Set the number of fuzzy labels
-    training <- modifyFuzzyCrispIntervals(training, nLabels)
-    training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = nLabels)
-    test <- modifyFuzzyCrispIntervals(test, nLabels)
-    test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = nLabels)
+    training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
+    training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
+    test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
+    test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
     #Set Covered
     #training$covered <- logical(training$Ns)
     test$covered <- logical(test$Ns)
@@ -1260,6 +1268,7 @@ printFuGePSDParameters <- function(parameters, dataset, inputFromFiles = TRUE){
       "Global Fitness Weight 2: ", parameters$gfw2, "\n",
       "Global Fitness Weight 3: ", parameters$gfw3, "\n",
       "Global Fitness Weight 4: ", parameters$gfw4, "\n",
+      "Target Variable: ", parameters$targetVariable, "\n",
       "All Class: ", parameters$allClass, "\n",
       "-----------------------------------------------------------\n\n", sep = "")
  

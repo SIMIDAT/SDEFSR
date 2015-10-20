@@ -9,7 +9,7 @@ NMEEF_SD(paramFile = NULL, training = NULL, test = NULL,
   nLabels = 3, nEval = 10000, popLength = 100, mutProb = 0.1,
   crossProb = 0.6, RulesRep = "can", Obj1 = "CSUP", Obj2 = "CCNF",
   Obj3 = "null", minCnf = 0.6, reInitCoverage = "yes", porcCob = 0.5,
-  StrictDominance = "yes", targetClass = "null")
+  StrictDominance = "yes", targetVariable = NA, targetClass = "null")
 }
 \arguments{
 \item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}

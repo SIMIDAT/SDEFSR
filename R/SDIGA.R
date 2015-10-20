@@ -245,6 +245,7 @@ SDIGA <- function(parameters_file = NULL,
                   w3 = 0,
                   minConf = 0.6,
                   lSearch = "yes",
+                  targetVariable = NA,
                   targetClass = "null")
 {
   
@@ -254,13 +255,10 @@ SDIGA <- function(parameters_file = NULL,
     #Generate our "parameters file"
     if(class(training) != "keel" | class(test) != "keel")
       stop("'training' or 'test' parameters is not a KEEL class")
-    
     if(is.null(training) | is.null(test)) 
       stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
-    
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
-    
     if(length(output) != 3 )
       stop("You must specify three files to save the results.")
     
@@ -281,7 +279,8 @@ SDIGA <- function(parameters_file = NULL,
                        w3 = w3, 
                        lSearch = lSearch,
                        minConf = minConf,
-                       targetClass = targetClass)
+                       targetClass = targetClass,
+                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
       
   } else {
   # Parametros --------------------------
@@ -289,20 +288,25 @@ SDIGA <- function(parameters_file = NULL,
     if(parametros$algorithm != "SDIGA")
       stop("Parameters file is not for \"SDIGA\"")
   
-  test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
+  test <- read.keel(file = parametros$inputData[2])        # test data
   
-  training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data
+  training <- read.keel(file = parametros$inputData[1])   # training data
   }
+  if(is.na(parametros$targetVariable))
+    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  #Change target variable if it is neccesary
+    training <- changeTargetVariable(training, parametros$targetVariable)
+    test <- changeTargetVariable(test, parametros$targetVariable)
   
   #Check if the last variable is categorical.
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   
   #Set the number of fuzzy labels
-  training <- modifyFuzzyCrispIntervals(training, nLabels)
-  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = nLabels)
-  test <- modifyFuzzyCrispIntervals(test, nLabels)
-  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = nLabels)
+  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
+  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
+  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
   #Set Covered
   training$covered <- logical(training$Ns)
   test$covered <- logical(test$Ns)

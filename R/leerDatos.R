@@ -241,9 +241,10 @@ read.keel <- function(file) {
       stop("Param file error: 'mutProb' not especified. ")
     if (length(rep) == 0)
       stop("Param file error: 'RulesRep' not especified. ")
-    if (length(tC) == 0)
-      stop("Param file error: 'targetClass' not especified. ")
   }
+  
+  if (length(tC) == 0)
+    stop("Param file error: 'targetClass' not especified. ")
 
   if (!any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD", "FUGEPSD")))
     stop("Param file error: 'Algorithm' must be \"SDIGA\", \"MESDIF\", \"NMEEFSD\" or \"FUGEPSD\"  ")
@@ -281,7 +282,11 @@ read.keel <- function(file) {
     crossProb <- as.double(data[[cross]][2])
     prob_mutacion <- as.double(data[[mut]][2])
     rule_type <- data[[rep]][2]
-    target <- data[[tC]][2]
+  }
+  
+  target <- strsplit(data[[tC]][2], "[[:blank:]]*->[[:blank:]]*")[[1]]
+  if(length(target) < 2){
+    target <- c(NA, target)
   }
   
   #SDIGA own parameters
@@ -316,7 +321,7 @@ read.keel <- function(file) {
     
     lista <-
       list(
-        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, minConf = minimun_confidence, RulesRep = rule_type, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, w1 = peso1, w2 = peso2, w3 = peso3, lSearch = local_search, targetClass = target
+        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, minConf = minimun_confidence, RulesRep = rule_type, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, w1 = peso1, w2 = peso2, w3 = peso3, lSearch = local_search, targetClass = target[2], targetVariable = target[1]
       )
     
   }
@@ -351,7 +356,7 @@ read.keel <- function(file) {
     
     lista <-
       list(
-        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target, elitePop = elite, echo = echo, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, Obj4 = Obj4
+        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target[2], elitePop = elite, echo = echo, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, Obj4 = Obj4, targetVariable = target[1]
       )
     
   }
@@ -379,7 +384,7 @@ read.keel <- function(file) {
     
     lista <-
       list(
-        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target, StrictDominance = dominance, diversity = diversity, porcCob = porcCob, reInitPob = reInit, minConf = minConf, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3
+        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target[2], StrictDominance = dominance, diversity = diversity, porcCob = porcCob, reInitPob = reInit, minConf = minConf, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, targetVariable = target[1]
       )
     
   }
@@ -442,7 +447,8 @@ read.keel <- function(file) {
                   gfw1 = as.double(data[[gfw1]][2]),
                   gfw2 = as.double(data[[gfw2]][2]),
                   gfw3 = as.double(data[[gfw3]][2]),
-                  gfw4 = as.double(data[[gfw4]][2])
+                  gfw4 = as.double(data[[gfw4]][2]),
+                  targetVariable = target[1]
       )
     
   }
@@ -466,10 +472,10 @@ read.keel <- function(file) {
     "Relation:", train$relation, file = "", sep = " ", fill = TRUE
   )
   cat(
-    "Training file:", params$inputData[1], file = "", sep = " ", fill = TRUE
+    "Training dataset:", if("inputData" %in% names(params)) params$inputData[1] else substitute(train), file = "", sep = " ", fill = TRUE
   )
   cat(
-    "Test file:", params$inputData[2], file = "", sep = " ", fill = TRUE
+    "Test dataset:", if("inputData" %in% names(params)) params$inputData[2] else substitute(test), file = "", sep = " ", fill = TRUE
   )
   cat(
     "Rules Representation: ", if (tolower(params$RulesRep) == "can")
@@ -529,6 +535,9 @@ read.keel <- function(file) {
   cat(
     "Number of examples in test:", test$Ns, file = "", sep = " ", fill = TRUE
   )
+  
+  cat("Target Variable:", params$targetVariable, fill = TRUE)
+  cat("Target Class:", if(params$targetClass == "null") "All Variables" else params$targetClass, fill = TRUE)
   cat(
     "--------------------------------", file = "", sep = " ", fill = TRUE
   )
@@ -570,6 +579,8 @@ read.keel <- function(file) {
     },
     "Number of examples in training:", train$Ns, "\n",
     "Number of examples in test:", test$Ns, "\n",
+    "Target Variable:", params$targetVariable, "\n",
+    "Target Class:", if(params$targetClass == "null") "All Variables" else params$targetClass, "\n",
     "--------------------------------", file = params$outputData[1], sep = " "
   )
   

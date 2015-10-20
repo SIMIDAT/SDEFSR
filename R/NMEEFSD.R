@@ -546,6 +546,7 @@ NMEEF_SD <- function(paramFile = NULL,
                      reInitCoverage = "yes",
                      porcCob = 0.5,
                      StrictDominance = "yes",
+                     targetVariable = NA,
                      targetClass = "null"
                      )
 {
@@ -580,7 +581,8 @@ NMEEF_SD <- function(paramFile = NULL,
                        reInitPob = reInitCoverage,
                        porcCob = porcCob,
                        StrictDominance = StrictDominance,
-                       targetClass = targetClass)
+                       targetClass = targetClass,
+                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
   } else {
 
     # Parametros --------------------------
@@ -588,19 +590,23 @@ NMEEF_SD <- function(paramFile = NULL,
     
     if(parametros[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for \"NMEEF-SD\"")
    
-    training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data 
-    test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
+    training <- read.keel(file = parametros$inputData[1])   # training data 
+    test <- read.keel(file = parametros$inputData[2])        # test data
    
   }
-  
+  if(is.na(parametros$targetVariable))
+    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  #Change target variable if it is neccesary
+  training <- changeTargetVariable(training, parametros$targetVariable)
+  test <- changeTargetVariable(test, parametros$targetVariable)
   #Check if the last variable is categorical.
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   #Set the number of fuzzy labels
-  training <- modifyFuzzyCrispIntervals(training, nLabels)
-  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = nLabels)
-  test <- modifyFuzzyCrispIntervals(test, nLabels)
-  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = nLabels)
+  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
+  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
+  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
   #Set Covered
   #training$covered <- logical(training$Ns)
   test$covered <- logical(test$Ns)

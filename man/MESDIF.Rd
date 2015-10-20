@@ -8,7 +8,8 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
   output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"), seed = 0,
   nLabels = 3, nEval = 10000, popLength = 100, eliteLength = 3,
   crossProb = 0.6, mutProb = 0.01, RulesRep = "can", Obj1 = "CSUP",
-  Obj2 = "CCNF", Obj3 = "null", Obj4 = "null", targetClass = "null")
+  Obj2 = "CCNF", Obj3 = "null", Obj4 = "null", targetVariable = NA,
+  targetClass = "null")
 }
 \arguments{
 \item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}

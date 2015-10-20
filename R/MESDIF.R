@@ -335,6 +335,7 @@ MESDIF <- function(paramFile = NULL,
                    Obj2 = "CCNF",
                    Obj3 = "null",
                    Obj4 = "null",
+                   targetVariable = NA,
                    targetClass = "null"
                    )
 {
@@ -367,27 +368,32 @@ MESDIF <- function(paramFile = NULL,
                        Obj2 = Obj2,
                        Obj3 = Obj3,
                        Obj4 = Obj4,
-                       targetClass = targetClass)
+                       targetClass = targetClass,
+                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
   } else {
   # Parametros --------------------------
     parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
     if(parametros$algorithm != "MESDIF") 
       stop(paste("The algorithm specificied (", parametros$algorithm, ") in parameters file is not \"MESDIF\". Check parameters file. Aborting program..."))
     
-    test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
+    test <- read.keel(file = parametros$inputData[2])        # test data
     
-    training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data
+    training <- read.keel(file = parametros$inputData[1])   # training data
   }
-  
+  if(is.na(parametros$targetVariable))
+    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  #Change target variable if it is neccesary
+  training <- changeTargetVariable(training, parametros$targetVariable)
+  test <- changeTargetVariable(test, parametros$targetVariable)
   #Check if the last variable is categorical.
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   
   #Set the number of fuzzy labels
-  training <- modifyFuzzyCrispIntervals(training, nLabels)
-  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = nLabels)
-  test <- modifyFuzzyCrispIntervals(test, nLabels)
-  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = nLabels)
+  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
+  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
+  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
   #Set Covered
   #training$covered <- logical(training$Ns)
   test$covered <- logical(test$Ns)

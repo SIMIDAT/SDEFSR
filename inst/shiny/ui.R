@@ -14,7 +14,7 @@ shinyUI(fluidPage( theme = NULL,
   sidebarLayout(
     sidebarPanel( 
       #---- DATASET INFORMATION, ---------
-       p(h4(HTML("1.- Select a <a title = 'Learn more about KEEL', href = 'http://www.keel.es'>KEEL</a> dataset: "))),
+       p(h4(HTML("1.- Select a <a title = 'Learn more about KEEL', href = 'http://www.keel.es'>KEEL</a> or <a title = 'Learn more about ARFF', href = 'http://www.cs.waikato.ac.nz/ml/weka/arff.html'>ARFF</a> dataset: "))),
        fileInput("traFile", "Select Training File: "),
        fileInput("tstFile", "Select Test File: "),
        selectInput("targetClassSelect", "Select the target variable:", choices = NA),
