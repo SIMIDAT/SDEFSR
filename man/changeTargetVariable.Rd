@@ -18,11 +18,11 @@ The dataset with the variables changed
 Change the actual target variable for another one if it is categorical.
 }
 \examples{
+\dontrun{
 changeTargetVariable(carTra, 3)
 changeTargetVariable(carTra, "Doors")
-\dontrun{
-Throws an error because the variable selected is numerical:
 
+Throws an error because the variable selected is numerical:
 changeTargetVariable(habermanTra, 1)
 }
 }

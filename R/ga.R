@@ -880,7 +880,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
     f <- na.exclude(Fitness)[,seq_len(nObjs),drop=F]
     n_Ind <- NROW(f)
     for(i in seq_len(n_Ind)){
-      nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,,drop=F], StrictDominance) #Sangría
+      nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,,drop=F], StrictDominance) #Sangria de tiempo
       Dominados[i] <- length(which(nd == 1L))
       WhoIDomain[[i]] <- which(nd <= 0L)
     }

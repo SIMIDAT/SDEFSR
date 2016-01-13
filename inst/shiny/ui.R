@@ -15,8 +15,8 @@ shinyUI(fluidPage( theme = NULL,
     sidebarPanel( 
       #---- DATASET INFORMATION, ---------
        p(h4(HTML("1.- Select a <a title = 'Learn more about KEEL', href = 'http://www.keel.es'>KEEL</a> or <a title = 'Learn more about ARFF', href = 'http://www.cs.waikato.ac.nz/ml/weka/arff.html'>ARFF</a> dataset: "))),
-       fileInput("traFile", "Select Training File: "),
-       fileInput("tstFile", "Select Test File: "),
+       fileInput("traFile", "Select Training File: ", accept = c(".dat", ".arff")),
+       fileInput("tstFile", "Select Test File: ", accept = c(".dat", ".arff")),
        selectInput("targetClassSelect", "Select the target variable:", choices = NA),
        selectInput("targetValueSelect", "Select the target value:", choices = NA),
        radioButtons("visualizacion", "Visualize dataset info as a: ", c("Pie Chart", "Histogram", "Box Plot"), selected = "Pie Chart"),
@@ -133,23 +133,7 @@ shinyUI(fluidPage( theme = NULL,
                    br(), br(), br()
           ),
           
-          
-          
-          tabPanel("Execution Info",
-                   conditionalPanel(
-                     condition="($('html').hasClass('shiny-busy'))",
-                     br(),
-                     img(src="busy.gif"), 
-                     p("Executing. Please, wait..."), align = "center"
-                   ),
-                   br(),
-                   br(),
-                   p(h2("Execution Info"), align = "center"),
-                   uiOutput("execInfo")
-                   
-          ),
-          
-          tabPanel("Rules generated",
+          tabPanel("Rules Generated",
                    conditionalPanel(
                      condition="($('html').hasClass('shiny-busy'))",
                      br(),
@@ -173,6 +157,22 @@ shinyUI(fluidPage( theme = NULL,
                        br(),
                        p(h2("Test Quality Measures for Generated Rules"), align = "center"),
                        dataTableOutput("medidas")
+          ),
+          
+          
+          
+          tabPanel("Execution Info",
+                   conditionalPanel(
+                     condition="($('html').hasClass('shiny-busy'))",
+                     br(),
+                     img(src="busy.gif"), 
+                     p("Executing. Please, wait..."), align = "center"
+                   ),
+                   br(),
+                   br(),
+                   p(h2("Execution Info"), align = "center"),
+                   uiOutput("execInfo")
+                   
           )
           ,type = "pills", id = "tabSet"
       )

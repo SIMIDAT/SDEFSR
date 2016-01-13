@@ -4,10 +4,12 @@
 \alias{summary.keel}
 \title{S3 function to summary a keel object}
 \usage{
-\method{summary}{keel}(object)
+\method{summary}{keel}(object, ...)
 }
 \arguments{
 \item{object}{A \code{keel} class.}
+
+\item{...}{Additional arguments to the summary function.}
 }
 \description{
 Summary relevant data of a \code{keel} dataset.

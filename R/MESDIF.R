@@ -176,6 +176,7 @@
 #' @param Obj2 Sets the Objective number 2. See \code{Objective values} for more information about the possible values.
 #' @param Obj3 Sets the Objective number 3. See \code{Objective values} for more information about the possible values.
 #' @param Obj4 Sets the Objective number 4. See \code{Objective values} for more information about the possible values.
+#' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 

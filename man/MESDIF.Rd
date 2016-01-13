@@ -44,6 +44,8 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
 
 \item{Obj4}{Sets the Objective number 4. See \code{Objective values} for more information about the possible values.}
 
+\item{targetVariable}{The name or index position of the target variable (or class). It must be a categorical one.}
+
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }
 \value{

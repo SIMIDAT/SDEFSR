@@ -84,6 +84,7 @@
 #' @param w3 Sets the weight of \code{Obj3}.
 #' @param minConf Sets the minimum confidence that must have the rule returned by the genetic algorithm after the local optimitation phase. A number in [0,1].
 #' @param lSearch Sets if the local optimitation phase must be performed. A string with "yes" or "no".
+#' @param targetVariable A string with the name or an integer with the index position of the target variable (or class). It must be a categorical one.
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 

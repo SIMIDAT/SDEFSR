@@ -181,7 +181,7 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 
 .get_values6 <- function(gr_perts, nombre_clases, dataset, targetClass, examples_perClass, cov, Ns, N_vars , por_cubrir, marcar = FALSE, test = FALSE, difuso = FALSE, NMEEF = FALSE){
   #Esto no es lo mejor, habr?a que buscar otra manera de utilizar la lista directamente
-  dataset <- matrix(unlist(dataset), nrow = length(dataset[[1]]), ncol = length(dataset))
+  dataset <- matrix(unlist(dataset), nrow = length(dataset[[1]]), ncol = length(dataset)) #MUCHO TIEMPO
   
   ejemplo_Cubiertos <- 0L
   sumaFuzzyejCubiertos <- 0
@@ -362,9 +362,10 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 #' @return  This function returns the same dataset with their fuzzy definitions modified.
 #' 
 #' @examples 
+#' \dontrun{
 #'     modifyFuzzyCrispIntervals(habermanTra, 2)
 #'     modifyFuzzyCrispIntervals(habermanTra, 15)
-#'
+#'}
 #'
 
 modifyFuzzyCrispIntervals <- function(dataset, nLabels){
@@ -395,11 +396,11 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' 
 #' 
 #' @examples 
+#' \dontrun{
 #' changeTargetVariable(carTra, 3)
 #' changeTargetVariable(carTra, "Doors")
-#' \dontrun{
-#' Throws an error because the variable selected is numerical:
 #' 
+#' Throws an error because the variable selected is numerical:
 #' changeTargetVariable(habermanTra, 1)
 #' }
 #' 
@@ -816,6 +817,7 @@ improvedTable <- function(dataset, classNames){
 #' Summary relevant data of a \code{keel} dataset.
 #' 
 #' @param object A \code{keel} class.
+#' @param ... Additional arguments to the summary function.
 #' 
 #' @details This function show important information about the \code{keel} dataset for the user. Note that it does not 
 #' show all the information available. The rest is only for the algorithms. The values that appear are accesible by the
@@ -826,7 +828,7 @@ improvedTable <- function(dataset, classNames){
 #'summary(carTra) 
 #' 
 #'@export
-summary.keel <- function(object){
+summary.keel <- function(object, ...){
   cat(paste("Summary of the keel object: '", substitute(object),"'", sep = ""),
       paste("\t- relation:", object$relation),
       paste("\t- nVars:", object$nVars),
@@ -843,16 +845,17 @@ summary.keel <- function(object){
 #'  
 #'  This function shows the matrix of data uncoded.
 #'  
-#'  @param object The \code{keel} object to view
-#' 
+#'  @param x The \code{keel} object to view
+#'  @param ... Additional arguments passed to the print function
+#'  
 #'  @details This function show the matix of data. Internally, a \code{keel} object has a list of of examples
-#'  and this examples are coded numerically. This function decode these exameples and convert the list into a matrix.
+#'  and this examples are coded numerically. This function decode these examples and convert the list into a matrix.
 #'  
 #'  @return a matrix with the dataset uncoded.
 #'  
 #' @export
-print.keel <- function(object){
-  data <- lapply(object$data,
+print.keel <- function(x, ...){
+  data <- lapply(x$data,
                  function(x, categoricos)
                    vapply(seq_len(length(x)), function(i, ejemplo, cateValues){
                      if(is.na(cateValues[[i]][1])){
@@ -862,9 +865,9 @@ print.keel <- function(object){
                      }
                    }, character(1), x, categoricos)
                  
-                 , object$categoricalValues
+                 , x$categoricalValues
                  
   )
   
-  matrix(data = unlist(data), ncol = object$nVars + 1, byrow = TRUE, dimnames = list(NULL,object$atributeNames))
+  print(matrix(data = unlist(data), ncol = x$nVars + 1, byrow = TRUE, dimnames = list(NULL,x$atributeNames)), ...)
 }

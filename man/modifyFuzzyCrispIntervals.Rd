@@ -23,7 +23,9 @@ The fuzzy definitions used in the \code{keel} class are triangular.
     has the same width. With this function you can re-calculate this triangular fuzzy sets.
 }
 \examples{
-modifyFuzzyCrispIntervals(habermanTra, 2)
+\dontrun{
+    modifyFuzzyCrispIntervals(habermanTra, 2)
     modifyFuzzyCrispIntervals(habermanTra, 15)
+}
 }
 

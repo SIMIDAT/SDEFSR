@@ -593,6 +593,7 @@ Rule.addVariable <- function(rule, dataset){
   #' @param test A \code{keel} class variable with test data.
   #' @param output Character vector with the paths where store information file, rules file and test quality measures file, respectively. For rules and quality measures files, the algorithm generate 4 files, each one with the results of a given filter of fuzzy confidence.
   #' @param seed An integer to set the seed used for generate random numbers.
+  #' @param nLabels The number of fuzzy labels to use with numeric variables. By default 3. We recommend an odd number between 3 and 9.
   #' @param t_norm A string with the t-norm to use when computing the compatibilty degree of the rules. Use \code{'Minimum/Maximum'} to specify the minimum t-norm, if not, we use product t-norm that is the default method. 
   #' @param ruleWeight String with the method to calculate the rule weight. Possible values are: 
   #' \itemize{
@@ -616,7 +617,7 @@ Rule.addVariable <- function(rule, dataset){
   #' @param tournamentSize Sets the number of individuals that will be chosen in the tournament selection procedure. This number must be greater than or equal to 2.
   #' @param globalFitnessWeights A numeric vector of length 4 specifying the weights used in the computation of the Global Fitness Parameter. 
   #' @param ALL_CLASS if TRUE, the algorithm returns, at least, the best rule for each target class, even if it does not pass the filters. If FALSE, it only returns, at least, the best rule if there are not rules that passes the filters.
-  #' 
+  #' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
   #' 
   #'  @details This function sets as target variable the last one that appear in the KEEL file or object. If you want 
   #'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  

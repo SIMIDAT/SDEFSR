@@ -1302,7 +1302,7 @@ keelFromARFF <- function(file){
 #' @author Angel M Garcia <amgv0009@@red.ujaen.es>
 #' 
 #' @export
-keelFromDataFrame <- function(data, relation, names = NA, types = NA, classNames = NA){
+keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
   #check data.frame
   if(! is.data.frame(data))
     stop(paste(substitute(data), "must be a data.frame"))

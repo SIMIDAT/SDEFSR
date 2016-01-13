@@ -48,6 +48,8 @@ SDIGA(parameters_file = NULL, training = NULL, test = NULL,
 
 \item{lSearch}{Sets if the local optimitation phase must be performed. A string with "yes" or "no".}
 
+\item{targetVariable}{A string with the name or an integer with the index position of the target variable (or class). It must be a categorical one.}
+
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }
 \value{

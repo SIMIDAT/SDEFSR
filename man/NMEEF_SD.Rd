@@ -48,6 +48,8 @@ NMEEF_SD(paramFile = NULL, training = NULL, test = NULL,
 
 \item{StrictDominance}{Sets if the comparison between individuals must be done by strict dominance or not. A string with "yes" or "no".}
 
+\item{targetVariable}{The name or index position of the target variable (or class). It must be a categorical one.}
+
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }
 \value{

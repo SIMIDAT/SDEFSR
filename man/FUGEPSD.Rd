@@ -24,6 +24,8 @@ FUGEPSD(paramFile = NULL, training = NULL, test = NULL,
 
 \item{seed}{An integer to set the seed used for generate random numbers.}
 
+\item{nLabels}{The number of fuzzy labels to use with numeric variables. By default 3. We recommend an odd number between 3 and 9.}
+
 \item{t_norm}{A string with the t-norm to use when computing the compatibilty degree of the rules. Use \code{'Minimum/Maximum'} to specify the minimum t-norm, if not, we use product t-norm that is the default method.}
 
 \item{ruleWeight}{String with the method to calculate the rule weight. Possible values are:
@@ -58,6 +60,8 @@ FUGEPSD(paramFile = NULL, training = NULL, test = NULL,
 \item{globalFitnessWeights}{A numeric vector of length 4 specifying the weights used in the computation of the Global Fitness Parameter.}
 
 \item{ALL_CLASS}{if TRUE, the algorithm returns, at least, the best rule for each target class, even if it does not pass the filters. If FALSE, it only returns, at least, the best rule if there are not rules that passes the filters.}
+
+\item{targetVariable}{The name or index position of the target variable (or class). It must be a categorical one.}
 }
 \value{
 The algorithm shows in console the following results:

@@ -386,6 +386,7 @@
 #' @param reInitCoverage Sets if the algorithm must perform the reinitialitation based on coverage when it is needed. A string with "yes" or "no".
 #' @param porcCob Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]
 #' @param StrictDominance Sets if the comparison between individuals must be done by strict dominance or not. A string with "yes" or "no".
+#' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 

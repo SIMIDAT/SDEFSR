@@ -4,10 +4,12 @@
 \alias{print.keel}
 \title{S3 function to print in console the contents of the dataset}
 \usage{
-\method{print}{keel}(object)
+\method{print}{keel}(x, ...)
 }
 \arguments{
-\item{object}{The \code{keel} object to view}
+\item{x}{The \code{keel} object to view}
+
+\item{...}{Additional arguments passed to the print function}
 }
 \value{
 a matrix with the dataset uncoded.
@@ -17,6 +19,6 @@ This function shows the matrix of data uncoded.
 }
 \details{
 This function show the matix of data. Internally, a \code{keel} object has a list of of examples
- and this examples are coded numerically. This function decode these exameples and convert the list into a matrix.
+ and this examples are coded numerically. This function decode these examples and convert the list into a matrix.
 }
 

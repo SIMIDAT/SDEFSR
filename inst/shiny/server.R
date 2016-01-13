@@ -33,7 +33,7 @@ colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176",
 shinyServer(function(input, output, session) {
   
   
-  # All this must be session variables instead of global ones.
+  # All this must be session variables 
   dataTra <- NULL
   datosTra <- NULL
   
@@ -156,7 +156,13 @@ shinyServer(function(input, output, session) {
              xlab = "Value")
       } else if(input$visualizacion == "Box Plot"){
         updateRadioButtons(session, "visualizacion", selected = "Box Plot")
-        boxplot(datos[pos,]) #Ponerlo mas bonito si eso.
+        boxplot(datos[pos,], 
+                main = "Distribution of examples over variables",
+                xlab = input$targetClassSelect, 
+                ylab = "Value", 
+                col = "royalblue2",
+                outcol="red"
+                ) #Ponerlo mas bonito si eso.
       }
     }
     
@@ -332,8 +338,8 @@ shinyServer(function(input, output, session) {
     
     #Set target Variable.
 
-      dataTst <<- SDR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
-      dataTra <<- SDR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
+      #dataTst <<- SDR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
+      #dataTra <<- SDR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
     
       
     targetClass <- isolate(input$targetClassSelect)
@@ -380,6 +386,7 @@ shinyServer(function(input, output, session) {
                    w3 = w3, 
                    minConf = minConf,
                    lSearch = lSearch,
+                   targetVariable = isolate(input$targetClassSelect),
                    targetClass = targetValue )
              #sink(NULL)
              
@@ -412,6 +419,7 @@ shinyServer(function(input, output, session) {
                     Obj2 = Obj2,
                     Obj3 = Obj3,
                     Obj4 = Obj4,
+                    targetVariable = isolate(input$targetClassSelect),
                     targetClass = targetValue)
              #sink(NULL)
              
@@ -442,6 +450,7 @@ shinyServer(function(input, output, session) {
                       reInitCoverage = reInit,
                       porcCob = porcCob,
                       StrictDominance = strictDominance,
+                      targetVariable = isolate(input$targetClassSelect),
                       targetClass = targetValue)
            },
            "FuGePSD" = {
@@ -470,7 +479,8 @@ shinyServer(function(input, output, session) {
                           dropProb = dropProb,
                           tournamentSize = tSize,
                           globalFitnessWeights = gfw,
-                          ALL_CLASS = allClass)
+                          ALL_CLASS = allClass,
+                          targetVariable = isolate(input$targetClassSelect))
            }
     )
     
@@ -485,7 +495,7 @@ shinyServer(function(input, output, session) {
 
     
     if (input$ejecutar > 0){
-      updateTabsetPanel(session = session, inputId = "tabSet", selected = "Rules generated")
+      updateTabsetPanel(session = session, inputId = "tabSet", selected = "Rules Generated")
     }
     lastValue <<- value
   })
