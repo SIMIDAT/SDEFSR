@@ -1,0 +1,21 @@
+{
+    "debugBreakpointsState" : {
+        "breakpoints" : [
+            {
+                "editor_line_number" : 519,
+                "editor_state" : 1,
+                "function_name" : ".findRule",
+                "function_steps" : "2",
+                "id" : 7,
+                "is_package_breakpoint" : true,
+                "is_pending_debug_completion" : false,
+                "line_number" : 519,
+                "needs_updated_steps" : false,
+                "package_name" : "SDR",
+                "path" : "/home/angel/MEGA/MEGAsync/Universidad/Trabajo Fin de Grado/SDR/R/MESDIF.R",
+                "state" : 1,
+                "type" : 0
+            }
+        ]
+    }
+}

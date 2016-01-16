@@ -1,0 +1,10 @@
+{
+    "dialog-state" : {
+        "caseSensitive" : true,
+        "filePatterns" : [
+        ],
+        "path" : "~/MEGA/MEGAsync/Universidad/Grado/Trabajo Fin de Grado/SDR",
+        "query" : "modifyFuzzyCrispIntervals(habermanTra, 2)",
+        "regex" : false
+    }
+}

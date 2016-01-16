@@ -1,0 +1,18 @@
+{
+    "contents" : "checkShiny <- function(){\n  packages <- installed.packages()[,1]\n  \"shiny\" %in% packages\n}",
+    "created" : 1444978443505.000,
+    "dirty" : true,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "3500785770",
+    "id" : "38AEB3F0",
+    "lastKnownWriteTime" : 7011605692497750387,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "type" : "r_source"
+}
