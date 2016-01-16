@@ -5,7 +5,7 @@
 [![totalDownloads] (http://cranlogs.r-pkg.org/badges/grand-total/SDR)](https://cran.rstudio.com/web/packages/SDR/index.html)
 
 Implementation of algorithms of the data mining task called "subgroup discovery" implemented directly in R without any other dependecies.
-Those algorithms works with data sets provided in the format of _KEEL data mining tool_ . Also, the package provide a Shiny App to ease the work.
+Those algorithms works with data sets provided in the format of _KEEL data mining tool_, _ARFF_ or data.frame objects . Also, the package provide a Shiny App to ease the work.
 The interface is also available at http://sdrinterface.shinyapps.io/shiny to make the interface without R installed in our systems.
 
 ## Installation
@@ -34,16 +34,15 @@ SDR_GUI()
 
 This will launch the interface in our predetermined browser. 
 
-Also the package can handle with _KEEL_ datasets to use within the subgroups discovery algorithms in order to use it in a R script for example. 
-Those functions could change the target variable used by the algorithms, and also modify the fuzzy sets definitions created. For example, having the file `iris.dat` in our working directory:
+Also the package can handle with _KEEL_, _ARFF_ datasets to use within the subgroups discovery algorithms in order to use it in a R script for example. For example, having the file `iris.dat` in our working directory:
 ```R
 irisKEEL <- read.keel("iris.dat")
-irisKEEL <- modifyFuzzyCrispIntervals(irisKEEL, 6) #Use 6 fuzzy labels 
-#With classic iris dataset we cannot change the target variable, we need a categorical one. So, this function throws an error with this dataset
-irisKEEL <- changeTargetVariable(irisKEEL, 3) #Use variable at position 3 as target variable.
+irisARFF <- read.keel("iris.arff")
+#With classic iris datasets loaded in a data.frame called 'iris':
+irisDataFrame <- keelFromDataFrame(iris) #Use variable at position 3 as target variable.
 ```
 
-The are three subgroup discovery implemented: __SDIGA__, __MESDIF__ and __NMEEF-SD__ You can use this algorithms by:
+The are four subgroup discovery implemented: __SDIGA__, __MESDIF__, __NMEEF-SD__ and __FuGePSD__. You can use this algorithms by:
 * specifying the path of a parameter file 
 * specifying all the parameters of the algorithm in the function call, one by one.  
 
