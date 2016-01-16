@@ -9,20 +9,23 @@ Authors@R: c(person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role 
     person("Francisco", "Charte", email = "francisco@fcharte.com", role = "ctb")
     )
 Maintainer: Angel M. Garcia <amgv0009@red.ujaen.es>
-Description: Implementation of some algorithms for the data mining task called "subgroup discovery" without package dependencies. It also provide a Shiny App for make the analysis easier.
-    The algorithms works with data sets provided in KEEL or ARFF format.
-    If you want more information about this format, please refer to < http://www.keel.es > .
+Description: Implementation of some algorithms for the data mining task called
+    "subgroup discovery" without package dependencies. It also provide a Shiny App
+    for make the analysis easier. The algorithms works with data sets provided in
+    KEEL or ARFF format files or data.frame objects. If you want more information about KEEL format, please
+    refer to < http://www.keel.es > .
 URL: https://github.com/aklxao2/SDR
-Depends: 
+Depends:
     R (>= 3.0.0)
 License: LGPL (>= 3) | file LICENSE
 LazyData: TRUE
-Imports: 
-  methods,
-  parallel,
-  stats,
-  utils
-Suggests: 
-  knitr,
-  shiny (>= 0.11)
+Imports:
+    methods,
+    parallel,
+    stats,
+    utils
+Suggests:
+    knitr,
+    shiny (>= 0.11)
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1

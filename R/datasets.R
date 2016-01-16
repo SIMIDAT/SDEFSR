@@ -81,8 +81,8 @@ NULL
 #'    carTra$data
 #'    carTra$atributeNames
 #'    
-#'    @docType data
-#'    @name carTra
+#' @docType data
+#' @name carTra
 NULL
 
 
