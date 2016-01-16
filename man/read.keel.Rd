@@ -2,19 +2,17 @@
 % Please edit documentation in R/leerDatos.R
 \name{read.keel}
 \alias{read.keel}
-\title{Reads a KEEL format file}
+\title{Reads a KEEL data format file or an ARFF data format file.}
 \usage{
-read.keel(file, nLabels = 3)
+read.keel(file)
 }
 \arguments{
-\item{file}{The path of the file in KEEL format}
-
-\item{nLabels}{The number of fuzzy labels to create on numerical variables.}
+\item{file}{The path of the file in KEEL ".dat" or ARFF format}
 }
 \description{
-This function reads a KEEL dataset file and store the information
-  in a \code{keel} class. This function also create fuzzy sets definitions
-  for execute in SDIGA, MESDIF or NMEEF-SD algorithms
+This function reads a KEEL (.dat) or ARFF (.arff) dataset file and store the information
+  in a \code{keel} class. This function also create fuzzy sets definitions for numeric variables
+  for execute in SDIGA, MESDIF, NMEEF-SD and FuGePSD algorithms
 }
 \details{
 A KEEL data file must have the following structure:
@@ -26,13 +24,19 @@ A KEEL data file must have the following structure:
    \item{ @data: Starting tag of the data}
 }
    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
+ARFF file format is a well-know dataset format from WEKA data mining tool.
 }
 \examples{
 \dontrun{
        Reads a KEEL dataset from a file.
-       read.keel(file = "C:\\KEELFile.txt")
+       read.keel(file = "C:\\KEELFile.dat")
 
-       read.keel(file = "C:\\KEELFile.txt", nLabels = 7)
+       read.keel(file = "C:\\KEELFile.dat", nLabels = 7)
+
+     Reads an ARFF dataset from a file.
+       read.keel(file = "C:\\ARFFFile.arff")
+
+       read.keel(file = "C:\\ARFFFile.arff", nLabels = 7)
     }
 }
 \author{

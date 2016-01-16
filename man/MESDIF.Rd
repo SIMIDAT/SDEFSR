@@ -8,16 +8,17 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
   output = c("optionsFile.txt", "rulesFile.txt", "testQM.txt"), seed = 0,
   nLabels = 3, nEval = 10000, popLength = 100, eliteLength = 3,
   crossProb = 0.6, mutProb = 0.01, RulesRep = "can", Obj1 = "CSUP",
-  Obj2 = "CCNF", Obj3 = "null", Obj4 = "null", targetClass = "null")
+  Obj2 = "CCNF", Obj3 = "null", Obj4 = "null", targetVariable = NA,
+  targetClass = "null")
 }
 \arguments{
 \item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}
 
 \item{training}{A \code{keel} class variable with training data.}
 
-\item{test}{A \code{keel} class variable with training data.}
+\item{test}{A \code{keel} class variable with test data.}
 
-\item{output}{character vector with the paths of where store information file, rules file and test quality measures file, respectively.}
+\item{output}{character vector with the paths where store information file, rules file and test quality measures file, respectively.}
 
 \item{seed}{An integer to set the seed used for generate random numbers.}
 
@@ -42,6 +43,8 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
 \item{Obj3}{Sets the Objective number 3. See \code{Objective values} for more information about the possible values.}
 
 \item{Obj4}{Sets the Objective number 4. See \code{Objective values} for more information about the possible values.}
+
+\item{targetVariable}{The name or index position of the target variable (or class). It must be a categorical one.}
 
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }
@@ -142,7 +145,7 @@ This function sets as target variable the last one that appear in the KEEL file.
         \item Significance -> \code{sign}
       }
 
-    If you dont want to use a objetive value you must specify \code{null}
+    If you dont want to use a objective value you must specify \code{null}
 }
 \examples{
 MESDIF( paramFile = NULL,

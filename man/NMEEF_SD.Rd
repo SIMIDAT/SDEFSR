@@ -9,7 +9,7 @@ NMEEF_SD(paramFile = NULL, training = NULL, test = NULL,
   nLabels = 3, nEval = 10000, popLength = 100, mutProb = 0.1,
   crossProb = 0.6, RulesRep = "can", Obj1 = "CSUP", Obj2 = "CCNF",
   Obj3 = "null", minCnf = 0.6, reInitCoverage = "yes", porcCob = 0.5,
-  StrictDominance = "yes", targetClass = "null")
+  StrictDominance = "yes", targetVariable = NA, targetClass = "null")
 }
 \arguments{
 \item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}
@@ -47,6 +47,8 @@ NMEEF_SD(paramFile = NULL, training = NULL, test = NULL,
 \item{porcCob}{Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]}
 
 \item{StrictDominance}{Sets if the comparison between individuals must be done by strict dominance or not. A string with "yes" or "no".}
+
+\item{targetVariable}{The name or index position of the target variable (or class). It must be a categorical one.}
 
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }

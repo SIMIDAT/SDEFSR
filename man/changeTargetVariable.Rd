@@ -2,14 +2,14 @@
 % Please edit documentation in R/Utils.R
 \name{changeTargetVariable}
 \alias{changeTargetVariable}
-\title{Change the targetVariable of a KEEL Dataset}
+\title{Change the target Variable of a \code{'keel'} Dataset}
 \usage{
-changeTargetVariable(dataset, posVariable)
+changeTargetVariable(dataset, variable)
 }
 \arguments{
 \item{dataset}{The KEEL dataset class}
 
-\item{posVariable}{The position of the variable to set as target Variable.}
+\item{variable}{The position (or the name) of the variable to set as target Variable.}
 }
 \value{
 The dataset with the variables changed
@@ -18,10 +18,11 @@ The dataset with the variables changed
 Change the actual target variable for another one if it is categorical.
 }
 \examples{
-changeTargetVariable(carTra, 3)
 \dontrun{
-Throws an error because the variable selected is numerical:
+changeTargetVariable(carTra, 3)
+changeTargetVariable(carTra, "Doors")
 
+Throws an error because the variable selected is numerical:
 changeTargetVariable(habermanTra, 1)
 }
 }

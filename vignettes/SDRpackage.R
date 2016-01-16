@@ -13,11 +13,10 @@
 #  irisTest <- read.keel("irisTst.dat", nLabels = 5)
 
 ## ----eval=FALSE----------------------------------------------------------
-#  irisTraining <- changeTargetVariable(dataset = irisTraining, posVariable = 2)
-#  carTra <- changeTargetVariable(dataset = carTra, posVariable = 2)
+#  irisTraining <- keelFromDataFrame(data = iris, relation = "iris",)
 
 ## ----eval=FALSE----------------------------------------------------------
-#  irisTraining <- modifyFuzzyCrispIntervals(dataset = irisTraining, nLabels = 7)
+#  irisTraining <- keelFromDataFrame(data = iris, relation = "iris", nLabels = 5, names = c("Sepal.Length, Sepal.Width", "Petal.Length", "Petal.Width"), types = c('r','r','r','r','c'), classNames = c("setosa", "virginica","versicolor"))
 
 ## ----eval=FALSE----------------------------------------------------------
 #  MESDIF(paramFile = "MESDIFparameters.txt")

@@ -1,26 +1,31 @@
 Package: SDR
 Type: Package
 Title: Subgroup Discovery Algorithms for R
-Version: 0.6.0.9000
-Date: 2015-06-14
+Version: 0.7.0.0
+Date: 2016-01-16
 Authors@R: c(person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role = c("aut", "cre")),
     person("Pedro", "Gonzalez", email = "pglez@ujaen.es", role = c("aut", "cph")),
     person("Cristobal J.", "Carmona", email = "ccarmona@ujaen.es", role = c("aut", "cph")),
     person("Francisco", "Charte", email = "francisco@fcharte.com", role = "ctb")
     )
 Maintainer: Angel M. Garcia <amgv0009@red.ujaen.es>
-Description: Implementation of some algorithms for the data mining task called "subgroup discovery" without package dependencies. It also provide a Shiny App for make the analysis easier.
-    The algorithms works with data sets provided in KEEL format.
-    If you want more information about this format, please refer to < http://www.keel.es > .
+Description: Implementation of some algorithms for the data mining task called
+    "subgroup discovery" without package dependencies. It also provide a Shiny App
+    for make the analysis easier. The algorithms works with data sets provided in
+    KEEL or ARFF format files or data.frame objects. If you want more information about KEEL format, please
+    refer to < http://www.keel.es > .
 URL: https://github.com/aklxao2/SDR
-Depends: 
+Depends:
     R (>= 3.0.0)
 License: LGPL (>= 3) | file LICENSE
 LazyData: TRUE
-Imports: 
-  methods,
-  parallel,
-  stats,
-  shiny (>= 0.11)
-Suggests: knitr
+Imports:
+    methods,
+    parallel,
+    stats,
+    utils
+Suggests:
+    knitr,
+    shiny (>= 0.11)
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1

@@ -1,0 +1,17 @@
+{
+    "contents" : "\n\n#------------------------------------------------------------------------\n# \n#        Devuelve el .coverage ( N(Cond) / Ns )  de la regla\n#        \n#        Donde:\n#        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente\n#        ? Ns es el n?mero de ejemplos del dataset\n#        \n#------------------------------------------------------------------------\n\n.coverage <- function(x){\n  c <- x[[1]] / x[[4]]\n  if(is.nan(c)){\n    0\n  } else {\n    c\n  }\n}\n\n\n#------------------------------------------------------------------------\n# \n#        Devuelve el soporte ( N(TargetValue ? Cond) / Ns )  de la regla\n#        \n#        Donde:\n#        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo\n#        ? Ns es el n?mero de ejemplos del dataset\n#        \n#------------------------------------------------------------------------\n\n\n.Csupport <- function(x){\n  c <- x[[2]] / x[[4]]\n  if(is.nan(c)){\n    0\n  } else {\n    c\n  }\n}\n\n.Fsupport <- function(x){\n  c <- x[[11]] / x[[4]]\n  if(is.nan(c)){\n    0  \n  } else {\n    c\n  }\n}\n\n.FLocalSupport <- function(x){\n  c <- x[[12]] / x[[9]]\n  if(is.nan(c)){\n    0  \n  } else {\n    c\n  }\n}\n\n#------------------------------------------------------------------------\n# \n#        Devuelve la confianza ( N(TargetValue ? Cond) / N(Cond) )  de la regla\n#        \n#        Donde:\n#        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo\n#        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente\n#        \n#------------------------------------------------------------------------\n\n.confianza <- function(x){\n  \n  c <- x[[2]] / x[[1]]\n  if(is.nan(c)){\n    0\n  } else {\n    c\n  }\n  \n}\n\n.confianzaDifusa <- function(x){\n  c <- x[[11]] / x[[10]]\n  if(is.nan(c)){\n    0\n  } else {\n    c\n  }\n}\n\n\n\n.unusualness <- function(x){\n  .coverage(x) * ( .confianza(x) - (x[[5]] / x[[4]]) )\n}\n\n.norm_unusualness <- function(x){\n  .coverage(x) * .confianza(x)\n  \n}\n\n\n.sensitivity <- function(x){\n  c <- x[[2]] / x[[5]]\n  if(is.nan(c)){\n    0\n  } else {\n    c\n  }\n}\n\n\n.accuracy <- function(x){\n  c <-  (x[[2]] + 1) / (x[[1]] + NROW(x[[7]]))\n  if(is.nan(c)){\n    0\n  } else {\n    c\n  }\n}\n\n\n\n.significance <- function(x){\n  cove <- .coverage(x = x)\n  if(cove > 0){\n    SumsingClase <- 0\n    for(i in 1:length(x[[6]])){\n      if(x[[6]][i] > 0 && x[[7]][i] > 0){\n        SumsingClase <- SumsingClase + x[[6]][i] * log10(x = (x[[6]][i] / (x[[7]][[i]] * cove)  ))\n      }\n    }\n    \n    2 * SumsingClase\n  \n  } else {\n    0\n  }\n}\n\n\n\n.LocalSupport <- function(x){\n  \n  c <- x[[8]] / x[[9]]\n  if(is.infinite(c)){\n    0\n  } else {\n    c\n  }\n}\n\n\n\n\n\n",
+    "created" : 1444991430808.000,
+    "dirty" : false,
+    "encoding" : "ISO8859-1",
+    "folds" : "",
+    "hash" : "1728848651",
+    "id" : "D9BBA62A",
+    "lastKnownWriteTime" : 1445181491,
+    "path" : "E:/Escritorio/SDR/R/QualityMeasures.R",
+    "project_path" : "R/QualityMeasures.R",
+    "properties" : {
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

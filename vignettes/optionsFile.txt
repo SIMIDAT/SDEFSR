@@ -16,4 +16,6 @@
  Obj4: null 
  Number of examples in training: 244 
  Number of examples in test: 62 
+ Target Variable: Survival 
+ Target Class: positive 
  --------------------------------

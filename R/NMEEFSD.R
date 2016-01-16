@@ -202,11 +202,11 @@
     for( i in num_measures){
       measures <- pop[,i]
       #Order measures
-      #indices <- order(measures, decreasing = FALSE)
+      indices <- order(measures, decreasing = FALSE)
       
       #/**/ REMOVE THIS AND USE ORDER
-      indices <- .qsort(measures, 1, length(measures), seq_len(length(measures)))
-      indices <- indices$indices
+      #indices <- .qsort(measures, 1, length(measures), seq_len(length(measures)))
+      #indices <- indices$indices
       #/**/
       
       #Set boundary individuals distance as infinity
@@ -386,6 +386,7 @@
 #' @param reInitCoverage Sets if the algorithm must perform the reinitialitation based on coverage when it is needed. A string with "yes" or "no".
 #' @param porcCob Sets the maximum percentage of variables that participate in the rules genereted in the reinitialitation based on coverage. A number in [0,1]
 #' @param StrictDominance Sets if the comparison between individuals must be done by strict dominance or not. A string with "yes" or "no".
+#' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 
@@ -527,7 +528,7 @@
 #'                targetClass = "null"
 #'                )
 #'      }
-#'               
+#'  @export       
 NMEEF_SD <- function(paramFile = NULL, 
                      training = NULL, 
                      test = NULL, 
@@ -546,6 +547,7 @@ NMEEF_SD <- function(paramFile = NULL,
                      reInitCoverage = "yes",
                      porcCob = 0.5,
                      StrictDominance = "yes",
+                     targetVariable = NA,
                      targetClass = "null"
                      )
 {
@@ -580,7 +582,8 @@ NMEEF_SD <- function(paramFile = NULL,
                        reInitPob = reInitCoverage,
                        porcCob = porcCob,
                        StrictDominance = StrictDominance,
-                       targetClass = targetClass)
+                       targetClass = targetClass,
+                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
   } else {
 
     # Parametros --------------------------
@@ -588,19 +591,29 @@ NMEEF_SD <- function(paramFile = NULL,
     
     if(parametros[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for \"NMEEF-SD\"")
    
-    training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data 
-    test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
+    training <- read.keel(file = parametros$inputData[1])   # training data 
+    test <- read.keel(file = parametros$inputData[2])        # test data
    
   }
-  
+  if(is.na(parametros$targetVariable))
+    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  #Change target variable if it is neccesary
+  training <- changeTargetVariable(training, parametros$targetVariable)
+  test <- changeTargetVariable(test, parametros$targetVariable)
   #Check if the last variable is categorical.
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
-  
+  #Set the number of fuzzy labels
+  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
+  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
+  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
+  #Set Covered
+  #training$covered <- logical(training$Ns)
+  test$covered <- logical(test$Ns)
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
-  if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")
-  
+ 
   if(tolower(parametros$RulesRep) == "can"){
     DNF = FALSE
   } else {
@@ -727,19 +740,7 @@ NMEEF_SD <- function(paramFile = NULL,
   )
   
   #Medidas de calidad globales (Save in testMeasures File FOR THE WEB INTERFACE)
-  cat(
-    nrow(reglas),
-    round(sumNvars / n_reglas, 6),
-    round(sumCov / n_reglas, 6),
-    round(sumSign / n_reglas, 6),
-    round(sumUnus / n_reglas, 6),
-    round(sumAccu / n_reglas, 6),
-    round(sum(test[["covered"]] / test[["Ns"]]), 6),
-    round(sumFsup / n_reglas, 6),
-    round(sumFconf / n_reglas, 6),
-    round(sumCconf / n_reglas, 6),
-    file = "testQualityMeasures.txt", sep = "\n", append = TRUE
-  )
+
   
   #Medidas de calidad globales (Save in testMeasures File)
   

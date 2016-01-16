@@ -33,7 +33,7 @@ colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176",
 shinyServer(function(input, output, session) {
   
   
-  # All this must be session variables instead of global ones.
+  # All this must be session variables 
   dataTra <- NULL
   datosTra <- NULL
   
@@ -134,6 +134,7 @@ shinyServer(function(input, output, session) {
     
     
     } else {
+      updateRadioButtons(session, "visualizacion", selected = "Histogram")
       if(categorico){
         posiciones <- NULL
         for(i in input$classNames){
@@ -141,17 +142,27 @@ shinyServer(function(input, output, session) {
           if(length(p) > 0 )
             posiciones <- c(posiciones, p)
         }
+        updateRadioButtons(session, "visualizacion", selected = "Histogram")
         barplot(tabla <- table(data[[15]][[pos]][datos[pos,]+1][posiciones]),
                 main = "Distribution of examples over variables",
                 col = colors
                 )
-      } else {
+      } else if(input$visualizacion == "Histogram") {
         updateRadioButtons(session, "visualizacion", selected = "Histogram")
         hist(x = datos[pos,],
              col = colors,
              main = "Distribution of examples over variables",
              ylab = "Frequency",
              xlab = "Value")
+      } else if(input$visualizacion == "Box Plot"){
+        updateRadioButtons(session, "visualizacion", selected = "Box Plot")
+        boxplot(datos[pos,], 
+                main = "Distribution of examples over variables",
+                xlab = input$targetClassSelect, 
+                ylab = "Value", 
+                col = "royalblue2",
+                outcol="red"
+                ) #Ponerlo mas bonito si eso.
       }
     }
     
@@ -167,8 +178,10 @@ shinyServer(function(input, output, session) {
      tryCatch({
     if(rutaTra != paste(input$traFile[,1],input$traFile[,4])){
       file <- input$traFile
+      file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
+      file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
       rutaTra <<- paste(input$traFile[,1],input$traFile[,4])
-      dataTra <<- SDR::read.keel(file$datapath, nLabels = input$nLabels)
+      dataTra <<- SDR::read.keel(file$datapath)
       updateSelectInput(session = session, 
                         inputId = "targetClassSelect", 
                         label = "Select the target variable", 
@@ -202,8 +215,10 @@ shinyServer(function(input, output, session) {
     if(! is.null(input$tstFile)){
       if(rutaTst != paste(input$tstFile[,1], input$tstFile[,4])){
         file <- input$tstFile
+        file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
+        file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
         rutaTst <<- paste(input$tstFile[,1], input$tstFile[,4])
-        dataTst <<- SDR::read.keel(file$datapath,nLabels = input$nLabels)
+        dataTst <<- SDR::read.keel(file$datapath)
         updateSelectInput(session = session, 
                           inputId = "targetClassSelect", 
                           label = "Select the target variable", 
@@ -229,18 +244,6 @@ shinyServer(function(input, output, session) {
     }
   })
   
-   #Observe nLabels
-  observe({ 
-    nLabels <- input$nLabels
-    
-    if(! is.null(dataTra)){
-      dataTra <<- SDR::modifyFuzzyCrispIntervals(dataTra, nLabels)
-    }
-    
-    if(! is.null(dataTst)){
-      dataTst <<- SDR::modifyFuzzyCrispIntervals(dataTst, nLabels)
-    }
-  })
   
   
   
@@ -307,7 +310,7 @@ shinyServer(function(input, output, session) {
   })
   
   
-  #EJECUTAR ALGORITMO
+  #EJECUTAR ALGORITMO 
 
   observe({
     input$ejecutar
@@ -335,8 +338,8 @@ shinyServer(function(input, output, session) {
     
     #Set target Variable.
 
-      dataTst <<- SDR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
-      dataTra <<- SDR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
+      #dataTst <<- SDR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
+      #dataTra <<- SDR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
     
       
     targetClass <- isolate(input$targetClassSelect)
@@ -351,7 +354,7 @@ shinyServer(function(input, output, session) {
     seed <- isolate(input$seed)
     #------------------------------------------------------
     
-  
+
     
     # Preparation of specific parameters and execution of the algoritm.
     switch(algorithm,
@@ -383,6 +386,7 @@ shinyServer(function(input, output, session) {
                    w3 = w3, 
                    minConf = minConf,
                    lSearch = lSearch,
+                   targetVariable = isolate(input$targetClassSelect),
                    targetClass = targetValue )
              #sink(NULL)
              
@@ -395,7 +399,8 @@ shinyServer(function(input, output, session) {
              Obj1 <- .getObjetives(isolate(input$Obj1M))
              Obj2 <- .getObjetives(isolate(input$Obj2M))
              Obj3 <- .getObjetives(isolate(input$Obj3M))
-             Obj4 <- .getObjetives(isolate(input$Obj3M))
+             Obj4 <- .getObjetives(isolate(input$Obj4M))
+             crossProb <- isolate(input$crossProbM)
              
             
              # Execute the algorithm
@@ -414,6 +419,7 @@ shinyServer(function(input, output, session) {
                     Obj2 = Obj2,
                     Obj3 = Obj3,
                     Obj4 = Obj4,
+                    targetVariable = isolate(input$targetClassSelect),
                     targetClass = targetValue)
              #sink(NULL)
              
@@ -444,7 +450,37 @@ shinyServer(function(input, output, session) {
                       reInitCoverage = reInit,
                       porcCob = porcCob,
                       StrictDominance = strictDominance,
+                      targetVariable = isolate(input$targetClassSelect),
                       targetClass = targetValue)
+           },
+           "FuGePSD" = {
+             # /**/
+             t_norm <- isolate(input$tnorm)
+             ruleWeight <- isolate(input$ruleWeight)
+             frm <- isolate(input$frm)
+             insProb <- isolate(input$insProb)
+             dropProb <- isolate(input$dropProb)
+             tSize <- isolate(input$tournamentSize)
+             gfw <- c(isolate(input$gfw1), isolate(input$gfw2), isolate(input$gfw3), isolate(input$gfw4) )
+             allClass <- isolate(input$allClass)
+             
+             SDR::FUGEPSD(paramFile = NULL,
+                          training = dataTra,
+                          test = dataTst,
+                          seed = seed,
+                          t_norm = t_norm,
+                          ruleWeight = ruleWeight,
+                          frm = frm,
+                          numGenerations = nEvals,
+                          numberOfInitialRules = popSize,
+                          crossProb = crossProb,
+                          mutProb = mutProb,
+                          insProb = insProb,
+                          dropProb = dropProb,
+                          tournamentSize = tSize,
+                          globalFitnessWeights = gfw,
+                          ALL_CLASS = allClass,
+                          targetVariable = isolate(input$targetClassSelect))
            }
     )
     
@@ -459,14 +495,26 @@ shinyServer(function(input, output, session) {
 
     
     if (input$ejecutar > 0){
-      updateTabsetPanel(session = session, inputId = "tabSet", selected = "Rules generated")
+      updateTabsetPanel(session = session, inputId = "tabSet", selected = "Rules Generated")
     }
     lastValue <<- value
   })
 
   
   
-  
+  observe({
+    algo <- input$algoritmo
+    if(algo == "FuGePSD"){
+      updateNumericInput(session, "nEval", label = "Number of generations", value = 300, min = 1, max = Inf, step = 1)
+      updateSelectInput(session, "rulesRep", "Type of rules: ", choices = c("Canonical"))
+    } else if(algo %in% c("SDIGA", "MESDIF")){
+      updateNumericInput(session, "nEval", label = "Number of evaluations", value = 10000, min = 1, max = Inf, step = 1)
+      updateSelectInput(session, "rulesRep", "Type of rules: ", choices = c("Canonical", "DNF (Disyuntive Normal Form)"))
+    } else if (algo == "NMEEF-SD"){
+      updateNumericInput(session, "nEval", label = "Number of evaluations", value = 10000, min = 1, max = Inf, step = 1)
+      updateSelectInput(session, "rulesRep", "Type of rules: ", choices = c("Canonical"))
+    }
+  })
   
   
   # RESULTADOS 
@@ -474,6 +522,36 @@ shinyServer(function(input, output, session) {
   output$resultados <- renderDataTable({
     
     input$ejecutar
+    
+    algoritmo <- isolate(input$algoritmo)
+    if(algoritmo == "FuGePSD"){
+      file <- which(c(file.exists("rulesFile_f06_TRUE.txt"), file.exists("rulesFile_f06_FALSE.txt")))
+      file <- c("rulesFile_f06_TRUE.txt", "rulesFile_f06_FALSE.txt")[file]
+      contents <- readChar(file, file.info(file)$size)
+      contents <- gsub(pattern = "[0-9]+:", replacement = "", x = contents)
+      contents <- strsplit(x = contents, split = "\n", fixed = TRUE)[[1]]
+      contents <- contents[- c(1,2,3)]
+      #Eliminate the "with rule weight":
+      contents <- gsub(pattern = "\\bwith Rule Weight\\b:", replacement = "", x = contents)
+      reglas <- gsub(pattern = "[[:blank:]]{2}-?[0-9.]+", replacement = "", x = contents)
+      weigths <- strsplit(paste(contents, collapse = " "), split = "  ")[[1]]
+      weigths <- weigths[which(seq_len(length(weigths)) %% 2 == 0)]
+      mat <- matrix(NA, nrow = length(reglas), ncol = 3)
+      colnames(mat) <- c("Num Rule", "Rule", "Weight")
+      mat[,1] <- as.character(seq_len(length(reglas)))
+      mat[,2] <- reglas
+      mat[,3] <- weigths
+      
+      junk <- dir(".", "[^QM].txt")
+      options <- which(junk == "optionsFile.txt")
+      if(length(options) > 0)
+        junk <- junk[- options]
+      
+      file.remove(junk)
+      
+      as.data.frame(mat)
+      
+    } else {
       if(file.exists("rulesFile.txt")){
       #get and parse the results
       contents <- readChar("rulesFile.txt", file.info("rulesFile.txt")$size)
@@ -495,6 +573,7 @@ shinyServer(function(input, output, session) {
       colnames(rules) <- c("Num Rule", "Rule")
      
       as.data.frame(rules)
+      }
     }
 }, escape = FALSE, options = list(pageLength = 10))
   
@@ -518,23 +597,48 @@ shinyServer(function(input, output, session) {
   
   output$medidas <- renderDataTable({
     input$ejecutar
-    if(file.exists("testQualityMeasures.txt")){
-      #get and process results
-      contents <- readChar("testQualityMeasures.txt", file.info("testQualityMeasures.txt")$size)
-      contents <- as.numeric(unlist( strsplit(contents, "\n", fixed = TRUE) ) )
+    algoritmo <- isolate(input$algoritmo)
+    if(algoritmo == "FuGePSD"){
+      if(file.exists("rulesFile_f06_TRUE_QM.txt") || file.exists("rulesFile_f06_FALSE_QM.txt")){
+        #get and process results
+        file <- which(c(file.exists("rulesFile_f06_TRUE_QM.txt"), file.exists("rulesFile_f06_FALSE_QM.txt")))
+        file <- c("rulesFile_f06_TRUE_QM.txt", "rulesFile_f06_FALSE_QM.txt")[file]
+        contents <- readChar(file, file.info(file)$size)
+        contents <- gsub(x = contents, pattern = "[^0-9.]+",replacement = " ")
+        contents <- strsplit(x = contents, split = " ", fixed = TRUE)[[1]][-1]
+        contents <- as.numeric(contents)
+        
+        mat <- matrix(contents, ncol = 9, byrow = TRUE)
+        mat[seq_len(nrow(mat) - 1) , 1] <- NA
+        colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Sensitivity", "Support", "FConfidence", "CConfidence")
+        rownames(mat) <- c( seq_len((length(contents) / 9 - 1)), "Global: ")
+        
+        junk <- dir(".", "[*QM].txt")
+    
+        file.remove(junk)
+        
+        #Show results as html
+        #as.table(mat)
+        as.data.frame(mat, stringsAsFactors = FALSE)
+      }
+    } else {
+      if(file.exists("testQM.txt")){
+        #get and process results
+        contents <- readChar("testQM.txt", file.info("testQM.txt")$size)
+        contents <- gsub(x = contents, pattern = "[^0-9.]+",replacement = " ")
+        contents <- strsplit(x = contents, split = " ", fixed = TRUE)[[1]][-1]
+        contents <- as.numeric(contents)
+       
+        
+        mat <- matrix(contents, ncol = 10, byrow = TRUE)
+
+        mat[seq_len(nrow(mat) - 1) , 1] <- NA
+        colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Accuracy", "CSupport", "FSupport", "CConfidence", "FConfidence")
       
-      mat <- matrix(contents, ncol = 10, byrow = TRUE)
-      aux <- mat[seq_len(nrow(mat) - 1) , 1:9]
-      mat[seq_len(nrow(mat) - 1) , 2:10] <- aux
-      mat[seq_len(nrow(mat) - 1) , 1] <- NA
-      colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Accuracy", "CSupport", "FSupport", "CConfidence", "FConfidence")
-      rownames(mat) <- c( seq_len((length(contents) / 10 - 1)), "Global: ")
-      file.remove("testQualityMeasures.txt")
-      
-      #Show results as html
-      #as.table(mat)
-      as.data.frame(mat, stringsAsFactors = FALSE)
-     
+        file.remove("testQM.txt")
+        as.data.frame(mat, stringsAsFactors = FALSE)
+       
+      }
     }
   })
 

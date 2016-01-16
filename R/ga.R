@@ -555,9 +555,9 @@ Mu_next <- Mu_next - nGenes
 
 #Replace the worst individuals in the population with the genereted in crossovers and mutations
 
-#orden <- order(AdaptationValue)
-orden <- .qsort(AdaptationValue, left = 1, right = length(AdaptationValue), index = seq_len(length(AdaptationValue)))
-orden <- orden$indices
+orden <- order(AdaptationValue)
+#orden <- .qsort(AdaptationValue, left = 1, right = length(AdaptationValue), index = seq_len(length(AdaptationValue)))
+#orden <- orden$indices
 Pop <- interPop#[orden, , drop = F]
 orden <- c(orden, (popSize+1):NROW(Fitness))
 #Fitness <- Fitness[orden,, drop = F] 
@@ -880,7 +880,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
     f <- na.exclude(Fitness)[,seq_len(nObjs),drop=F]
     n_Ind <- NROW(f)
     for(i in seq_len(n_Ind)){
-      nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,,drop=F], StrictDominance)
+      nd <- apply(X = f, MARGIN = 1, FUN = .calculateDominance, f[i,,drop=F], StrictDominance) #Sangria de tiempo
       Dominados[i] <- length(which(nd == 1L))
       WhoIDomain[[i]] <- which(nd <= 0L)
     }
@@ -1020,6 +1020,237 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 }
 
 
+
+
+
+
+
+#
+#
+#  FuGePSD Genetic Algorithm
+#
+#
+
+.gaFuGePSD <- function(type,           # Type of execution (1 for One vs All, != 1 for normal execution)
+                       dataset,        # keel object asociated to this genetic Algorithm (training file)
+                       selection ,     # Selection function !
+                       crossover ,     # Crossover function !
+                       mutation ,      # mutation function
+                       popSize = 50,      #size of the population
+                       pcrossover = 0.8,  #Crossover Probability
+                       pmutation = 0.1,   #Mutation Probability
+                       pinsertion = 0.05,    #Insertion Probability
+                       pdropping = 0.05,     #Dropping Probability
+                       selectionSize = 2, #Tournament selection size
+                       AllClass = TRUE,   #ALL_CLASS Attribute
+                       T_norm = 1,        # T-norm used
+                       ruleWeight = 0 ,    # Rule Weighting method to use
+                       frm = 0,           # Fuzzy Reasoning Method to use
+                       maxiter = 100,    #Max generations to run this genetic Algorithm.
+                       weightsGlobalFitness = c(0.25, 0.25, 0.25, 0.25), #Weights Used in population Global Evaluation
+                       seed = .randInt(0, 20000000)
+                      )
+{
+  #First of all, we must check types of all attributes
+  if(class(dataset) != "keel")
+    stop("'dataset' must be a keel dataset object.")
+  if(! is.function(selection))
+    stop("'selection' must be function.")
+  if(! is.function(crossover))
+    stop("'crossover' must be function.")
+  if(! is.function(mutation))
+    stop("'mutation' must be function.")  
+  if(popSize <= 0)
+    stop("'popSize' must be greater than zero.")
+ 
+  if(selectionSize < 2)
+    stop("'selectionSize' must be greater than 2.")
+  if(! is.logical(AllClass))
+    stop("'AllClass' must be a logical value.")
+  if(maxiter < 1)
+    stop("'maxiter' must be greater than zero")
+
+  if(length(weightsGlobalFitness) != 4)
+    stop("length of 'weightsGlobalFitness' must be 4")
+  
+  suma <- sum(pcrossover, pmutation, pinsertion, pdropping)
+  if(suma != 1 ){
+    pcrossover <- pcrossover / suma
+    pmutation <- pmutation / suma
+    pinsertion <- pinsertion / suma
+    pdropping <- pdropping / suma
+  }
+  
+  #Once checked, the evolutive process can start
+  if(type == 0){
+    #Execution One Vs all
+    
+  } else {
+    #Normal execution and Return
+    executionPSD( clas = NULL,
+                  dataset,        
+                  selection ,    
+                  crossover ,     
+                  mutation ,      
+                  popSize,      
+                  pcrossover, 
+                  pmutation ,  
+                  pinsertion,    
+                  pdropping ,     
+                  selectionSize, 
+                  AllClass,   
+                  T_norm,       
+                  ruleWeight,    
+                  frm,           
+                  maxiter,   
+                  weightsGlobalFitness,
+                  seed)
+  }
+  
+}
+
+
+
+executionPSD <- function(clas = NULL,   # number of the class to generate rules.
+                       dataset,        # keel object asociated to this genetic Algorithm (training file)
+                       selection ,     # Selection function !
+                       crossover ,     # Crossover function !
+                       mutation ,      # mutation function
+                       popSize = 50,      #size of the population
+                       pcrossover = 0.8,  #Crossover Probability
+                       pmutation = 0.1,   #Mutation Probability
+                       pinsertion = 0.05,    #Insertion Probability
+                       pdropping = 0.05,     #Dropping Probability
+                       selectionSize = 2, #Tournament selection size
+                       AllClass = TRUE,   #ALL_CLASS Attribute
+                       T_norm = 1,        # T-norm used
+                       ruleWeight = 0 ,    # Rule Weighting method to use
+                       frm = 0,           # Fuzzy Reasoning Method to use
+                       maxiter = 100,    #Max generations to run this genetic Algorithm.
+                       weightsGlobalFitness = c(0.25, 0.25, 0.25, 0.25), #Weights Used in population Global Evaluation
+                       seed = .randInt(0, 20000000)
+){
+  populationFitness <- bestPopulationFitness <- numeric(1)
+  exampleClass <- unlist(.getClassAttributes(dataset$data))
+  
+  #get categorical and numerical variables
+  categorical <- dataset$atributeTypes == "c"
+  categorical <- categorical[-length(categorical)]
+  numerical <- !categorical
+  
+  datasetNoClass <- matrix(unlist(.separar(dataset)), nrow = dataset$nVars, ncol = dataset$Ns)
+  bestPop <- vector(mode = "list", length = popSize)
+  
+  #Init population
+  pop <- lapply(seq_len(popSize), function(x, dataset, tnorm, tconorm, rule_weight, clase){
+    createNewRule(dataset, tnorm, tconorm, rule_weight, clase)
+  }, dataset, T_norm, T_norm, ruleWeight, clas)
+  
+  #evaluate initial population individuals (In parallel for Linux)
+  if(length(pop) >= 20 & Sys.info()[1] == "Linux"){
+    pop <- parallel::mclapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight, mc.cores = parallel::detectCores())
+  } else {
+   pop <- lapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight)
+  }
+  #evaluate the whole population
+  populationFitness <- Pop.evaluate(pop, dataset, datasetNoClass, exampleClass, frm, categorical, numerical, T_norm, weightsGlobalFitness)
+  
+  #best population is now initial population.
+  bestPop <- pop
+  bestPopulationFitness <- populationFitness
+  cat(paste("Global Fitness obtained in generation [0]:", bestPopulationFitness, "\n", sep = " "))
+  
+  
+  
+  #Init the evolutive process
+  for(generation in seq_len(maxiter - 1)){
+    #First, create a join population with twice length of population. Then add pop to joinPop
+    joinPop <- vector(mode = "list", length = length(pop) * 2)
+    joinPop[seq_len(length(pop))] <- pop
+    
+    #Now we need to generate an offspring population length equal to pop length.
+    #This offspring population is generated via genetic operators.
+    
+    dados <- runif(length(pop))
+    first_parents <- vapply(X = seq_len(length(pop)), 
+                            FUN = function(x, pop, tam){
+                                  tournamentSelection(pop, tam)}, numeric(1), pop, selectionSize)
+    
+    #Specify the genetic operator to apply according to their probability in 'dados'
+    cruzan <- first_parents[which(dados < pcrossover)]
+    mutan <- first_parents[which(pcrossover <= dados & dados < (pcrossover + pmutation))]
+    insertan <- first_parents[which((pcrossover + pmutation) <= dados & dados < (pcrossover + pmutation + pinsertion))]
+    dropean <- first_parents[which(pcrossover + pmutation + pinsertion <= dados)]
+    
+    posJoinPop <- length(pop) + 1
+    #Make crossovers
+    for(i in cruzan){
+      second_parent <- .randIntExcluded(1, length(pop), i)
+      joinPop[[posJoinPop]] <- FuGePSD_crossover(rule1 = pop[[i]], rule2 = pop[[second_parent]], nvars = dataset$nVars + 1)
+      posJoinPop <- posJoinPop + 1  
+    }
+    
+    #Make mutations 
+    for(i in mutan){
+      joinPop[[posJoinPop]] <- FuGePSD_Mutation(pop[[i]], dataset)
+      posJoinPop <- posJoinPop + 1
+    }
+    
+    #Make insertions
+    for(i in insertan){
+      if(length(pop[[i]][[1]]) == dataset[[6]]){ 
+        #If we cannot add more variables, we introduce a rule with an empty antecedent.
+        joinPop[[posJoinPop]] <- Rule.clearAntecedent(pop[[i]])
+      } else {
+        #Add a random variable
+        joinPop[[posJoinPop]] <- Rule.addVariable(pop[[i]], dataset)
+      }
+      posJoinPop <- posJoinPop + 1
+    }
+    
+    #Make droppings
+    for(i in dropean){
+      if(length(pop[[i]][[1]]) == 1){
+        #We cannot delete more variables, return an empty rule
+        joinPop[[posJoinPop]] <- Rule.clearAntecedent(pop[[i]])
+      } else {
+        joinPop[[posJoinPop]] <- Rule.deleteVariable(pop[[i]])
+      }
+      posJoinPop <- posJoinPop + 1
+    }
+    
+    #Evaluate joinPop.
+    joinPop <- lapply(joinPop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight)
+    
+    #Apply Token Competition
+    pop <- tokenCompetition(joinPop, dataset)
+    
+    #Evaluate Global Fitness
+    populationFitness <- Pop.evaluate(pop, dataset, datasetNoClass, exampleClass, frm, categorical, numerical, T_norm, weightsGlobalFitness)
+    
+    #Substitute best population if actual if better.
+    if(bestPopulationFitness < populationFitness){
+      bestPopulationFitness <- populationFitness
+      bestPop <- pop
+      cat(paste("Global Fitness obtained in generation [", generation, "]: ", bestPopulationFitness, "\n", sep = ""))
+    }
+    
+    #cat("\r", (generation / (maxiter-1)) * 100, "% Completed.", sep = "")
+  }
+  
+  #Order bestPop by conf_f (desc. order)
+  fuzzy_conf <- vapply(X = bestPop, FUN = function(x){x$qm_Cnf_f}, numeric(1))
+  sens <- vapply(X = bestPop, FUN = function(x){x$qm_Sens}, numeric(1))
+  orden <- order(fuzzy_conf, decreasing = TRUE)
+  fuzzy_conf <- fuzzy_conf[orden]
+  sens <- sens[orden]
+  
+  bestPop <- bestPop[orden]
+  
+  #Return 
+  list(bestPop = bestPop, conf = fuzzy_conf, sensitivity = sens)
+
+}
 
 
 #-------------------------------------------------------------------------------
@@ -1666,7 +1897,7 @@ if(DNFRules) {
           xmaxC <- crispSets[cbind(rule_num + 1, 2, seq_len(n_matricesCrisp))]
         }
         
-        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat, max_regla_num)
+        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat)
         
       } else { # DNF RULES (FALTA EL TRATAMIENTO DE VARIABLES CATEGORICAS)
         
@@ -1775,7 +2006,7 @@ if(DNFRules) {
           xmaxC <- crispSets[cbind(rule_num + 1, 2, seq_len(n_matricesCrisp))]
         }
         
-        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat, max_regla_num)
+        gr_perts <- .compara_CAN9(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, xminCrisp = xminC, xmaxCrisp = xmaxC,  max_regla_cat)
         
       } else { # DNF RULES
         
@@ -1836,5 +2067,109 @@ if(DNFRules) {
   }
   
 }
+
+
+#'
+#' Obtains the belonging degree of every example of a dataset to a given rule
+#' 
+#' @param regla The rule to compare example. This rule must be in canonica vector representation. (See Rule.toRuleCANRepresentation function)
+#' @param dataset The complete keel dataset object to get the examples
+#' @param noClass a matrix with all examples without the class attribute. One examples PER COLUMN
+#' @param nLabels number of fuzzy Labels that have numerical attributes
+#' @param max_regla maximum value of all attributes ($conjuntos of the keel dataset)
+#' @param cate logical vector indicating which attributes are categorical
+#' @param num logical vector indicating which attributes are numerical
+#' @param The T-norm to use. 0 to Minimum T-norm, 1 to Product T-norm.
+#'
+#' @return a numeric vector with the belonging degree of every example to the given rule.
+#' 
+.fitnessFuGePSD <- function(regla, dataset, noClass, nLabels, max_regla, cate, num, t_norm){
+  
+  
+  if( ! any(is.na(regla))) { #Si la regla no tiene NA se puede evaluar
+    
+    regla <- as.integer(regla)
+    participantes <- logical(length(max_regla))
+    participantes <- .getParticipantes(regla = regla, max_regla = max_regla, DNFRules = FALSE)
+    
+    
+    #If it's not the empty rule
+    if(any(participantes)){
+      
+      cat_particip <- which(cate & participantes)
+      num_particip <- which(num & participantes)
+      
+      max_regla_cat <- max_regla[cat_particip]
+      max_regla_num <- max_regla[num_particip]
+      
+     
+        
+        #Split into numerical variables and categorical ones. (And participate in the rule)
+        if(length(cat_particip) > 0){
+          rule_cat <- regla[cat_particip]
+        }
+        
+        if(length(num_particip) > 0){
+          rule_num <- regla[num_particip]
+          
+          fuzzy_sets <- dataset[["fuzzySets"]][1:nLabels, 1:3, num_particip, drop = F]
+          crispSets <- dataset[["crispSets"]][1:nLabels, 1:2, num_particip, drop = F]
+          #  Get values for xmin, xmedio and xmax for fuzzy computation.   
+          n_matrices <- dim(fuzzy_sets)[3]  
+          
+          xmin <- fuzzy_sets[cbind(rule_num + 1, 1, seq_len(n_matrices))]
+          xmax <- fuzzy_sets[cbind(rule_num + 1, 3, seq_len(n_matrices))]
+          xmedio <- fuzzy_sets[cbind(rule_num + 1, 2, seq_len(n_matrices))]
+          
+          #Get values for xmin and xmax for crisp computation
+          n_matricesCrisp <- dim(crispSets)[3]  
+          xminC <- crispSets[cbind(rule_num + 1, 1, seq_len(n_matricesCrisp))]
+          xmaxC <- crispSets[cbind(rule_num + 1, 2, seq_len(n_matricesCrisp))]
+        }
+        
+      #return
+        Rule.compatibility(ejemplo = noClass, rule_cat = rule_cat, rule_num = rule_num, catParticip = cat_particip, numParticip = num_particip, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices, max_cat = max_regla_cat, max_num = max_regla_num, t_norm = t_norm)
+        
+      
+    }
+  }
+}
+#         values <- .get_values6(gr_perts = gr_perts, nombre_clases = dataset[["class_names"]], dataset = dataset[["data"]], targetClass = targetClass, examples_perClass = dataset[["examplesPerClass"]],cov = dataset[["covered"]], Ns = dataset[["Ns"]], N_vars = n_Vars + 1, por_cubrir = por_cubrir, marcar = marcar, test = test, difuso = difuso)
+#       
+#       #Compute fitness
+#       if(! marcar){
+#         
+#         fitness <- 0
+#         if(is.function(Objetivos[[1]]) && Pesos[1] > 0){ 
+#           fitness <- fitness + (Objetivos[[1]](values) * Pesos[1])
+#         }
+#         if(is.function(Objetivos[[2]]) && Pesos[2] > 0){ 
+#           fitness <- fitness + (Objetivos[[2]](values) * Pesos[2])
+#         }
+#         if(is.function(Objetivos[[3]]) && Pesos[3] > 0) {
+#           fitness <- fitness + (Objetivos[[3]](values) * Pesos[3])
+#         }      
+#         fitness <- fitness / (sum(Pesos))
+#         # cat("Ns:", values[[4]], " - Local Support: ", .LocalSupport(values), " - .confianza:", .confianza(values), " - Support: ", .Csupport(values)," - .coverage:", .coverage(values), " - Fitness: ", fitness, file = "", fill = TRUE)
+#         
+#         fitness #Return
+#       } else {
+#         
+#         values #Return
+#       }
+#       
+#     } else{
+#       0 #Return
+#     }
+#     
+#   } else {
+#     0 #Return
+#   }
+  
+
+
+
+
+
 
 

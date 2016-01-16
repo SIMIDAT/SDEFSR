@@ -84,6 +84,7 @@
 #' @param w3 Sets the weight of \code{Obj3}.
 #' @param minConf Sets the minimum confidence that must have the rule returned by the genetic algorithm after the local optimitation phase. A number in [0,1].
 #' @param lSearch Sets if the local optimitation phase must be performed. A string with "yes" or "no".
+#' @param targetVariable A string with the name or an integer with the index position of the target variable (or class). It must be a categorical one.
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 
@@ -226,7 +227,7 @@
 #'       lSearch = "yes",
 #'       targetClass = "positive")
 #'       }
-#' 
+#' @export
 SDIGA <- function(parameters_file = NULL, 
                   training = NULL, 
                   test = NULL, 
@@ -245,6 +246,7 @@ SDIGA <- function(parameters_file = NULL,
                   w3 = 0,
                   minConf = 0.6,
                   lSearch = "yes",
+                  targetVariable = NA,
                   targetClass = "null")
 {
   
@@ -254,13 +256,10 @@ SDIGA <- function(parameters_file = NULL,
     #Generate our "parameters file"
     if(class(training) != "keel" | class(test) != "keel")
       stop("'training' or 'test' parameters is not a KEEL class")
-    
     if(is.null(training) | is.null(test)) 
       stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
-    
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
-    
     if(length(output) != 3 )
       stop("You must specify three files to save the results.")
     
@@ -281,7 +280,8 @@ SDIGA <- function(parameters_file = NULL,
                        w3 = w3, 
                        lSearch = lSearch,
                        minConf = minConf,
-                       targetClass = targetClass)
+                       targetClass = targetClass,
+                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
       
   } else {
   # Parametros --------------------------
@@ -289,18 +289,31 @@ SDIGA <- function(parameters_file = NULL,
     if(parametros$algorithm != "SDIGA")
       stop("Parameters file is not for \"SDIGA\"")
   
-  test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
+  test <- read.keel(file = parametros$inputData[2])        # test data
   
-  training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data
+  training <- read.keel(file = parametros$inputData[1])   # training data
   }
+  if(is.na(parametros$targetVariable))
+    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  #Change target variable if it is neccesary
+    training <- changeTargetVariable(training, parametros$targetVariable)
+    test <- changeTargetVariable(test, parametros$targetVariable)
   
   #Check if the last variable is categorical.
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   
+  #Set the number of fuzzy labels
+  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
+  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
+  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
+  #Set Covered
+  training$covered <- logical(training$Ns)
+  test$covered <- logical(test$Ns)
   
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
-  if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")
+
   
   if(tolower(parametros$RulesRep) == "can"){
     DNF = FALSE
@@ -495,20 +508,7 @@ SDIGA <- function(parameters_file = NULL,
   )
   
   
-  #Medidas de calidad globales (Save in testMeasures File)
-  cat(
-      length(reglas),
-      round(sumNvars / n_reglas, 6),
-      round(sumCov / n_reglas, 6),
-      round(sumSign / n_reglas, 6),
-      round(sumUnus / n_reglas, 6),
-      round(sumAccu / n_reglas, 6),
-      round(sum(test[["covered"]] / test[["Ns"]]), 6),
-      round(sumFsup / n_reglas, 6),
-      round(sumFconf / n_reglas, 6),
-      round(sumCconf / n_reglas, 6),
-      file = "testQualityMeasures.txt", sep = "\n", append = TRUE
-  )
+  
   
   #---------------------------------------------------
   
@@ -575,23 +575,6 @@ SDIGA <- function(parameters_file = NULL,
       paste("\t - FConfidence:", Fcnf, "\n", sep = " "),
       file = parametros$outputData[3], sep = "\n", append = TRUE
   )
-  
-  
-  #Save into the test file for web
-  cat(
-      nVars, "\n",
-      Cov, "\n",
-      sig,  "\n",
-      unus,  "\n",
-      acc,  "\n",
-      Csup,  "\n",
-      Fsup,  "\n",
-      Ccnf,  "\n",
-      Fcnf, "\n\n",
-      file = "testQualityMeasures.txt", append = TRUE
-      )
-      
-  
   
 #Return
     list( covered = testSet[["covered"]], 

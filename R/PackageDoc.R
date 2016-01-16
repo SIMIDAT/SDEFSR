@@ -22,7 +22,10 @@
 #' }
 #'
 #' @author Angel M. Garcia-Vico <amgv0009@@red.ujaen.es>
-#' 
+#' @import methods
+#' @import parallel
+#' @import stats
+#' @import utils
 #' @docType package
 #' @name SDR
 NULL

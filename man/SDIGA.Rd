@@ -9,7 +9,7 @@ SDIGA(parameters_file = NULL, training = NULL, test = NULL,
   nLabels = 3, nEval = 10000, popLength = 100, mutProb = 0.01,
   RulesRep = "can", Obj1 = "CSUP", w1 = 0.7, Obj2 = "CCNF", w2 = 0.3,
   Obj3 = "null", w3 = 0, minConf = 0.6, lSearch = "yes",
-  targetClass = "null")
+  targetVariable = NA, targetClass = "null")
 }
 \arguments{
 \item{parameters_file}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}
@@ -47,6 +47,8 @@ SDIGA(parameters_file = NULL, training = NULL, test = NULL,
 \item{minConf}{Sets the minimum confidence that must have the rule returned by the genetic algorithm after the local optimitation phase. A number in [0,1].}
 
 \item{lSearch}{Sets if the local optimitation phase must be performed. A string with "yes" or "no".}
+
+\item{targetVariable}{A string with the name or an integer with the index position of the target variable (or class). It must be a categorical one.}
 
 \item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
 }

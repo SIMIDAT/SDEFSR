@@ -162,8 +162,8 @@
 #' 
 #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
 #' @param training A \code{keel} class variable with training data.
-#' @param test A \code{keel} class variable with training data.
-#' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
+#' @param test A \code{keel} class variable with test data.
+#' @param output character vector with the paths where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
 #' @param nLabels Number of fuzzy labels defined in the datasets.
 #' @param nEval An integer for set the maximum number of evaluations in the evolutive process.
@@ -176,6 +176,7 @@
 #' @param Obj2 Sets the Objective number 2. See \code{Objective values} for more information about the possible values.
 #' @param Obj3 Sets the Objective number 3. See \code{Objective values} for more information about the possible values.
 #' @param Obj4 Sets the Objective number 4. See \code{Objective values} for more information about the possible values.
+#' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 
@@ -254,7 +255,7 @@
 #'         \item Significance -> \code{sign}
 #'       }
 #'     
-#'     If you dont want to use a objetive value you must specify \code{null}
+#'     If you dont want to use a objective value you must specify \code{null}
 #' 
 #' 
 #' @return The algorithm shows in the console the following results:
@@ -318,6 +319,7 @@
 #'         )
 #'  }
 #' 
+#' @export
 MESDIF <- function(paramFile = NULL,
                    training = NULL, 
                    test = NULL, 
@@ -334,6 +336,7 @@ MESDIF <- function(paramFile = NULL,
                    Obj2 = "CCNF",
                    Obj3 = "null",
                    Obj4 = "null",
+                   targetVariable = NA,
                    targetClass = "null"
                    )
 {
@@ -366,24 +369,39 @@ MESDIF <- function(paramFile = NULL,
                        Obj2 = Obj2,
                        Obj3 = Obj3,
                        Obj4 = Obj4,
-                       targetClass = targetClass)
+                       targetClass = targetClass,
+                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
   } else {
   # Parametros --------------------------
     parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
     if(parametros$algorithm != "MESDIF") 
       stop(paste("The algorithm specificied (", parametros$algorithm, ") in parameters file is not \"MESDIF\". Check parameters file. Aborting program..."))
     
-    test <- read.keel(file = parametros$inputData[2], nLabels = parametros$nLabels)        # test data
+    test <- read.keel(file = parametros$inputData[2])        # test data
     
-    training <- read.keel(file = parametros$inputData[1], nLabels = parametros$nLabels )   # training data
+    training <- read.keel(file = parametros$inputData[1])   # training data
   }
-  
+  if(is.na(parametros$targetVariable))
+    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  #Change target variable if it is neccesary
+  training <- changeTargetVariable(training, parametros$targetVariable)
+  test <- changeTargetVariable(test, parametros$targetVariable)
   #Check if the last variable is categorical.
   if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   
+  #Set the number of fuzzy labels
+  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
+  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
+  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
+  #Set Covered
+  #training$covered <- logical(training$Ns)
+  test$covered <- logical(test$Ns)
+  
+    #Remove files
   file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
-  if(file.exists("testQualityMeasures.txt")) file.remove("testQualityMeasures.txt")
+ 
   
   if(tolower(parametros$RulesRep) == "can"){
     DNF = FALSE
@@ -507,21 +525,6 @@ MESDIF <- function(paramFile = NULL,
        file = parametros$outputData[3], sep = "\n", append = TRUE
   )
   
-  
-  #Medidas de calidad globales (Save in testMeasures File)
-  cat(
-    nrow(reglas),
-    round(sumNvars / n_reglas, 6),
-    round(sumCov / n_reglas, 6),
-    round(sumSign / n_reglas, 6),
-    round(sumUnus / n_reglas, 6),
-    round(sumAccu / n_reglas, 6),
-    round(sum(test[["covered"]] / test[["Ns"]]), 6),
-    round(sumFsup / n_reglas, 6),
-    round(sumFconf / n_reglas, 6),
-    round(sumCconf / n_reglas, 6),
-    file = "testQualityMeasures.txt", sep = "\n", append = TRUE
-  )
   #---------------------------------------------------
   
 }

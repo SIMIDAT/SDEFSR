@@ -11,6 +11,66 @@
 #--------------------------------------------------------------------
 
 
+
+#'
+#' Return the compatibility degrees of a rule with all instances of a given dataset.
+#' 
+#' The rules passed to this functions MUST have a vector representation in CANONICA form. This function
+#' was made for being used mainly for the FuGePSD algorithm. 
+#' 
+#' @param ejemplo The instances of the dataset, a matrix with one example PER COLUMN and without the CLASS ATTRIBUTE.
+#' @param rule_cat Part of the rule with the categorical values.
+#' @param rule_num Part of the rule with the numerical values.
+#' @param catParticip vector indicating which categorical attributes participate in the rule and so, they must be evaluated.
+#' @param numParticip vector indicating which numerical attributes participate in the rule and so, they must be evaluated.
+#' @param xmin numeric vector which indicate the minimum value of the fuzzy sets of every numeric attribute that participate in the rule.
+#' @param xmedio numeric vector which indicate the medium value of the fuzzy sets of every numeric attribute that participate in the rule.
+#' @param xmax numeric vector which indicate the maximum value of the fuzzy sets of every numeric attribute that participate in the rule.
+#' @param n_matrices number of fuzzy sets that there are in the rule (The length of vectors xmin, xmedio and xmax)
+#' @param max_cat numeric vector indicating the maximum value of categorical values.
+#' @param max_num numeric vector indicating the maximum value for fuzzy partitions on every attribute
+#' @param t_norm The T-norm to use to compute the compatibility degree. 0 for minimum t-norm. Other value for product t-norm
+#' 
+#' @return A vector with length 'number of examples' indicating their compatibility degree.
+#' 
+Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices,max_cat, max_num, t_norm){
+  dispFuzzy <- numeric(NCOL(ejemplo)) + 1
+  
+  #Computation of membership degree.
+  
+  #Categorical variables.
+  if(length(catParticip > 0)){
+    ej_cat <- as.integer( ejemplo[catParticip,] )
+    values <-  ceiling( ( which(ej_cat != rule_cat & ! (ej_cat == max_cat + 1 )) / (length(catParticip)) ) ) 
+    #Examples no compatibles
+    dispFuzzy[values] <- 0L
+  }
+  
+  
+  #Numerical Values 
+  if(length(numParticip) > 0){
+    ej_num <- as.vector( ejemplo[numParticip, which(dispFuzzy > 0) ] )
+    
+    #Fuzzy computation
+    #Computes compatibility degree of every value of the whole dataset with the rule
+    pertenencia <- .grado_pertenencia5(x = ej_num, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices)
+    
+    if(t_norm == 0) { # MINIMUM T-NORM 
+      dispFuzzy[which(dispFuzzy > 0)] <- apply(X = pertenencia, MARGIN = 1, FUN = min)
+    } else { # PRODUCT T-NORM
+      dispFuzzy[which(dispFuzzy > 0)] <- apply(X = pertenencia, MARGIN = 1, FUN = prod)
+    }
+  }
+  
+  
+  dispFuzzy
+  
+}
+
+
+
+
+
 #
 #
 #   Gets the membership degree of all examples in the dataset over a single rule. (Use with lapply)
@@ -23,7 +83,7 @@
 # xmin, xmax, xmedio and xminCrisp and xmaxCrisp are the vectors with the fuzzy and crisp definition of the variables that participa in the rule
 # max_cat is a vector the maximum value for categorical values and max_num is the same but for numerical variables.
 
-.compara_CAN9 <- function(ejemplo, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices, xminCrisp, xmaxCrisp, max_cat, max_num){
+.compara_CAN9 <- function(ejemplo, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices, xminCrisp, xmaxCrisp, max_cat){
   dispFuzzy <- numeric(NCOL(ejemplo)) + 1
   dispCrisp <- integer(NCOL(ejemplo)) + 1L
   
@@ -121,7 +181,7 @@
 
 .get_values6 <- function(gr_perts, nombre_clases, dataset, targetClass, examples_perClass, cov, Ns, N_vars , por_cubrir, marcar = FALSE, test = FALSE, difuso = FALSE, NMEEF = FALSE){
   #Esto no es lo mejor, habr?a que buscar otra manera de utilizar la lista directamente
-  dataset <- matrix(unlist(dataset), nrow = length(dataset[[1]]), ncol = length(dataset))
+  dataset <- matrix(unlist(dataset), nrow = length(dataset[[1]]), ncol = length(dataset)) #MUCHO TIEMPO
   
   ejemplo_Cubiertos <- 0L
   sumaFuzzyejCubiertos <- 0
@@ -149,7 +209,8 @@
   #Ejemplos cubiertor por la regla de cada clase (Significancia)
   #   tabla <- table( t( dataset[N_vars,coveredFuzzy]) )
   #   cov_examplesFuzzy[ names( tabla )] <- tabla 
-  tabla <- table( t( nombre_clases[ dataset[N_vars,coveredCrisp] + 1] ) )
+  #tabla <- table( t( nombre_clases[ dataset[N_vars,coveredCrisp] + 1] ) )
+  tabla <- improvedTable(dataset[, coveredCrisp, drop = F], nombre_clases)
   cov_examplesCrisp[names( tabla )] <- tabla 
   
   
@@ -301,8 +362,10 @@
 #' @return  This function returns the same dataset with their fuzzy definitions modified.
 #' 
 #' @examples 
+#' \dontrun{
 #'     modifyFuzzyCrispIntervals(habermanTra, 2)
 #'     modifyFuzzyCrispIntervals(habermanTra, 15)
+#'}
 #'
 
 modifyFuzzyCrispIntervals <- function(dataset, nLabels){
@@ -323,60 +386,69 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 
 
 #'
-#' Change the targetVariable of a KEEL Dataset
+#' Change the target Variable of a \code{'keel'} Dataset
 #' 
 #' Change the actual target variable for another one if it is categorical.
 #' 
 #' @param dataset The KEEL dataset class
-#' @param posVariable The position of the variable to set as target Variable.
+#' @param variable The position (or the name) of the variable to set as target Variable.
 #' @return The dataset with the variables changed
 #' 
 #' 
 #' @examples 
-#' changeTargetVariable(carTra, 3)
 #' \dontrun{
-#' Throws an error because the variable selected is numerical:
+#' changeTargetVariable(carTra, 3)
+#' changeTargetVariable(carTra, "Doors")
 #' 
+#' Throws an error because the variable selected is numerical:
 #' changeTargetVariable(habermanTra, 1)
 #' }
 #' 
-changeTargetVariable <- function(dataset, posVariable){
-  if(class(dataset) != "keel") stop("The provided 'dataset' is not a keel class")
-  #if(posVariable >= dataset$nVars + 1) stop("posVariable is the same of the actual variable or is out of range")
-  if(dataset[[3]][posVariable] != "c") stop("No categorical variable selected.")
-  if(posVariable <= dataset$nVars){
+#' 
+changeTargetVariable <- function(dataset, variable){
+  if(class(dataset) != "keel") stop( paste("'",substitute(dataset),"' is not a keel class", sep = ""))
+  #if(variable >= dataset$nVars + 1) stop("variable is the same of the actual variable or is out of range")
+  
+  if(is.character(variable)){
+    variable <- which(tolower(dataset$atributeNames) == tolower(variable))
+    if(length(variable) == 0)
+      stop(paste(variable, "is not a variable of this dataset."))
+  }
+  
+  if(dataset[[3]][variable] != "c") stop("No categorical variable selected.")
+  if(variable <= dataset$nVars){
   #Swap variables.
-  dataset$data <- lapply(X = dataset$data , FUN = function(x, posVariable){ 
-                       aux <- x[posVariable]; 
-                       x[posVariable] <- x[length(x)]; 
+  dataset$data <- lapply(X = dataset$data , FUN = function(x, variable){ 
+                       aux <- x[variable]; 
+                       x[variable] <- x[length(x)]; 
                        x[length(x)] <- aux; 
                        x }, 
-                       posVariable)
+                       variable)
   
   #Swap Attribute Names
-  aux <- dataset[[2]][posVariable]
-  dataset[[2]][posVariable] <- dataset[[2]][length(dataset[[2]])]
+  aux <- dataset[[2]][variable]
+  dataset[[2]][variable] <- dataset[[2]][length(dataset[[2]])]
   dataset[[2]][length(dataset[[2]])] <- aux
   
   #swap conjuntos
-  dataset[["conjuntos"]][posVariable] <- dataset[["max"]][dataset[["nVars"]] + 1]
+  dataset[["conjuntos"]][variable] <- dataset[["max"]][dataset[["nVars"]] + 1]
   
   #Swap Min
-  aux <- dataset[[4]][posVariable]
-  dataset[[4]][posVariable] <- dataset[[4]][length(dataset[[4]])]
+  aux <- dataset[[4]][variable]
+  dataset[[4]][variable] <- dataset[[4]][length(dataset[[4]])]
   dataset[[4]][length(dataset[[4]])] <- aux
   
   #Swap Max
-  aux <- dataset[[5]][posVariable]
-  dataset[[5]][posVariable] <- dataset[[5]][length(dataset[[5]])]
+  aux <- dataset[[5]][variable]
+  dataset[[5]][variable] <- dataset[[5]][length(dataset[[5]])]
   dataset[[5]][length(dataset[[5]])] <- aux
   
   #Change class_names Values
-  dataset[["class_names"]] <- dataset[["categoricalValues"]][[posVariable]]
+  dataset[["class_names"]] <- dataset[["categoricalValues"]][[variable]]
   
   #Swap categorical Values
-  aux <- dataset[["categoricalValues"]][[posVariable]]
-  dataset[["categoricalValues"]][[posVariable]] <- dataset[["categoricalValues"]][[length(dataset[["categoricalValues"]])]]
+  aux <- dataset[["categoricalValues"]][[variable]]
+  dataset[["categoricalValues"]][[variable]] <- dataset[["categoricalValues"]][[length(dataset[["categoricalValues"]])]]
   dataset[["categoricalValues"]][[length(dataset[["categoricalValues"]])]] <- aux
   
   #Calculate new value for examplesPerClass
@@ -432,7 +504,12 @@ changeTargetVariable <- function(dataset, posVariable){
 }
 
 
-
+#'
+#' Returns the class attribute of the examples of a dataset.
+#'
+.getClassAttributes <- function(dataset){
+  lapply(dataset, FUN = function(x) x[length(x)])
+}
 
 
 
@@ -481,7 +558,7 @@ changeTargetVariable <- function(dataset, posVariable){
 
 #
 #
-# Obtain the fuzzy values of a DNF Rules
+# Obtain the fuzzy values of a DNF Rule
 #
 #
 .getFuzzyValues <- function(regla_num, fuzzy,  crisp = FALSE){
@@ -512,8 +589,9 @@ changeTargetVariable <- function(dataset, posVariable){
 
 
 
-
-
+#
+# Normalize a DNF by means of put all the non-participating variables filled with 0's.
+#
 .normalizeDNFRule <- function(regla, max){
   if(!anyNA(regla)){
     for(i in seq_len(length(max) - 1)){ 
@@ -567,9 +645,22 @@ changeTargetVariable <- function(dataset, posVariable){
 #'     
 #' @export
  SDR_GUI <- function(){
-   shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
-   
-   invisible()
+   packages <- installed.packages()[,1]
+   if(! "shiny" %in% packages){
+     if(tolower(.yesno("Package 'shiny' is not installed and must be installed to run this GUI. Do you want to install it? (Y/n): ")) == "y"){
+       install.packages("shiny")
+       cat("Launching interface...")
+       shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
+       
+       invisible()
+     } else {
+       cat("Package not installed. Execution aborted.")
+     }
+   } else {
+     shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
+     
+     invisible()
+   }
  }
 
 
@@ -582,3 +673,201 @@ changeTargetVariable <- function(dataset, posVariable){
   line
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+######################################################################
+#                                                                    #
+#                   MATHEMATICAL UTILS                               #    
+#                                                                    #
+#                                                                    #
+######################################################################
+
+
+#'
+#' returns an integer between low and high. EXCLUDING high
+#' @param low Lower bound (included)
+#' @param high Upper bound (NOT included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randInt <- function(low, high){
+  floor( low + (high - low) * runif(1) )
+}
+
+
+
+#'
+#' returns an integer between low and high. INCLUDING high
+#' @param low Lower bound (included)
+#' @param high Upper bound (included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+#' 
+.randIntClosed <- function(low, high){
+  floor( low + ((high + 1) - low) * runif(1) )
+}
+
+
+
+#'
+#' returns an integer between low and high. EXCLUDING low and high
+#' @param low Lower bound (NOT included)
+#' @param high Upper bound (NOT included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randIntClosed <- function(low, high){
+  floor( (low+1) + (high - (low+1)) * runif(1) )
+}
+
+
+#'
+#' returns a number between low and high. EXCLUDING high
+#' @param low Lower bound (included)
+#' @param high Upper bound (NOT included)
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randDouble <- function(low, high){
+  low + (high - low) * runif(1) 
+}
+
+
+
+#'
+#' returns a number between low and high. Including high and EXCLUDING excluded
+#' @param low Lower bound (included)
+#' @param high Upper bound (NOT included)
+#' @param excluded. The number to exclude, it does not check if it is in the range [low,high]
+#' @return a uniform-distributed integer value in [low, high)
+#' 
+.randIntExcluded <- function(low, high, excluded){
+  number <- .randIntClosed(low, high)
+  while(number == excluded){
+    number <- .randIntClosed(low, high)
+  }
+  number
+}
+
+
+
+
+#'
+#' Parse a time differente to "x hours, y minutes and z seconds"
+#'
+#' @param actual End time in UNIX int format (i.e. as.numeric(Sys.time()))
+#' @param initial Initial time in Unix format.
+#'
+#' @return A human-readable string with time difference.
+#'
+parseTime <- function(actual, initial){
+  dif <- actual - initial
+  horas <- 0
+  minutos <- 0
+  segundos <- 0
+  
+  if(dif >= 3600){
+    horas <- floor(dif / 3600)
+    dif <- dif %% 3600
+  }
+  
+  if(dif >= 60){
+    minutos <- floor(dif / 60)
+    segundos <- dif %% 60
+  } else {
+    segundos <- dif
+  }
+  
+  
+  paste(horas, " hours, ", minutos, " minutes and ", round(segundos, 2) , " seconds.", sep = "")
+}
+
+
+#'
+#' Improved table creation for .get_values6
+#' 
+#' @param dataset A matrix with the data
+#' @param classNames a vector with the names of the attributes.
+#' 
+#' @return a named vector with the number of instances per class.
+#' 
+improvedTable <- function(dataset, classNames){
+  tabla <-
+    vapply(
+      X = seq_len(length(classNames)) - 1, FUN = function(x, data)
+        sum(data == x), integer(1), dataset[nrow(dataset),]
+    )
+  names(tabla) <- classNames
+  tabla
+}
+
+
+
+#' S3 function to summary a keel object
+#' 
+#' Summary relevant data of a \code{keel} dataset.
+#' 
+#' @param object A \code{keel} class.
+#' @param ... Additional arguments to the summary function.
+#' 
+#' @details This function show important information about the \code{keel} dataset for the user. Note that it does not 
+#' show all the information available. The rest is only for the algorithms. The values that appear are accesible by the
+#' \code{$} operator, e.g. dataset$relation or dataset$examplesPerClass.
+#' 
+#'@examples 
+#'  
+#'summary(carTra) 
+#' 
+#'@export
+summary.keel <- function(object, ...){
+  cat(paste("Summary of the keel object: '", substitute(object),"'", sep = ""),
+      paste("\t- relation:", object$relation),
+      paste("\t- nVars:", object$nVars),
+      paste("\t- Ns:", object$Ns),
+      paste("\t- attributeNames:", paste(object$atributeNames, collapse = ", ")),
+      paste("\t- class_names:", paste(object$class_names, collapse = ", ")),
+      paste("\t- examplesPerClass:" ,paste(unlist(object$examplesPerClass), collapse = ", "))
+      , sep = "\n")
+}
+
+
+
+#'  S3 function to print in console the contents of the dataset
+#'  
+#'  This function shows the matrix of data uncoded.
+#'  
+#'  @param x The \code{keel} object to view
+#'  @param ... Additional arguments passed to the print function
+#'  
+#'  @details This function show the matix of data. Internally, a \code{keel} object has a list of of examples
+#'  and this examples are coded numerically. This function decode these examples and convert the list into a matrix.
+#'  
+#'  @return a matrix with the dataset uncoded.
+#'  
+#' @export
+print.keel <- function(x, ...){
+  data <- lapply(x$data,
+                 function(x, categoricos)
+                   vapply(seq_len(length(x)), function(i, ejemplo, cateValues){
+                     if(is.na(cateValues[[i]][1])){
+                       as.character(ejemplo[i])
+                     } else{
+                       cateValues[[i]][ejemplo[i] + 1]
+                     }
+                   }, character(1), x, categoricos)
+                 
+                 , x$categoricalValues
+                 
+  )
+  
+  print(matrix(data = unlist(data), ncol = x$nVars + 1, byrow = TRUE, dimnames = list(NULL,x$atributeNames)), ...)
+}

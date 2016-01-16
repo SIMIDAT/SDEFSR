@@ -11,7 +11,12 @@
 #------------------------------------------------------------------------
 
 .coverage <- function(x){
-  x[[1]] / x[[4]]
+  c <- x[[1]] / x[[4]]
+  if(is.nan(c)){
+    0
+  } else {
+    c
+  }
 }
 
 
@@ -118,15 +123,19 @@
 
 .significance <- function(x){
   cove <- .coverage(x = x)
-  
-  SumsingClase <- 0
-  for(i in 1:length(x[[6]])){
-    if(x[[6]][i] > 0){
-      SumsingClase <- SumsingClase + x[[6]][i] * log10(x = (x[[6]][i] / (x[[7]][[i]] * cove)  ))
+  if(cove > 0){
+    SumsingClase <- 0
+    for(i in 1:length(x[[6]])){
+      if(x[[6]][i] > 0 && x[[7]][i] > 0){
+        SumsingClase <- SumsingClase + x[[6]][i] * log10(x = (x[[6]][i] / (x[[7]][[i]] * cove)  ))
+      }
     }
-  }
+    
+    2 * SumsingClase
   
-  2 * SumsingClase
+  } else {
+    0
+  }
 }
 
 

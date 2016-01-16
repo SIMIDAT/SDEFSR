@@ -1,26 +1,15 @@
 Rule 1 :
-	 - N_vars: 2
-	 - Coverage: 0.016129
-	 - Significance: 0.278358
-	 - Unusualness: -0.00026
-	 - Accuracy: 0.333333
-	 - CSupport: 0
-	 - FSupport: 0.005583
-	 - CConfidence: 0
-	 - FConfidence: 0.272727 
-
-Rule 2 :
-	 - N_vars: 3
+	 - N_vars: 4
 	 - Coverage: 0
 	 - Significance: 0
 	 - Unusualness: 0
 	 - Accuracy: 0.5
 	 - CSupport: 0
-	 - FSupport: 0.00592
+	 - FSupport: 0.002481
 	 - CConfidence: 0
-	 - FConfidence: 0.15253 
+	 - FConfidence: 0.070144 
 
-Rule 3 :
+Rule 2 :
 	 - N_vars: 2
 	 - Coverage: 0.903226
 	 - Significance: 0.223676
@@ -31,14 +20,25 @@ Rule 3 :
 	 - CConfidence: 0.232143
 	 - FConfidence: 0.218818 
 
+Rule 3 :
+	 - N_vars: 3
+	 - Coverage: 0
+	 - Significance: 0
+	 - Unusualness: 0
+	 - Accuracy: 0.5
+	 - CSupport: 0
+	 - FSupport: 0.004399
+	 - CConfidence: 0
+	 - FConfidence: 0.639344 
+
 Global:
 	 - N_rules: 3
-	 - N_vars: 2.333333
-	 - Coverage: 0.306452
-	 - Significance: 0.167345
-	 - Unusualness: -0.007891
-	 - Accuracy: 0.358237
+	 - N_vars: 3
+	 - Coverage: 0.301075
+	 - Significance: 0.074559
+	 - Unusualness: -0.007804
+	 - Accuracy: 0.413793
 	 - CSupport: 0.209677
-	 - FSupport: 0.065869
-	 - FConfidence: 0.214692
+	 - FSupport: 0.064328
+	 - FConfidence: 0.309435
 	 - CConfidence: 0.077381
