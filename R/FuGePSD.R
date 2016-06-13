@@ -24,13 +24,13 @@
 #' @param tnorm The T-norm to use: 0 -> minimum T-norm, 1 -> product T-norm
 #' @param tconorm The T-conorm to use: 0 -> maximum T-conorm, 1 -> Probabilistic sum t-conorm
 #' @param rule_weight The Rule Weighting method: 0 -> Wining Rule, 1 -> Normalized sum, 2 -> Arithmetic mean
-#' @param clase Integer specifying the creation of a rule for the given class number. By default \code{'NULL'}, makes a rule with a random class in the consecuent.
+#' @param class Integer specifying the creation of a rule for the given class number. By default \code{'NULL'}, makes a rule with a random class in the consecuent.
 #' 
 #' @return  A new \code{'Rule'} object
 #' 
-createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
+createNewRule <- function(dataset, tnorm, tconorm, rule_weight, class = NULL ){
   
-   regla <- structure( list(antecedent = list(),                 # Antecedent part of the rule
+   rule <- structure( list(antecedent = list(),                 # Antecedent part of the rule
                               clas = integer(1),                 # Consecuent
                               weight = numeric(1),               # Weight associated with the rule
                               raw_fitness = numeric(1),          # Raw Fitness associated to the rule
@@ -62,24 +62,24 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
    # Select Randomly variables of the dataset to create the antecedent (maximum 50 % of the variables are selected)
   numVarsOfRule <- ceiling(.randIntClosed(1,dataset$nVars) * 0.5)
   variables <- sample(dataset$nVars, numVarsOfRule)
-  regla$antecedent <- lapply(variables, .createNewFuzzyAntecedent, dataset)
+  rule$antecedent <- lapply(variables, .createNewFuzzyAntecedent, dataset)
   
   
   # Fill the rest of the data.
-  regla$t_norm <- tnorm
-  regla$t_conorm <- tconorm
-  regla$ruleWeight <- rule_weight
-  regla$level = 1L
+  rule$t_norm <- tnorm
+  rule$t_conorm <- tconorm
+  rule$ruleWeight <- rule_weight
+  rule$level = 1L
   
-  if(is.null(clase))
-    regla$clas <- sample(0:(length(dataset$class_names) - 1), 1)
+  if(is.null(class))
+    rule$clas <- sample(0:(length(dataset$class_names) - 1), 1)
   else
-    if(length(dataset$class_names) - 1 <= clase & clase >= 0)
-      regla$clas <- clase
+    if(length(dataset$class_names) - 1 <= class & class >= 0)
+      rule$clas <- class
     else
-      stop("Error when creating a new Rule: 'clase' is greater than te number of classes or is less than zero.")
+      stop("Error when creating a new Rule: 'class' is greater than te number of classes or is less than zero.")
   #Return 
-  regla
+  rule
 }
 
 
@@ -385,7 +385,7 @@ Rule.addVariable <- function(rule, dataset){
         correctly_matching_examples <- integer(1)
         
         #Get compatibility
-        perts <- .fitnessFuGePSD(regla = Rule.toCANVectorRepresentation(rule, dataset), 
+        perts <- .fitnessFuGePSD(rule = Rule.toCANVectorRepresentation(rule, dataset), 
                                  dataset = dataset, 
                                  noClass = data,
                                  nLabels = dim(dataset$fuzzySets)[1], 
@@ -1149,12 +1149,12 @@ writeRuleFile <- function(pop, dataset, fileName){
   sumVars <- 0
   numRules <- length(pop)
   
-  for(regla in pop){
+  for(rule in pop){
      #Make the human-readable rule representation
-     ruleRep <- sapply(regla$antecedent, function(x){paste(x$labels[[1]]$name, " IS L_", x$labels[[1]]$value, sep = "")})
+     ruleRep <- sapply(rule$antecedent, function(x){paste(x$labels[[1]]$name, " IS L_", x$labels[[1]]$value, sep = "")})
      ruleRep <- paste(ruleRep, collapse = " AND ")
-     RulesLine <- paste(RulesLine, contador,": IF ", ruleRep, " THEN ", dataset$class_names[regla$clas + 1], " with Rule Weight: ", regla$ruleWeight, "\n", sep = "")
-     sumVars <- sumVars + length(regla$antecedent)
+     RulesLine <- paste(RulesLine, contador,": IF ", ruleRep, " THEN ", dataset$class_names[rule$clas + 1], " with Rule Weight: ", rule$ruleWeight, "\n", sep = "")
+     sumVars <- sumVars + length(rule$antecedent)
      contador <- contador + 1
   }
   
@@ -1190,27 +1190,27 @@ writeTestQMFile <- function(pop, fileName, numExamples){
   nRules <- length(pop)
   contador <- 1
   Salida <- ""
-  for(regla in pop){
-    sum_nVars <- sum_nVars + length(regla$antecedent)
-    sum_Cov <- sum_Cov + regla$qm_Cov
-    sum_Sig <- sum_Sig + regla$qm_Sig
-    sum_Unus <- sum_Unus + regla$qm_Unus
-    sum_Sens <- sum_Sens + regla$qm_Sens
-    sum_ConfN <- sum_ConfN + regla$qm_Cnf_n
-    sum_ConfF <- sum_ConfF + regla$qm_Cnf_f
+  for(rule in pop){
+    sum_nVars <- sum_nVars + length(rule$antecedent)
+    sum_Cov <- sum_Cov + rule$qm_Cov
+    sum_Sig <- sum_Sig + rule$qm_Sig
+    sum_Unus <- sum_Unus + rule$qm_Unus
+    sum_Sens <- sum_Sens + rule$qm_Sens
+    sum_ConfN <- sum_ConfN + rule$qm_Cnf_n
+    sum_ConfF <- sum_ConfF + rule$qm_Cnf_f
     
-    tokens[which(regla$tokens)] <- TRUE
+    tokens[which(rule$tokens)] <- TRUE
     
    #Rule QM
    Salida <-  paste(Salida, paste("Rule ", contador, ":", sep = ""),
-         paste("\t - N_vars:", length(regla$antecedent), sep = " "),
-         paste("\t - Coverage:", round(regla$qm_Cov, 6), sep = " "),
-         paste("\t - Significance:", round(regla$qm_Sig, 6), sep = " "),
-         paste("\t - Unusualness:", round(regla$qm_Unus, 6), sep = " "),
-         paste("\t - Sensitivity:", round(regla$qm_Sens, 6), sep = " "),
-         paste("\t - Support:", round(regla$qm_Sup, 6), sep = " "),
-         paste("\t - FConfidence:", round(regla$qm_Cnf_f,6), sep = " "),
-         paste("\t - CConfidence:", round(regla$qm_Cnf_n, 6), sep = " "),
+         paste("\t - N_vars:", length(rule$antecedent), sep = " "),
+         paste("\t - Coverage:", round(rule$qm_Cov, 6), sep = " "),
+         paste("\t - Significance:", round(rule$qm_Sig, 6), sep = " "),
+         paste("\t - Unusualness:", round(rule$qm_Unus, 6), sep = " "),
+         paste("\t - Sensitivity:", round(rule$qm_Sens, 6), sep = " "),
+         paste("\t - Support:", round(rule$qm_Sup, 6), sep = " "),
+         paste("\t - FConfidence:", round(rule$qm_Cnf_f,6), sep = " "),
+         paste("\t - CConfidence:", round(rule$qm_Cnf_n, 6), sep = " "),
          sep = "\n"
     )
    contador <- contador + 1

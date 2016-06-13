@@ -54,35 +54,36 @@ read.keel <- function(file) {
     properties <- data[1:value]
     data <- data[(value + 2):length(data)]
     
-    # Preparacion de las propiedades de los datos
+    # Get the data properties (value ranges, type, etc.)
     
     properties <- lapply(X = properties, FUN = .preprocessHeader)
     
     num_atribs <-
-      length(properties) - 3 # Obviamos valor de @relation, @inputs y @outputs
+      length(properties) - 3 # @relation, @inputs and @outputs fields are ignored
     atribs_names <- character(num_atribs)
     atribs_types <- character(num_atribs)
     atribs_min <- numeric(num_atribs)
     atribs_max <- numeric(num_atribs)
     categorical_values <- vector(mode = "list", length = num_atribs)
     
-    #Procesamos @relation
-    relation_pos <- grep(pattern = "@relation", x = properties, fixed = TRUE) #NOTA: Es mejor usar pmatch ! 77x faster!
+    #Process @relation
+    relation_pos <- grep(pattern = "@relation", x = properties, fixed = TRUE) #NOTE: It is better use pmatch in this line! Is 77x faster!
     if (length(relation_pos) == 0)
       stop("No '@relation' field provided, this is not a KEEL format dataset. Aborting load... ")
-    relacion <- properties[[relation_pos]][2]
+    relation <- properties[[relation_pos]][2]
     
-    #Procesamos el resto de atributos
-    atributes <- properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
+    #Process the rest of attributes
+    attributes <- properties[-c(relation_pos, grep(pattern = "@inputs|@output", x = properties))]
     aux <- vector(mode = "list", length = 5)
     
-    if (length(atributes) == 0)
+    if (length(attributes) == 0)
       stop(
         "No '@input' or '@output' fields found, this is not a KEEL format dataset. Aborting load..."
       )
     
-    for (i in seq_len(length(atributes))) {
-      aux <- .processLine(line = atributes[[i]])
+    # To process an attribute line we use the function .processLine which gets, name, type (categorical or real) and range of a variable
+    for (i in seq_len(length(attributes))) {
+      aux <- .processLine(line = attributes[[i]])
       
       atribs_names[i] <- aux[[1]]
       atribs_types[i] <- aux[[2]]
@@ -92,11 +93,12 @@ read.keel <- function(file) {
     }
     
     
-    #Preparacion de los datos
+    #Data preparation
     if (Sys.info()[1] != "Windows")
-      data <-
+  
+      data <-  
       parallel::mclapply(
-        X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1
+        X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1 # -1 to prevent system hang up until the task finish
       )
     else
       #In windows mclapply doesnt work
@@ -106,13 +108,13 @@ read.keel <- function(file) {
       )
     
     
-    #Preparacion del resto de atributos del dataset
+    #Prepare the rest of attributes of the keel object
     
-    covered <- NA
+    covered <- NA  
     fuzzySets <- NA
     crispSets <- NA
     classNames <- categorical_values[[length(categorical_values)]]
-    clValues <- unlist(lapply(data, '[', length(atributes)))
+    clValues <- unlist(lapply(data, '[', length(attributes)))
     examplesPerClass <-
       lapply(
         X = seq_len(length(classNames)) - 1, FUN = function(x, data)
@@ -120,27 +122,28 @@ read.keel <- function(file) {
       )
     names(examplesPerClass) <- classNames
     
-    conjuntos <- NA
+    sets <- NA
     
-    lostData <- FALSE #Quitar esto
+    lostData <- FALSE 
     
+    # Creation of the keel object as a list
     lista <- list(
-      relation = relacion,
-      atributeNames = atribs_names,
-      atributeTypes = atribs_types,
-      min = atribs_min,
-      max = atribs_max,
-      nVars = length(atribs_min) - 1,
-      data = data,
-      class_names = classNames,
-      examplesPerClass = examplesPerClass,
-      lostData = lostData,
-      covered = covered,
-      fuzzySets = fuzzySets,
-      crispSets = crispSets,
-      conjuntos = conjuntos,
-      categoricalValues = categorical_values,
-      Ns = length(data)
+      relation = relation,                    # Relation name
+      attributeNames = atribs_names,          # Names of the attributes
+      attributeTypes = atribs_types,          # Types of attributes (real, integer or categorical)
+      min = atribs_min,                       # Min value for real attributes
+      max = atribs_max,                       # Max value for real attributes
+      nVars = length(atribs_min) - 1,         # Number of variables
+      data = data,                            # The processed data
+      class_names = classNames,               # Names of the values of the target variable
+      examplesPerClass = examplesPerClass,    # Number of examples per value of the target variable
+      lostData = lostData,                    # Boolean that indicate the presence or ausence of lost data (unnecessary)
+      covered = covered,                      # Indicate which examples are covered
+      fuzzySets = fuzzySets,                  # The fuzzy sets definitions
+      crispSets = crispSets,                  # The crisp sets definitions
+      sets = sets,                            # The number of sets per variable (for categorical variables indicates the number of different values)
+      categoricalValues = categorical_values, # The different values for categorical attributes
+      Ns = length(data)                       # Number of examples
     )
     
     
@@ -168,7 +171,7 @@ read.keel <- function(file) {
   data <- strsplit(x = data, split = " = ")
   
   
-  #Mirar posicion de los parametros
+  #look at parameter's position and get it
   alg <- grep(pattern = "algorithm", x = data, fixed = TRUE)
   iData <- grep(pattern = "inputData", x = data, fixed = TRUE)
   oData <- grep(pattern = "outputData", x = data, fixed = TRUE)
@@ -180,10 +183,10 @@ read.keel <- function(file) {
   mut <- grep(pattern = "mutProb", x = data, fixed = TRUE)
   rep <- grep(pattern = "RulesRep", x = data, fixed = TRUE)
   tC <- grep(pattern = "targetClass", x = data, fixed = TRUE)
-  #MESDIF Parametros
+  #MESDIF Parameters
   elit <- grep(pattern = "eliteLength", x = data, fixed = TRUE)
   ech <- grep(pattern = "echo", x = data, fixed = TRUE)
-  #SDIGA Parametros
+  #SDIGA Parameters
   ob1 <- grep(pattern = "Obj1", x = data, fixed = TRUE)
   ob2 <- grep(pattern = "Obj2", x = data, fixed = TRUE)
   ob3 <- grep(pattern = "Obj3", x = data, fixed = TRUE)
@@ -193,13 +196,13 @@ read.keel <- function(file) {
   w3 <- grep(pattern = "w3", x = data, fixed = TRUE)
   search <- grep(pattern = "lSearch", x = data, fixed = TRUE)
   miConf <- grep(pattern = "minConf", x = data, fixed = TRUE)
-  #NMEEF-SD Parametros
+  #NMEEF-SD Parameters
   div <- grep(pattern = "diversity", x = data, fixed = TRUE)
   rInit <- grep(pattern = "ReInitCob", x = data, fixed = TRUE)
   pCob <- grep(pattern = "porcCob", x = data, fixed = TRUE)
   dom <- grep(pattern = "StrictDominance", x = data, fixed = TRUE)
   miCf <- grep(pattern = "minCnf", x = data, fixed = TRUE)
-  #FuGePSD Parametros
+  #FuGePSD Parameters
   nLabels <- grep(pattern = "Number of Labels", x = data, fixed = TRUE)
   tnorm <- grep(pattern = "T-norm/T-conorm for the Computation of the Compatibility Degree", x = data, fixed = TRUE)
   ruleWeight <- grep(pattern = "Rule Weight", x = data, fixed = TRUE)
@@ -220,7 +223,7 @@ read.keel <- function(file) {
   
   if (length(alg) == 0)
     stop("Param file error: 'algorithm' not especified. ")
-  algoritmo <- data[[alg]][2]
+  algorithm <- data[[alg]][2]  
   if (length(iData) == 0)
     stop("Param file error: 'inputData' not especified. ")
   if (length(oData) == 0)
@@ -228,7 +231,7 @@ read.keel <- function(file) {
   if (length(seed) == 0)
     stop("Param file error: 'seed' not especified. ")
   
-  if(any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD"))){
+  if(any(algorithm == c("SDIGA", "MESDIF", "NMEEFSD"))){
     if (length(labels) == 0)
       stop("Param file error: 'nLabels' not especified. ")
     if (length(evals) == 0)
@@ -246,12 +249,13 @@ read.keel <- function(file) {
   if (length(tC) == 0)
     stop("Param file error: 'targetClass' not especified. ")
 
-  if (!any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD", "FUGEPSD")))
+  if (!any(algorithm == c("SDIGA", "MESDIF", "NMEEFSD", "FUGEPSD")))
     stop("Param file error: 'Algorithm' must be \"SDIGA\", \"MESDIF\", \"NMEEFSD\" or \"FUGEPSD\"  ")
   
-  #General parameters
-  #datos de entrada
-  input_data <- character(2) # Dos inputs, training y tes
+  # Now, parse the parameters
+  # Get general parameters
+  # input data
+  input_data <- character(2) # Two inputs, training and test
   
   input_string <-
     gsub(
@@ -260,7 +264,7 @@ read.keel <- function(file) {
   input_data <-
     strsplit(x = input_string, split = " ", fixed = TRUE)[[1]]
   
-  output_data <- character(4) # Reglas, tra_qua, tra_seg y tst_quac
+  output_data <- character(4) # Rules, tra_qua, tra_seg y tst_quac
   
   input_string <-
     gsub(
@@ -269,13 +273,15 @@ read.keel <- function(file) {
   output_data <-
     strsplit(x = input_string, split = " ", fixed = TRUE)[[1]]
   
+  # 'semilla' is 'seed' in spanish
   semilla <- as.integer(data[[seed]][2])
   
-  if(length(input_data) > 2){ #If the are more than 2 input files we warning the user.
+  if(length(input_data) > 2){ #If the are more than 2 input files we warn the user.
     warning("More than two input files have been specified. Only the first two will be used !")
   }
   
-  if(any(algoritmo == c("SDIGA", "MESDIF", "NMEEFSD"))){
+  # Parse parameters that are specific for SDIGA, MESDIF or NMEEFSD
+  if(any(algorithm == c("SDIGA", "MESDIF", "NMEEFSD"))){
     n_intervals <- as.integer (data[[labels]][2])
     n_evals <- as.integer (data[[evals]][2])
     popLenght <- as.integer(data[[len]][2])
@@ -284,13 +290,14 @@ read.keel <- function(file) {
     rule_type <- data[[rep]][2]
   }
   
+  # Catch target variable and value, this is represented in the file as 'Variable -> value'
   target <- strsplit(data[[tC]][2], "[[:blank:]]*->[[:blank:]]*")[[1]]
   if(length(target) < 2){
     target <- c(NA, target)
   }
   
   #SDIGA own parameters
-  if (algoritmo == "SDIGA") {
+  if (algorithm == "SDIGA") {
     if (length(miConf) == 0)
       stop("Param file error: 'minConf' not specified.")
     if (length(ob1) == 0)
@@ -319,15 +326,16 @@ read.keel <- function(file) {
     peso3 <- as.double(data[[w3]][2])
     local_search <- data[[search]][2]
     
+    # Make the list with the paremeters
     lista <-
       list(
-        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, minConf = minimun_confidence, RulesRep = rule_type, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, w1 = peso1, w2 = peso2, w3 = peso3, lSearch = local_search, targetClass = target[2], targetVariable = target[1]
+        algorithm = algorithm, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, minConf = minimun_confidence, RulesRep = rule_type, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, w1 = peso1, w2 = peso2, w3 = peso3, lSearch = local_search, targetClass = target[2], targetVariable = target[1]
       )
     
   }
   
   #MESDIF own parameters
-  if (algoritmo == "MESDIF") {
+  if (algorithm == "MESDIF") {
     if (length(elit) == 0)
       stop("Param file error: 'elitePop' not specified.")
     if (length(ech) == 0)
@@ -353,16 +361,16 @@ read.keel <- function(file) {
     Obj3 <- data[[ob3]][2]
     Obj4 <- data[[ob4]][2]
     
-    
+    # Make the list with the paremeters
     lista <-
       list(
-        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target[2], elitePop = elite, echo = echo, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, Obj4 = Obj4, targetVariable = target[1]
+        algorithm = algorithm, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target[2], elitePop = elite, echo = echo, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, Obj4 = Obj4, targetVariable = target[1]
       )
     
   }
   
   #NMEEF-SD own parameters
-  if (algoritmo == "NMEEFSD") {
+  if (algorithm == "NMEEFSD") {
     #if(length(div) == 0) stop("Param file error: 'diversity' not specified.")
     if (length(rInit) == 0)
       stop("Param file error: 'ReInitCob' not specified.")
@@ -382,16 +390,17 @@ read.keel <- function(file) {
     Obj2 <- data[[ob2]][2]
     Obj3 <- data[[ob3]][2]
     
+    # Make the list with the paremeters
     lista <-
       list(
-        algorithm = algoritmo, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target[2], StrictDominance = dominance, diversity = diversity, porcCob = porcCob, reInitPob = reInit, minConf = minConf, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, targetVariable = target[1]
+        algorithm = algorithm, inputData = input_data, outputData = output_data, seed = semilla, nLabels = n_intervals, nEval = n_evals, popLength = popLenght, crossProb = crossProb, mutProb = prob_mutacion, RulesRep = rule_type, targetClass = target[2], StrictDominance = dominance, diversity = diversity, porcCob = porcCob, reInitPob = reInit, minConf = minConf, Obj1 = Obj1, Obj2 = Obj2, Obj3 = Obj3, targetVariable = target[1]
       )
     
   }
   
   
   #FuGePSD Own Parameters
-  if(algoritmo == "FUGEPSD"){
+  if(algorithm == "FUGEPSD"){
     if(length(nLabels) == 0)
       stop("'Number of Labels' not specified.")
     if(length(tnorm) == 0)
@@ -425,8 +434,8 @@ read.keel <- function(file) {
     if(length(allClass) == 0)
       stop("'All Class' not specified.")
   
-    
-    lista <- list(algorithm = algoritmo, 
+    # Make the list with the paremeters
+    lista <- list(algorithm = algorithm, 
                   inputData = input_data, 
                   outputData = output_data, 
                   seed = semilla, 
@@ -587,21 +596,23 @@ read.keel <- function(file) {
 }
 
 
-#
-#@name .dameConjuntos
-#@description Devuelve el numero de conjuntos (difusos o no) en funci?n del tipo de par?metro.
-#   Si son datos continuos da como resultado el numero de conjuntos difusos.
-#   En caso de ser categoricos devolvera el numero de categorias
-#
+#'
+#' @name .giveMeSets
+#' @description Return the number of sets (fuzzy or not) depending on the type of the variable
+#' If there is a real variable the result is the number of fuzzy sets.
+#' If the variable is categorical, it return the number of categories.
+#' 
+#' @return A vector with the specified information
+#' 
 
 
-.dameConjuntos <- function(data_types, max, n_labels) {
+.giveMeSets <- function(data_types, max, n_labels) {
   data_types <- data_types[-length(data_types)]
-  
+  # Split into categorical attributes and real ones. They have a different processing
   salida <- numeric(length(data_types))
   cat <- which(data_types == 'c')
   if (length(cat > 0)) {
-    #Si no hay datos categoricos, todos tienen el valor de n_labels
+    #If there are no categorical data, all has the 'n_labels' value
     salida[cat] <- max[cat]
     salida[-cat] <- n_labels
   } else {
@@ -1221,7 +1232,7 @@ keelFromARFF <- function(file){
   crispSets <- NA
   
   #Conjuntos
-  conjuntos <- NA
+  sets <- NA
   
   
   #DATA
@@ -1252,7 +1263,7 @@ keelFromARFF <- function(file){
     covered = covered,
     fuzzySets = fuzzySets,
     crispSets = crispSets,
-    conjuntos = conjuntos,
+    sets = sets,
     categoricalValues = longitud_categoricos,
     Ns = Ns
   )
@@ -1376,8 +1387,8 @@ keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = N
   crispSets <- NA
   
   #Conjuntos
-  conjuntos <-
-    .dameConjuntos(data_types = types, max = max, n_labels = nLabels)
+  sets <-
+    .giveMeSets(data_types = types, max = max, n_labels = nLabels)
   
   #DATA
   if(Ns > 150){
@@ -1412,7 +1423,7 @@ keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = N
     covered = covered,
     fuzzySets = fuzzySets,
     crispSets = crispSets,
-    conjuntos = conjuntos,
+    sets = sets,
     categoricalValues = categoricalValues,
     Ns = Ns
   )
