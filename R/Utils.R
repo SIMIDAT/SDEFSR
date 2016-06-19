@@ -1,7 +1,7 @@
 #
 #
 #   THIS FILE CONTAINS SOME FUNCTIONS FOR DOING SOME STUFF INSIDE THE PACKAGE.
-#   THIS MEANS THAT THE FUNCTIONS USED HERE MUST NOT BE EXPORTED. (EXCEPT ONE)
+#   THIS MEANS THAT THE FUNCTIONS USED HERE MUST NOT BE EXPORTED. (EXCEPT SDR_GUI(), print.keel() and summary.keel())
 #
 #
 
@@ -18,7 +18,7 @@
 #' The rules passed to this functions MUST have a vector representation in CANONICA form. This function
 #' was made for being used mainly for the FuGePSD algorithm. 
 #' 
-#' @param ejemplo The instances of the dataset, a matrix with one example PER COLUMN and without the CLASS ATTRIBUTE.
+#' @param example The instances of the dataset, a matrix with one example PER COLUMN and without the CLASS ATTRIBUTE.
 #' @param rule_cat Part of the rule with the categorical values.
 #' @param rule_num Part of the rule with the numerical values.
 #' @param catParticip vector indicating which categorical attributes participate in the rule and so, they must be evaluated.
@@ -33,14 +33,14 @@
 #' 
 #' @return A vector with length 'number of examples' indicating their compatibility degree.
 #' 
-Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices,max_cat, max_num, t_norm){
-  dispFuzzy <- numeric(NCOL(ejemplo)) + 1
+Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices, max_cat, max_num, t_norm){
+  dispFuzzy <- numeric(NCOL(example)) + 1
   
   #Computation of membership degree.
   
   #Categorical variables.
   if(length(catParticip > 0)){
-    ej_cat <- as.integer( ejemplo[catParticip,] )
+    ej_cat <- as.integer( example[catParticip,] )
     values <-  ceiling( ( which(ej_cat != rule_cat & ! (ej_cat == max_cat + 1 )) / (length(catParticip)) ) ) 
     #Examples no compatibles
     dispFuzzy[values] <- 0L
@@ -49,16 +49,16 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
   
   #Numerical Values 
   if(length(numParticip) > 0){
-    ej_num <- as.vector( ejemplo[numParticip, which(dispFuzzy > 0) ] )
+    ej_num <- as.vector( example[numParticip, which(dispFuzzy > 0) ] )
     
     #Fuzzy computation
     #Computes compatibility degree of every value of the whole dataset with the rule
-    pertenencia <- .grado_pertenencia5(x = ej_num, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices)
+    belongingDegree <- .fuzzyBelongingDegree(x = ej_num, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices)
     
     if(t_norm == 0) { # MINIMUM T-NORM 
-      dispFuzzy[which(dispFuzzy > 0)] <- apply(X = pertenencia, MARGIN = 1, FUN = min)
+      dispFuzzy[which(dispFuzzy > 0)] <- apply(X = belongingDegree, MARGIN = 1, FUN = min)
     } else { # PRODUCT T-NORM
-      dispFuzzy[which(dispFuzzy > 0)] <- apply(X = pertenencia, MARGIN = 1, FUN = prod)
+      dispFuzzy[which(dispFuzzy > 0)] <- apply(X = belongingDegree, MARGIN = 1, FUN = prod)
     }
   }
   
@@ -76,25 +76,22 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 #   Gets the membership degree of all examples in the dataset over a single rule. (Use with lapply)
 #
 #     ONLY FOR CAN RULES
-# ejemplo es una matriz despues de usar .separar
+# example is a matrix after the use of .separate
 # rule_cat is the categorcal variables that participate in the rule
 # rule_num is the numerical variables that participate in the rule
 # catParticip and numParticip are logical vectors for tell the function which rules of each type participe in the rule
 # xmin, xmax, xmedio and xminCrisp and xmaxCrisp are the vectors with the fuzzy and crisp definition of the variables that participa in the rule
 # max_cat is a vector the maximum value for categorical values and max_num is the same but for numerical variables.
 
-.compara_CAN9 <- function(ejemplo, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices, xminCrisp, xmaxCrisp, max_cat){
-  dispFuzzy <- numeric(NCOL(ejemplo)) + 1
-  dispCrisp <- integer(NCOL(ejemplo)) + 1L
-  
-  
-  
+.compareCAN <- function(example, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices, xminCrisp, xmaxCrisp, max_cat){
+  dispFuzzy <- numeric(NCOL(example)) + 1
+  dispCrisp <- integer(NCOL(example)) + 1L
   
   #Computation of membership degree.
   
   #Categorical variables.
   if(length(catParticip > 0)){
-    ej_cat <- as.integer( ejemplo[catParticip,] )
+    ej_cat <- as.integer( example[catParticip,] )
     values <-  ceiling( ( which(ej_cat != rule_cat & ! (ej_cat == max_cat + 1 )) / (length(catParticip)) ) ) 
     #Examples no compatibles
     dispFuzzy[values] <- 0L
@@ -104,14 +101,14 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
   
   #Numerical Values 
   if(length(numParticip) > 0){
-    ej_num <- as.vector( ejemplo[numParticip, which(dispFuzzy > 0) ] )
+    ej_num <- as.vector( example[numParticip, which(dispFuzzy > 0) ] )
     #Fuzzy computation
-    pertenencia <- .grado_pertenencia5(x = ej_num, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices)
-    dispFuzzy[which(dispFuzzy > 0)] <- apply(X = pertenencia, MARGIN = 1, FUN = min)
+    belongingDegree <- .fuzzyBelongingDegree(x = ej_num, xmin = xmin, xmedio = xmedio, xmax = xmax, n_matrices = n_matrices)
+    dispFuzzy[which(dispFuzzy > 0)] <- apply(X = belongingDegree, MARGIN = 1, FUN = min)
     
     #Crisp Computation
-    pertenencia <- .gradoPertenenciaCrisp2(x = ej_num, xmin = xminCrisp, xmax = xmaxCrisp)
-    dispCrisp[which(dispCrisp > 0)] <- apply(X = pertenencia, MARGIN = 1, FUN = min)
+    belongingDegree <- .crispBelongingDegree(x = ej_num, xmin = xminCrisp, xmax = xmaxCrisp)
+    dispCrisp[which(dispCrisp > 0)] <- apply(X = belongingDegree, MARGIN = 1, FUN = min)
     
   }
   
@@ -123,26 +120,26 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 #
 #
 #
-# It works similar to compara_CAN9 but for DNF rules.
+# It works similar to compareCAN but for DNF rules.
 #
 
-.comparaDNF4 <- function(ejemplo,  regla, regla_num, cat_particip, num_particip, max_regla_cat, max_regla_num, nLabels, fuzzySets, crispSet, valuesFuzzy, valuesCrisp){
-  ejemplo_cat <- as.vector( ejemplo[cat_particip, ] )
+.compareDNF4 <- function(example,  rule, rule_num, cat_particip, num_particip, max_rule_cat, max_rule_num, nLabels, fuzzySets, crispSet, valuesFuzzy, valuesCrisp){
+  ejemplo_cat <- as.vector( example[cat_particip, ] )
   
-  dispFuzzy <- numeric(NCOL(ejemplo)) + 1
-  dispCrisp <- numeric(NCOL(ejemplo)) + 1
-  #No salen los mismo resultados a?n.
+  dispFuzzy <- numeric(NCOL(example)) + 1
+  dispCrisp <- numeric(NCOL(example)) + 1
+
   if(length(ejemplo_cat > 0)){  
-    valCat <- (max_regla_cat + 1) + ejemplo_cat
+    valCat <- (max_rule_cat + 1) + ejemplo_cat
     
     #Categorical Values
-    fuera <- unique( ceiling(which(regla[valCat] == 0) / length(max_regla_cat)) )
+    fuera <- unique( ceiling(which(rule[valCat] == 0) / length(max_rule_cat)) )
     
     dispFuzzy[fuera] <- 0
     dispCrisp[fuera] <- 0
   }
   
-  ejemplo_num <- ejemplo[num_particip, which(dispFuzzy > 0), drop = F] 
+  ejemplo_num <- example[num_particip, which(dispFuzzy > 0), drop = F] 
   
   #Numerical Values
   if(length(ejemplo_num) > 0){
@@ -163,100 +160,97 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 #   RETURN THE VALUES FOR CALCULATE THE QUALITY MEASURES
 #
 # - Return:
-# -  [[1]] n(cond)  -> Ejemplos cubiertos por la regla
-# -  [[2]] n(Tv ? cond) -> ejemplos cubiertos que cumplen el consecuente
-# -  [[3]] FP -> Ejemplos que cumplen el antecedente pero no el consecuente (Falsos positivos)
-# -  [[4]] Ns -> Numero de ejemplos en el dataset
-# -  [[5]] n(TargetValue) -> numero de ejemplos que cumplen el consecuente
-# -  [[6]] numero de ejemplos cubiertos de cada clase
-# -  [[7]] numero de ejemplos de cada clase
-# -  [[8]] ejemplos correctamente cubiertos que son nuevos
-# -  [[9]] ejemplos de la clase objetivo que quedan por cubrir
-# -  [[10]] suma difusa de los ejemplos cubiertos
-# -  [[11]] suma difusa de los ejemplos correctamente cubiertos
-# -  [[12]] suma difusa de los ejemplos nuevos correctamente cubiertos
+# -  [[1]] n(cond)  -> Examples covered by the rule
+# -  [[2]] n(Tv ? cond) -> Covered examples that match the consecuent of the rule
+# -  [[3]] FP -> Exmaples that match the antecedent but not the consecuent (False positives)
+# -  [[4]] Ns -> Number of examples in the dataset
+# -  [[5]] n(TargetValue) -> number of examples that match the consecuent
+# -  [[6]] number of examples covered for each class
+# -  [[7]] number of examples for each class
+# -  [[8]] new correctly covered examples
+# -  [[9]] number of examples of the target class that are uncovered
+# -  [[10]] Fuzzy sum of belonging degree of the examples covered
+# -  [[11]] Fuzzy sum of the belonging degree of correctly covered examples
+# -  [[12]] Fuzzy sum of the belonging degree of new correctle covered examples
 # 
 # ---------------------------------------------------------------
 
 
-.get_values6 <- function(gr_perts, nombre_clases, dataset, targetClass, examples_perClass, cov, Ns, N_vars , por_cubrir, marcar = FALSE, test = FALSE, difuso = FALSE, NMEEF = FALSE){
-  #Esto no es lo mejor, habr?a que buscar otra manera de utilizar la lista directamente
-  dataset <- matrix(unlist(dataset), nrow = length(dataset[[1]]), ncol = length(dataset)) #MUCHO TIEMPO
+.getValuesForQualityMeasures <- function(gr_perts, classNames, dataset, targetClass, examples_perClass, cov, Ns, N_vars , to_cover, mark = FALSE, test = FALSE, fuzzy = FALSE, NMEEF = FALSE){
+ # This is not the best form, there must be another form to use the list directly
+  dataset <- matrix(unlist(dataset), nrow = length(dataset[[1]]), ncol = length(dataset)) #Too much time-consuming
   
-  ejemplo_Cubiertos <- 0L
-  sumaFuzzyejCubiertos <- 0
-  ejemplosCorr_cubiertos <- 0L
-  sumaFuzzyejCorrectamenteCubiertos <- 0
-  ejemplosNuevos_Cubiertos <- 0L
-  sumaFuzzyEjNuevos <- 0
+  coveredExamples <- 0L
+  fuzzySumExCovered <- 0
+  corrCoverdExamples <- 0L
+  fuzzySumCorrCoveredExamples <- 0
+  newExamplesCovered <- 0L
+  fuzzySumNewExamples <- 0
   
-  #Datos sobre el dataset
-  
-  #   cov_examplesFuzzy <- replicate(length(nombre_clases), 0)  # Para el calculo de la significancia
-  #   names(cov_examplesFuzzy) <- nombre_clases
-  
-  cov_examplesCrisp <- integer(length(nombre_clases))  # Para el calculo de la significancia
-  names(cov_examplesCrisp) <- nombre_clases
+  # information about the dataset
+
+  cov_examplesCrisp <- integer(length(classNames))  # For significance computation
+  names(cov_examplesCrisp) <- classNames
   
   fuzzyPerts <- gr_perts[[1]]
   crispPerts <- gr_perts[[2]]
   
-  #Averiguamos los ejemplos cubiertos
+  # Get covered examples
   coveredFuzzy <- which( fuzzyPerts > 0)
   coveredCrisp <- which( crispPerts > 0)
   
   
-  #Ejemplos cubiertor por la regla de cada clase (Significancia)
+  #Covered examples by the rule for each class (for significance)
   #   tabla <- table( t( dataset[N_vars,coveredFuzzy]) )
   #   cov_examplesFuzzy[ names( tabla )] <- tabla 
-  #tabla <- table( t( nombre_clases[ dataset[N_vars,coveredCrisp] + 1] ) )
-  tabla <- improvedTable(dataset[, coveredCrisp, drop = F], nombre_clases)
+  #tabla <- table( t( classNames[ dataset[N_vars,coveredCrisp] + 1] ) )
+  tabla <- improvedTable(dataset[, coveredCrisp, drop = F], classNames)
   cov_examplesCrisp[names( tabla )] <- tabla 
   
   
-  #Ejemplos cubiertos por la regla
-  ejemplo_Cubiertos <- length(coveredCrisp)
-  sumaFuzzyejCubiertos <- sum(fuzzyPerts[coveredFuzzy])
+  #Examples covered by the rule
+  coveredExamples <- length(coveredCrisp)
+  fuzzySumExCovered <- sum(fuzzyPerts[coveredFuzzy])
   
   
-  #Ejemplos correctamente cubiertos
-  p <- nombre_clases[ dataset[N_vars,coveredFuzzy] + 1] == targetClass 
-  p1 <- nombre_clases[ dataset[N_vars,coveredCrisp] + 1] == targetClass 
+  #Correctly Covered Examples
+  p <- classNames[ dataset[N_vars,coveredFuzzy] + 1] == targetClass 
+  p1 <- classNames[ dataset[N_vars,coveredCrisp] + 1] == targetClass 
   
-  ejemplosCorr_cubiertos <- sum(p1)
-  sumaFuzzyejCorrectamenteCubiertos <- sum(fuzzyPerts[coveredFuzzy[p]])
+  corrCoverdExamples <- sum(p1)
+  fuzzySumCorrCoveredExamples <- sum(fuzzyPerts[coveredFuzzy[p]])
   
   
-  #Ejemplos correctamente cubiertos que no estaban cubiertos anteriormente.  
+  #Correctly Covered examples that aren't covered before (new covered examples)  
   i <- cov[coveredFuzzy] == FALSE
   iC <- cov[coveredCrisp] == FALSE
   obj_notCoveredFuzzy <- which(p & i)
   obj_notCoveredCrisp <- which(p1 & iC)
-  ejemplosNuevos_Cubiertos <- length(obj_notCoveredCrisp) #NCOL( dataset[ , obj_notCovered])
-  sumaFuzzyEjNuevos <- sum(fuzzyPerts[coveredFuzzy[obj_notCoveredFuzzy]])
+  newExamplesCovered <- length(obj_notCoveredCrisp) #NCOL( dataset[ , obj_notCovered])
+  fuzzySumNewExamples <- sum(fuzzyPerts[coveredFuzzy[obj_notCoveredFuzzy]])
   
-  #Marcar ejemplos nuevos cubiertos de la clase objetivo (Si es necesario)
-  if(marcar){
-    if(! difuso){
-      cov[coveredCrisp[obj_notCoveredCrisp]] <- TRUE #Si se usa SOPORTE CRISP
+  #Mark new covered examples (if neccesary)
+  if(mark){
+    if(! fuzzy){
+      cov[coveredCrisp[obj_notCoveredCrisp]] <- TRUE # If CRISP SUPPORT is used
     } else {
-      cov[coveredFuzzy[p & i]] <- TRUE # USAR CUANDO SE USA SOPORTE DIFUSO
+      cov[coveredFuzzy[p & i]] <- TRUE # If FUZZY SUPPORT is used
     }
     
-    l <- list(ejemplo_Cubiertos, ejemplosCorr_cubiertos, NA, Ns, NROW(p[p]), cov_examplesCrisp, examples_perClass, ejemplosNuevos_Cubiertos, por_cubrir, sumaFuzzyejCubiertos, sumaFuzzyejCorrectamenteCubiertos, sumaFuzzyEjNuevos ) 
-    conf <- .confianza(l)
+    l <- list(coveredExamples, corrCoverdExamples, NA, Ns, NROW(p[p]), cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples ) 
+    conf <- .confidence(l)
     if( ! test) return(list(cov, conf)) 
     return(list(cov, l) )
   } else {
     
-    #por_cubrir <- sum(obj_notCovered) 
+    #to_cover <- sum(obj_notCovered) 
     
     #Return 
     if(!NMEEF){
-      return( list(ejemplo_Cubiertos, ejemplosCorr_cubiertos, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, ejemplosNuevos_Cubiertos, por_cubrir, sumaFuzzyejCubiertos, sumaFuzzyejCorrectamenteCubiertos, sumaFuzzyEjNuevos ) )
+      return( list(coveredExamples, corrCoverdExamples, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples ) )
     }else{
-      cover <- (fuzzyPerts > 0 | crispPerts > 0) & nombre_clases[dataset[N_vars, ] + 1]== targetClass
-      return( list(ejemplo_Cubiertos, ejemplosCorr_cubiertos, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, ejemplosNuevos_Cubiertos, por_cubrir, sumaFuzzyejCubiertos, sumaFuzzyejCorrectamenteCubiertos, sumaFuzzyEjNuevos, cover ) )
+      cover <- (fuzzyPerts > 0 | crispPerts > 0) & classNames[dataset[N_vars, ] + 1]== targetClass
+      return( list(coveredExamples, corrCoverdExamples, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples, cover ) )
     }
   }
   
@@ -264,13 +258,13 @@ Rule.compatibility <- function(ejemplo, rule_cat, rule_num, catParticip, numPart
 
 
 
-.getVariableYValor <- function(value, max_valores){
-  variable <- which( (value / max_valores) <= 1)[1]  # Solo queremos el primer valor. 
-  vInicioVariable <- 1
+.getVariableAndValue <- function(value, maxValues){
+  variable <- which( (value / maxValues) <= 1)[1]  
+  vInitVariable <- 1
   if(variable > 1){
-    vInicioVariable <- max_valores[variable - 1] + 1
+    vInitVariable <- maxValues[variable - 1] + 1
   }
-  valor <- value - vInicioVariable + 1
+  valor <- value - vInitVariable + 1
   
   return(c(variable, valor))
 }
@@ -372,7 +366,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
     if(nLabels < 1)
       stop("The number of fuzzy sets ('nLabels') must be greater than zero.")
   
-    dataset[["fuzzySets"]] <- .create_fuzzyIntervals(min = dataset$min, max = dataset$max, num_sets = nLabels, types = dataset$atributeTypes)
+    dataset[["fuzzySets"]] <- .create_fuzzyIntervals(min = dataset$min, max = dataset$max, num_sets = nLabels, types = dataset$attributeTypes)
     dataset[["crispSets"]] <- .createCrispIntervals(fuzzyIntervals = dataset[["fuzzySets"]])
   
     dataset
@@ -410,7 +404,7 @@ changeTargetVariable <- function(dataset, variable){
   #if(variable >= dataset$nVars + 1) stop("variable is the same of the actual variable or is out of range")
   
   if(is.character(variable)){
-    variable <- which(tolower(dataset$atributeNames) == tolower(variable))
+    variable <- which(tolower(dataset$attributeNames) == tolower(variable))
     if(length(variable) == 0)
       stop(paste(variable, "is not a variable of this dataset."))
   }
@@ -430,8 +424,8 @@ changeTargetVariable <- function(dataset, variable){
   dataset[[2]][variable] <- dataset[[2]][length(dataset[[2]])]
   dataset[[2]][length(dataset[[2]])] <- aux
   
-  #swap conjuntos
-  dataset[["conjuntos"]][variable] <- dataset[["max"]][dataset[["nVars"]] + 1]
+  #swap sets
+  dataset[["sets"]][variable] <- dataset[["max"]][dataset[["nVars"]] + 1]
   
   #Swap Min
   aux <- dataset[[4]][variable]
@@ -474,19 +468,19 @@ changeTargetVariable <- function(dataset, variable){
 # Gets the variables that participate in a rule
 #
 #
-.getParticipantes <- function(regla, max_regla, DNFRules){
+.getParticipants <- function(rule, max_rule, DNFRules){
   if(!DNFRules){
-    participantes <- as.logical( (regla < max_regla) ) #Cuidado que ?sto puede que que no est? bien. No valor de la regla no es comparable con el ejemplo
+    participants <- as.logical( (rule < max_rule) ) 
   }else{
     
-    participantes <- logical(length(max_regla) - 1)
-    for(i in 2:length(max_regla)){
-      ruleValues <- regla[(max_regla[i - 1] + 1):max_regla[i]]
-      participantes[i-1] <- !(all(ruleValues == 1) | all(ruleValues == 0))
+    participants <- logical(length(max_rule) - 1)
+    for(i in 2:length(max_rule)){
+      ruleValues <- rule[(max_rule[i - 1] + 1):max_rule[i]]
+      participants[i-1] <- !(all(ruleValues == 1) | all(ruleValues == 0))
     }
   }
   
-  participantes
+  participants
   
 }
 
@@ -497,7 +491,7 @@ changeTargetVariable <- function(dataset, variable){
 #
 # Returns de dataset without the last (class) column
 #
-.separar <- function(dataset){
+.separate <- function(dataset){
   
   lapply(dataset$data, FUN = function(x) x[-length(x)])
   
@@ -514,9 +508,9 @@ changeTargetVariable <- function(dataset, variable){
 
 
 #
-# returns de original dataes
+# returns de original dataset
 #
-.unir <- function(dataNoClass , classes){
+.join <- function(dataNoClass , classes){
   lapply(X = 1:length(dataNoClass), FUN = function(num, x,y) append(x[[num]],y[[num]]), dataNoClass, classes)
   
 }
@@ -532,18 +526,18 @@ changeTargetVariable <- function(dataset, variable){
 #
 # Returns a matrix for select the variables that participate in a DNF rule for calculating their belonging degree
 #
-.getMatrixSelector <- function(regla_num, valor){
+.getMatrixSelector <- function(rule_num, value){
   
-  values <- unlist(lapply(X = seq_len(length(regla_num)), 
-                          FUN = function(x, regla, valor){
+  values <- unlist(lapply(X = seq_len(length(rule_num)), 
+                          FUN = function(x, rule, value){
                             
-                            a <- which(regla[[x]] > 0)
-                            valores <- unlist(lapply(X = a, 
-                                                     FUN = function(y, valor, mat){
-                                                       c(y, valor, mat)
-                                                     }, valor, x) )
-                            valores
-                          }, regla_num, valor))
+                            a <- which(rule[[x]] > 0)
+                            vals <- unlist(lapply(X = a, 
+                                                     FUN = function(y, value, mat){
+                                                       c(y, value, mat)
+                                                     }, value, x) )
+                            vals
+                          }, rule_num, value))
   
   
   matrix(data = values, nrow = length(values) / 3, ncol = 3, byrow = TRUE)
@@ -561,8 +555,8 @@ changeTargetVariable <- function(dataset, variable){
 # Obtain the fuzzy values of a DNF Rule
 #
 #
-.getFuzzyValues <- function(regla_num, fuzzy,  crisp = FALSE){
-  a <- .getMatrixSelector(regla_num = regla_num, valor = 1)
+.getFuzzyValues <- function(rule_num, fuzzy,  crisp = FALSE){
+  a <- .getMatrixSelector(rule_num = rule_num, valor = 1)
   variables <- a[,3]
   
   if(! crisp){
@@ -592,17 +586,17 @@ changeTargetVariable <- function(dataset, variable){
 #
 # Normalize a DNF by means of put all the non-participating variables filled with 0's.
 #
-.normalizeDNFRule <- function(regla, max){
-  if(!anyNA(regla)){
+.normalizeDNFRule <- function(rule, max){
+  if(!anyNA(rule)){
     for(i in seq_len(length(max) - 1)){ 
-      if(all(regla[(max[i] + 1):max[i+1]] == 1)){
-        regla[(max[i] + 1):max[i+1]] <- 0
+      if(all(rule[(max[i] + 1):max[i+1]] == 1)){
+        rule[(max[i] + 1):max[i+1]] <- 0
       }
     }
     
-    regla
+    rule
   } else{
-    regla
+    rule
   }
 }
 
@@ -668,8 +662,8 @@ changeTargetVariable <- function(dataset, variable){
 
 
 # Make a yes/no question to the user
-.yesno <- function(texto){
-  line <- readline(texto)
+.yesno <- function(text){
+  line <- readline(text)
   line
 }
 
@@ -762,38 +756,38 @@ changeTargetVariable <- function(dataset, variable){
 
 
 #'
-#' Parse a time differente to "x hours, y minutes and z seconds"
+#' Parse a time difference to "x hours, y minutes and z seconds"
 #'
-#' @param actual End time in UNIX int format (i.e. as.numeric(Sys.time()))
+#' @param actual End time in UNIX int format (e.g. as.numeric(Sys.time()))
 #' @param initial Initial time in Unix format.
 #'
 #' @return A human-readable string with time difference.
 #'
 parseTime <- function(actual, initial){
   dif <- actual - initial
-  horas <- 0
-  minutos <- 0
-  segundos <- 0
+  hours <- 0
+  minutes <- 0
+  seconds <- 0
   
   if(dif >= 3600){
-    horas <- floor(dif / 3600)
+    hours <- floor(dif / 3600)
     dif <- dif %% 3600
   }
   
   if(dif >= 60){
-    minutos <- floor(dif / 60)
-    segundos <- dif %% 60
+    minutes <- floor(dif / 60)
+    seconds <- dif %% 60
   } else {
-    segundos <- dif
+    seconds <- dif
   }
   
   
-  paste(horas, " hours, ", minutos, " minutes and ", round(segundos, 2) , " seconds.", sep = "")
+  paste(hours, " hours, ", minutes, " minutes and ", round(seconds, 2) , " seconds.", sep = "")
 }
 
 
 #'
-#' Improved table creation for .get_values6
+#' Improved table creation for .getValuesForQualityMeasures, this implementation is faster than table()
 #' 
 #' @param dataset A matrix with the data
 #' @param classNames a vector with the names of the attributes.
@@ -833,7 +827,7 @@ summary.keel <- function(object, ...){
       paste("\t- relation:", object$relation),
       paste("\t- nVars:", object$nVars),
       paste("\t- Ns:", object$Ns),
-      paste("\t- attributeNames:", paste(object$atributeNames, collapse = ", ")),
+      paste("\t- attributeNames:", paste(object$attributeNames, collapse = ", ")),
       paste("\t- class_names:", paste(object$class_names, collapse = ", ")),
       paste("\t- examplesPerClass:" ,paste(unlist(object$examplesPerClass), collapse = ", "))
       , sep = "\n")
@@ -857,11 +851,11 @@ summary.keel <- function(object, ...){
 print.keel <- function(x, ...){
   data <- lapply(x$data,
                  function(x, categoricos)
-                   vapply(seq_len(length(x)), function(i, ejemplo, cateValues){
+                   vapply(seq_len(length(x)), function(i, example, cateValues){
                      if(is.na(cateValues[[i]][1])){
-                       as.character(ejemplo[i])
+                       as.character(example[i])
                      } else{
-                       cateValues[[i]][ejemplo[i] + 1]
+                       cateValues[[i]][example[i] + 1]
                      }
                    }, character(1), x, categoricos)
                  
@@ -869,5 +863,5 @@ print.keel <- function(x, ...){
                  
   )
   
-  print(matrix(data = unlist(data), ncol = x$nVars + 1, byrow = TRUE, dimnames = list(NULL,x$atributeNames)), ...)
+  print(matrix(data = unlist(data), ncol = x$nVars + 1, byrow = TRUE, dimnames = list(NULL,x$attributeNames)), ...)
 }

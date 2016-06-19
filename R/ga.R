@@ -1148,7 +1148,7 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
   
   #evaluate initial population individuals (In parallel for Linux)
   if(length(pop) >= 20 & Sys.info()[1] == "Linux"){
-    pop <- parallel::mclapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight, mc.cores = parallel::detectCores())
+    pop <- parallel::mclapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight), mc.cores = parallel::detectCores())
   } else {
    pop <- lapply(pop, Rule.evaluate, dataset, datasetNoClass, categorical, numerical, T_norm, ruleWeight)
   }

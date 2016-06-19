@@ -81,7 +81,7 @@ read.keel <- function(file) {
         "No '@input' or '@output' fields found, this is not a KEEL format dataset. Aborting load..."
       )
     
-    # To process an attribute line we use the function .processLine which gets, name, type (categorical or real) and range of a variable
+    # To process an attribute line we use the function .processLine which gets name, type (categorical or real) and range of a variable
     for (i in seq_len(length(attributes))) {
       aux <- .processLine(line = attributes[[i]])
       
@@ -93,7 +93,8 @@ read.keel <- function(file) {
     }
     
     
-    #Data preparation
+    #Data preparation with the function .processData which takes a line that represent an instance an return all neccesary information
+    #We use parallel computing for better performance.
     if (Sys.info()[1] != "Windows")
   
       data <-  
@@ -101,7 +102,7 @@ read.keel <- function(file) {
         X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = parallel::detectCores() - 1 # -1 to prevent system hang up until the task finish
       )
     else
-      #In windows mclapply doesnt work
+      #In windows mclapply doesnt work (USE of 'snow' package)
       data <-
       parallel::mclapply(
         X = data, FUN = .processData, categorical_values, atribs_types, mc.cores = 1
@@ -110,11 +111,11 @@ read.keel <- function(file) {
     
     #Prepare the rest of attributes of the keel object
     
-    covered <- NA  
-    fuzzySets <- NA
-    crispSets <- NA
-    classNames <- categorical_values[[length(categorical_values)]]
-    clValues <- unlist(lapply(data, '[', length(attributes)))
+    covered <- NA     #Examples covered
+    fuzzySets <- NA   # Fuzzy sets definitons
+    crispSets <- NA   # Crisp sets definitions
+    classNames <- categorical_values[[length(categorical_values)]]   # Categories of the target variable
+    clValues <- unlist(lapply(data, '[', length(attributes)))    # gets the class value for each example
     examplesPerClass <-
       lapply(
         X = seq_len(length(classNames)) - 1, FUN = function(x, data)
@@ -167,7 +168,8 @@ read.keel <- function(file) {
 #
 .read.parametersFile2 <- function(file) {
   data <- .readFile(file)
- 
+  
+  # Format is 'paramName = value'
   data <- strsplit(x = data, split = " = ")
   
   
@@ -501,7 +503,7 @@ read.keel <- function(file) {
   cat(
     "Population Length:", params$popLength, file = "", sep = " ", fill = TRUE
   )
-  if (algo == "MESDIF")
+  if (algo == "MESDIF")  
     cat(
       "Elite Population Length:", params$elitePop, file = "", sep = " ", fill = TRUE
     )
@@ -607,18 +609,19 @@ read.keel <- function(file) {
 
 
 .giveMeSets <- function(data_types, max, n_labels) {
-  data_types <- data_types[-length(data_types)]
+  data_types <- data_types[-length(data_types)] # The last is the class, we don't use it
   # Split into categorical attributes and real ones. They have a different processing
-  salida <- numeric(length(data_types))
+  returnSets <- numeric(length(data_types))
   cat <- which(data_types == 'c')
   if (length(cat > 0)) {
-    #If there are no categorical data, all has the 'n_labels' value
-    salida[cat] <- max[cat]
-    salida[-cat] <- n_labels
+
+    returnSets[cat] <- max[cat] #Max is the number of categories for categorical variables
+    returnSets[-cat] <- n_labels
   } else {
-    salida[] <- n_labels
+    #If there are no categorical data, all has the 'n_labels' value
+    returnSets[] <- n_labels
   }
-  salida
+  returnSets
   
 }
 
@@ -630,37 +633,41 @@ read.keel <- function(file) {
 #
 #
 .print.rule <-
-  function(rule, max, names, consecuente, types, fuzzySets, categoricalValues, DNFRules = FALSE, rulesFile = "rulesFile.txt") {
+  function(rule, max, names, consecuent, types, fuzzySets, categoricalValues, DNFRules = FALSE, rulesFile = "rulesFile.txt") {
+    
+    #Print Canonical rule
     if (!DNFRules) {
-      participantes <- which(rule < max)
-      nombre <- names[participantes]
-      valores <- rule[participantes]
-      types <- types[participantes]
-      fuzzy <- fuzzySets[,,participantes, drop = F]
-      cate <- categoricalValues[participantes]
+      participants <- which(rule < max) #Take variables that participate in the rule, if rule == max, variable doesn't participate
+      name <- names[participants]
+      values <- rule[participants]
+      types <- types[participants]
+      fuzzy <- fuzzySets[,,participants, drop = F]
+      cate <- categoricalValues[participants]
       
-      val <- replicate(n = length(participantes), expr = NA)
+      val <- replicate(n = length(participants), expr = NA)
       
-      
-      for (p in seq_len(length(participantes))) {
+      # Get the value of a variable that participate in a rule
+      # If is categorical, the value is the name of the category
+      # If it is real, print the fuzzy definition as 'Label nº-label (minValue, mediumValue, maxValue)'
+      for (p in seq_len(length(participants))) {
         if (types[p] == 'c') {
-          val[p] <- cate[[p]][valores[p] + 1]
+          val[p] <- cate[[p]][values[p] + 1]
         } else {
           val[p] <-
-            paste("Label", valores[p], "(", fuzzy[valores[p] + 1,1,p], ",", fuzzy[valores[p] +
-                                                                                    1,2,p], ",",fuzzy[valores[p] + 1,3,p], ")", sep = " ")
+            paste("Label", values[p], "(", fuzzy[values[p] + 1,1,p], ",", fuzzy[values[p] +
+                                                                                    1,2,p], ",",fuzzy[values[p] + 1,3,p], ")", sep = " ")
         }
       }
-      nombre <- paste("Variable", nombre, sep = " ")
-      lineas <- paste(nombre, val, sep = " = ")
-      lineas <- paste(lineas, collapse = "\n")
+      name <- paste("Variable", name, sep = " ")
+      lines <- paste(name, val, sep = " = ")
+      lines <- paste(lines, collapse = "\n")
       cat(
-        lineas, "\n","THEN", consecuente, file = "", sep = " ", fill = TRUE
+        lines, "\n","THEN", consecuent, file = "", sep = " ", fill = TRUE
       )
       
       #Save in file
       cat(
-        lineas, "\n","THEN", consecuente, file = rulesFile, sep = " ", fill = TRUE, append = TRUE
+        lines, "\n","THEN", consecuent, file = rulesFile, sep = " ", fill = TRUE, append = TRUE
       )
       
     } else {
@@ -668,39 +675,41 @@ read.keel <- function(file) {
       
       max <- Reduce(f = '+', x = max, accumulate = TRUE)
       
-      anterior <- 1
+      before <- 1
       pos <- 1
-      lineas <- ""
+      lines <- ""
+      # Check if a variable participate in a rule
+      # A variable does not participate in a DNF rule if all his values are 0 or 1
       for (i in max) {
-        variable <- rule[anterior:i]
-        noParticipa <- all(variable == 1) | all(variable == 0)
-        if (!noParticipa) {
-          valores <- which(variable == 1)
-          nombreVariable <- names[pos]
+        variable <- rule[before:i]
+        notParticipate <- all(variable == 1) | all(variable == 0)
+        if (!notParticipate) {
+          values <- which(variable == 1)  # A variable with '1' indicate that this value participate in the rule
+          variableName <- names[pos]
           if (types[pos] == 'c') {
-            nombresValores <- categoricalValues[[pos]][valores]
-            nombresValores <-
-              paste(nombresValores, sep = " ", collapse = " OR ")
+            valueNames <- categoricalValues[[pos]][values]
+            valueNames <-
+              paste(valueNames, sep = " ", collapse = " OR ")
           } else {
-            nombresValores <-
+            valueNames <-
               paste(
-                "Label", valores - 1, "(", fuzzySets[valores,1,pos], ",", fuzzySets[valores,2,pos], ",",fuzzySets[valores,3,pos], ")", sep = " ", collapse = " OR "
+                "Label", values - 1, "(", fuzzySets[values,1,pos], ",", fuzzySets[values,2,pos], ",",fuzzySets[values,3,pos], ")", sep = " ", collapse = " OR "
               )
           }
-          lineas <-
-            paste(lineas, "Variable", nombreVariable, nombresValores, "\n", sep = " ")
+          lines <-
+            paste(lines, "Variable", variableName, valueNames, "\n", sep = " ")
           
           
         }
         pos <- pos + 1
-        anterior <- i + 1
+        before <- i + 1
       }
       cat(
-        lineas, "\n","THEN", consecuente, file = "", sep = " ", fill = TRUE
+        lines, "\n","THEN", consecuent, file = "", sep = " ", fill = TRUE
       )
       #Save in file
       cat(
-        lineas, "\n","THEN", consecuente, file = rulesFile, sep = " ", fill = TRUE, append = TRUE
+        lines, "\n","THEN", consecuent, file = rulesFile, sep = " ", fill = TRUE, append = TRUE
       )
       
     }
@@ -715,57 +724,56 @@ read.keel <- function(file) {
 # and return the corresponding functions.
 #
 #
-.parseObjetives <- function(parametros, algorithm, DNF) {
-  Objetivos <- list(NA,NA,NA,NA) # prealocamos memoria
+.parseObjectives <- function(parameters, algorithm, DNF) {
+  Objectives <- list(NA,NA,NA,NA) # Preallocate memory
   
   if (algorithm == "SDIGA") {
-    if (parametros$Obj1 == "CSUP") {
-      #NO PONEMOS COMPLETITUD !!
-      Objetivos[[1]] <- .LocalSupport
-      Objetivos[[4]] <- FALSE
+    if (parameters$Obj1 == "CSUP") {
+      Objectives[[1]] <- .LocalSupport
+      Objectives[[4]] <- FALSE
     } else{
-      Objetivos[[1]] <- .FLocalSupport
-      Objetivos[[4]] <- TRUE
+      Objectives[[1]] <- .FLocalSupport
+      Objectives[[4]] <- TRUE
     }
     
-    if (parametros$Obj2 == "CCNF") {
-      Objetivos[[2]] <- .confianza
+    if (parameters$Obj2 == "CCNF") {
+      Objectives[[2]] <- .confidence
     } else{
-      Objetivos[[2]] <- .confianzaDifusa
+      Objectives[[2]] <- .fuzzyConfidence
     }
     
-    if (parametros$Obj3 == "UNUS") {
-      Objetivos[[3]] <- .norm_unusualness
-    } else if (parametros$Obj3 == "SIGN") {
-      Objetivos[[3]] <- .significance
-    } else if (parametros$Obj3 == "COVE") {
-      Objetivos[[3]] <- .coverage
+    if (parameters$Obj3 == "UNUS") {
+      Objectives[[3]] <- .norm_unusualness
+    } else if (parameters$Obj3 == "SIGN") {
+      Objectives[[3]] <- .significance
+    } else if (parameters$Obj3 == "COVE") {
+      Objectives[[3]] <- .coverage
     }
     
   } else {
-    valores <- c(parametros$Obj1, parametros$Obj2, parametros$Obj3)
+    valores <- c(parameters$Obj1, parameters$Obj2, parameters$Obj3)
     
     for (i in seq_len(3)) {
       if (valores[i] == "CSUP")
-        Objetivos[[i]] <- .Csupport
+        Objectives[[i]] <- .Csupport
       if (valores[i] == "FSUP")
-        Objetivos[[i]] <- .Fsupport
+        Objectives[[i]] <- .Fsupport
       if (valores[i] == "CCNF")
-        Objetivos[[i]] <- .confianza
+        Objectives[[i]] <- .confidence
       if (valores[i] == "FCNF")
-        Objetivos[[i]] <- .confianzaDifusa
+        Objectives[[i]] <- .fuzzyConfidence
       if (valores[i] == "UNUS")
-        Objetivos[[i]] <- .norm_unusualness
+        Objectives[[i]] <- .norm_unusualness
       if (valores[i] == "SIGN")
-        Objetivos[[i]] <- .significance
+        Objectives[[i]] <- .significance
       if (valores[i] == "COVE")
-        Objetivos[[i]] <- .coverage
+        Objectives[[i]] <- .coverage
       
     }
     
-    Objetivos[[4]] <- DNF
+    Objectives[[4]] <- DNF
   }
-  return(Objetivos)
+  return(Objectives)
 }
 
 
@@ -777,7 +785,7 @@ read.keel <- function(file) {
 #
 #
 .preprocessHeader <- function(line) {
-  #The regular expression eliminate eliminate the "{}" and "[]" symbols and commas that separate every element inside them
+  #The regular expression eliminate eliminate the "{}" , "[]", symbols and commas that separate every element inside them
   regex <-  "[[:blank:]]*\\{|[[:blank:]]*\\}|[[:blank:]]*\\[|[[:blank:]]*\\]|,[[:blank:]]*" 
   line <- gsub(pattern = regex, replacement = " ", x = line)
   
@@ -796,7 +804,7 @@ read.keel <- function(file) {
 .processData <- function(data, categoricalValues, types, fromDataFrame = FALSE) {
   line <- as.character(data)
   if(!fromDataFrame){
-    line <- gsub(pattern = ",[[:blank:]]*", replacement = " ", x = line)
+    line <- gsub(pattern = ",[[:blank:]]*", replacement = " ", x = line) # Split as a comma-separated values
     line <- strsplit(x = line, split = " ",fixed = TRUE)[[1]]
   }
   cat <- which(types == 'c')
@@ -818,18 +826,18 @@ read.keel <- function(file) {
 }
 
 
-# Devuelve una lista con los siguientes valores:
-# - Nombre del atributo
-# - tipo
-# - minimo
-# - maximo
-# - valores categoricos si los tuviera, NA en caso contrario
+# Return a list with the following values:
+# - Attribute name
+# - Type
+# - Minimum
+# - Maximum
+# - Categorical values if it has, NA if not.
 .processLine <- function(line) {
   returnList <- vector(mode = "list", length = 5)
   returnList[[1]] <- line[2] # Attribute name
   
   if (line[3] != "real" & line[3] != "integer") {
-    # Dato categorico
+    # Categorical value
     returnList[[2]] <- 'c' # Attribute type
     returnList[[3]] <- 0   #Minimum
     returnList[[4]] <-
@@ -855,7 +863,7 @@ read.keel <- function(file) {
 
 #
 #
-# This function reads an entire file in a block and the it is splitted by the \n or \r character.
+# This function reads an entire file in a block and it is splitted by the \n or \r character.
 # It is 8X faster than using scan()
 #
 # Thanks to F. Charte! 
@@ -915,10 +923,10 @@ save.keel <- function(dataset, file) {
     stop("'dataset' must be of class 'keel'.")
   }
   
-  respuesta <-
+  answer <-
     .yesno("Do you really want to save this dataset? (y/n): ")
   
-  if (respuesta == "y") {
+  if (answer == "y") {
     #Add .dat extension to the file.
     file <- paste(file, ".dat", sep = "")
     #Save file
@@ -933,7 +941,7 @@ save.keel <- function(dataset, file) {
     pos <- which(dataset[[3]] == "c")
     aux_values <- character(length(dataset[[2]]))
     aux_values[pos] <- dataset$categoricalValues[pos]
-    aux_values[-pos] <-
+    aux_values[-pos] <- # Numerical values are represented in a range like '[100, 105]'
       paste("[",dataset$min[-pos], ", ", dataset$max[-pos], "] ", sep = "")
     a <- lapply(aux_values, function(x)
       if (length(x) > 1) {
@@ -944,15 +952,15 @@ save.keel <- function(dataset, file) {
       })
     a <- unlist(a)
     
-    atributos <- paste("@attribute", dataset$atributeNames, aux, a)
-    atributos <- paste(atributos, collapse = "\n")
+    attributes <- paste("@attribute", dataset$attributeNames, aux, a)
+    attributes <- paste(attributes, collapse = "\n")
     
-    line <- paste(line, atributos, sep = "\n")
+    line <- paste(line, attributes, sep = "\n")
     
     #get inputs and outputs
     inputs <-
-      paste(dataset[[2]][-length(dataset[[2]])], collapse = ", ")
-    output <- dataset[[2]][length(dataset[[2]])]
+      paste(dataset[[2]][-length(dataset[[2]])], collapse = ", ")  # Inputs are are the variables except the class, the last one
+    output <- dataset[[2]][length(dataset[[2]])] # Outputs is the last attribute, the class
     line <- paste(line, "\n", "@inputs ", inputs, "\n", sep = "")
     line <- paste(line, "@outputs ", output, "\n@data",  sep = "")
     cat("Done\nGetting data (this may take some time)...")
@@ -963,35 +971,35 @@ save.keel <- function(dataset, file) {
       data <-
         parallel::mclapply(
           X = dataset$data, FUN = function(x, pos, catValues) {
-            resultado <-
+            result <-
               lapply(
                 X = seq_len(length(pos)), FUN = function(y, pos, data) {
-                  data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]
+                  data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]   # Catch the categorical value of a categorical variable, in a keel object, this values are coded into a number that specify the position of the value in the 'categoricalValues' variable
                   data[pos[y]]
                 }, categ, x
               )
-            x[pos] <- resultado
+            x[pos] <- result
             unlist(x)
           }, categ, dataset$categoricalValues, mc.cores = parallel::detectCores() - 1
         )
     } else {
       data <- lapply(
         X = dataset$data, FUN = function(x, pos, catValues) {
-          resultado <-
+          result <-
             lapply(
               X = seq_len(length(pos)), FUN = function(y, pos, data) {
                 data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]
                 data[pos[y]]
               }, categ, x
             )
-          x[pos] <- resultado
+          x[pos] <- result
           unlist(x)
         }, categ, dataset$categoricalValues
       )
     }
     
     
-    #Paste data into the line
+    #Paste data into the line (put each line as a comma-separated string)
     data <- lapply(data, function(x) {
       paste(x, collapse = ", ")
     })
@@ -1056,14 +1064,14 @@ addKeelRegister <- function(items, dataset) {
   
   # If items is not a list, is a single element.
   if (class(items) != "list") {
-    if (.checkElement(item = items, dataset = dataset)) {
+    if (.checkElement(item = items, dataset = dataset)) { # If the element is valid
       #We use this because it is only a single element !
-      if (class(items) == "numeric") {
+      if (class(items) == "numeric") { #Coded data
         dataset$data[[length(dataset$data) + 1]] <- items
         dataset$data
-      } else {
+      } else { #Uncoded date, we need to process the line to code the data.
         items <- paste(items, collapse = ", ")
-        items <- .processData(items, dataset$categoricalValues, dataset$atributeTypes)
+        items <- .processData(items, dataset$categoricalValues, dataset$attributeTypes)
         
         dataset$data[[length(dataset$data) + 1]] <- items
         dataset$data
@@ -1086,7 +1094,7 @@ addKeelRegister <- function(items, dataset) {
       if (class(items[[1]]) == "character") {
         #Process the elements, tranform every vector into a string line to use the .processData() function.
         items <- lapply(items, paste, collapse = ", ")
-        items <- lapply(items, .processData, dataset$categoricalValues, dataset$atributeTypes)
+        items <- lapply(items, .processData, dataset$categoricalValues, dataset$attributeTypes)
       }
       #Introduce the elements at the end of the $data atribute of the dataset.
       resultDataset[(length(dataset$data) + 1):length(resultDataset)] <-
@@ -1120,14 +1128,14 @@ addKeelRegister <- function(items, dataset) {
     
   } else {
     # If not, we need to check every categorical value if they have valid values. This is slower than the former option.
-    catData <- which(dataset$atributeTypes == "c")
+    catData <- which(dataset$attributeTypes == "c")
     numData <-
-      which(dataset$atributeTypes == "r" | dataset$atributeTypes == "e")
+      which(dataset$attributeTypes == "r" | dataset$attributeTypes == "e")
     
     cvalues <- dataset$categoricalValues[catData]
     cItem <- item[catData]
     
-    #Check if categorical values of an item have got valid values.
+    #Check if categorical values of an item have valid values.
     values <- lapply(
       X = seq_len(length(cItem)),
       FUN = function(x, lista, items) {
@@ -1177,55 +1185,58 @@ addKeelRegister <- function(items, dataset) {
 keelFromARFF <- function(file){
   warnPrevio <- getOption("warn")
   options(warn = -1)
-  conjunto <- read_arff(file)
+  set <- read_arff(file)
   
 
-  relation <- strsplit(conjunto[[1]], " ")[[1]][2]
+  relation <- strsplit(set[[1]], " ")[[1]][2]
   
   #Make attribute names and types
-  atributeNames <- names(conjunto[[2]])
-  categoricos <- regmatches(x = conjunto[[2]], gregexpr(pattern = "[/^{*}/$]", text = conjunto[[2]]))
-  conjunto[[2]] <- gsub(pattern = "[/^{*}/$]", replacement = "", x = conjunto[[2]])
-  categoricos <- unlist(lapply(categoricos, function(x){length(x) > 0}))
-  types <- character(length(categoricos))
-  types[] <- "r"
-  types[which(categoricos)] <- "c"
+  attributeNames <- names(set[[2]])
+  categoricalVariables <- regmatches(x = set[[2]], gregexpr(pattern = "[/^{*}/$]", text = set[[2]])) #Check which variable is categoric
+  set[[2]] <- gsub(pattern = "[/^{*}/$]", replacement = "", x = set[[2]])
+  categoricalVariables <- unlist(lapply(categoricalVariables, function(x){length(x) > 0}))
+  
+  #Put the types of the files 'r' for real and 'c' for categorical
+  types <- character(length(categoricalVariables)) 
+  types[] <- "r" 
+  types[which(categoricalVariables)] <- "c"
   
   if(types[length(types)] != "c")
     stop("Last value of the dataset is not categorical. We cannot create a dataset which class is not categorical.")
   
-  #Get min and max.
-  longitud_categoricos <- regmatches(x = conjunto[[2]], gregexpr(pattern = "[[:alnum:]]*[^(,/$| */$)]", text = conjunto[[2]]))
-  longitud <- unlist(lapply(longitud_categoricos, length))
-  values <- matrix(data = unlist(lapply(conjunto[[3]][,which(!categoricos)], 
+  #Get min, max 
+  #
+  categoricalLength <- regmatches(x = set[[2]], gregexpr(pattern = "[[:alnum:]]*[^(,/$| */$)]", text = set[[2]]))
+  len <- unlist(lapply(categoricalLength, length))
+  values <- matrix(data = unlist(lapply(set[[3]][,which(!categoricalVariables)], 
                                         function(x){
                                           x <- as.numeric(x)
                                           c(min(na.exclude(x)), max(na.exclude(x)))
                                           })),
                    ncol = 2, byrow = TRUE)
-  min <- max <- numeric(length(categoricos))
-  min[which(!categoricos)] <- values[,1]
-  max[which(!categoricos)] <- values[,2]
-  max[which(categoricos)] <- longitud[which(categoricos)]
+  min <- max <- numeric(length(categoricalVariables))
+  min[which(!categoricalVariables)] <- values[,1]
+  max[which(!categoricalVariables)] <- values[,2]
+  max[which(categoricalVariables)] <- len[which(categoricalVariables)]
  
-  nVars <- NCOL(conjunto[[3]]) - 1
+  nVars <- NCOL(set[[3]]) - 1
   
-  class_names <- longitud_categoricos[[length(longitud_categoricos)]]
+  class_names <- categoricalLength[[length(categoricalLength)]]
   
   #Examples per class
-  examplesClass <- unlist(lapply(longitud_categoricos[[length(longitud_categoricos)]], function(x, values){
+  examplesClass <- unlist(lapply(categoricalLength[[length(categoricalLength)]], function(x, values){
     sum(x == values)
-  }, conjunto[[3]][, NCOL(conjunto[[3]])]))
+  }, set[[3]][, NCOL(set[[3]])]))
   names(examplesClass) <- class_names
   
   #Ns
-  Ns <- NROW(conjunto[[3]])
+  Ns <- NROW(set[[3]])
   #Lost Data
   lostData <- FALSE
   #Covered
   covered <- logical(Ns)
   #Categorical Values
-  longitud_categoricos[which(longitud <= 1)] <- NA
+  categoricalLength[which(len <= 1)] <- NA
   
   #Fuzzy and crisp sets
   fuzzySets <- NA
@@ -1236,23 +1247,23 @@ keelFromARFF <- function(file){
   
   
   #DATA
-  df_aux <- as.data.frame(t(conjunto[[3]]), stringsAsFactors = FALSE)
+  df_aux <- as.data.frame(t(set[[3]]), stringsAsFactors = FALSE)
   if (Sys.info()[1] != "Windows")
     data <-
     parallel::mclapply(
-      X = df_aux, FUN = .processData, longitud_categoricos, types, TRUE, mc.cores = parallel::detectCores()
+      X = df_aux, FUN = .processData, categoricalLength, types, TRUE, mc.cores = parallel::detectCores() - 1
     )
   else
     #In windows mclapply doesnt work
     data <-
     parallel::mclapply(
-      X = as.data.frame(t(conjunto[[3]])), FUN = .processData, longitud_categoricos, types, TRUE, mc.cores = 1
+      X = as.data.frame(t(set[[3]])), FUN = .processData, categoricalLength, types, TRUE, mc.cores = 1
     )
   
   lista <- list(
     relation = relation,
-    atributeNames = atributeNames,
-    atributeTypes = types,
+    attributeNames = attributeNames,
+    attributeTypes = types,
     min = min,
     max = max,
     nVars = nVars,
@@ -1264,7 +1275,7 @@ keelFromARFF <- function(file){
     fuzzySets = fuzzySets,
     crispSets = crispSets,
     sets = sets,
-    categoricalValues = longitud_categoricos,
+    categoricalValues = categoricalLength,
     Ns = Ns
   )
   class(lista) <- "keel"
@@ -1386,7 +1397,7 @@ keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = N
   fuzzySets <- NA
   crispSets <- NA
   
-  #Conjuntos
+  #Sets
   sets <-
     .giveMeSets(data_types = types, max = max, n_labels = nLabels)
   
@@ -1395,7 +1406,7 @@ keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = N
   if (Sys.info()[1] != "Windows")
     data <-
     parallel::mclapply(
-      X = as.data.frame(t(data), stringsAsFactors = FALSE), FUN = .processData, categoricalValues, types, TRUE, mc.cores = parallel::detectCores()
+      X = as.data.frame(t(data), stringsAsFactors = FALSE), FUN = .processData, categoricalValues, types, TRUE, mc.cores = parallel::detectCores() - 1
     )
   else
     #In windows mclapply doesnt work
@@ -1409,10 +1420,11 @@ keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = N
         X = as.data.frame(t(data), stringsAsFactors = FALSE), FUN = .processData, categoricalValues, types, TRUE
       )
   }
+  
   lista <- list(
     relation = relation,
-    atributeNames = names,
-    atributeTypes = types,
+    attributeNames = names,
+    attributeTypes = types,
     min = min,
     max = max,
     nVars = nVars,
