@@ -31,37 +31,40 @@
 # Mutation operator for MESDIF
 #
 #
-.mutateMESDIF <- function(cromosoma, variable, max_valor_variables, DNF_Rule){
+.mutateMESDIF <- function(chromosome, variable, maxVariableValues, DNF_Rule){
   
   
   mutation_type <- sample(x = 1:2, size = 1)   #Type 1 -> Eliminate the variable, Type 2 -> change the value for a random one
   
   
-  if(! DNF_Rule){  #Reglas can?nicas
+  if(! DNF_Rule){  #CAN RULES
     if(mutation_type == 1L){
       
-      cromosoma[variable] <- max_valor_variables[variable] #Se pone el valor de no participacion
+      #If type == 1, we eliminate the variable (eliminate is put the max value)
+      chromosome[variable] <- maxVariableValues[variable] 
       
     } else {  #Assign a random value (elimination value NOT INCLUDED)
       
-      value <- sample(x = 0:(max_valor_variables[variable] - 1), size = 1)
-      cromosoma[variable] <- value 
+      value <- sample(x = 0:(maxVariableValues[variable] - 1), size = 1)
+      chromosome[variable] <- value 
       
     }
     
-  } else { #Reglas DNF
+  } else { #DNF RULE
     
+    #For a DNF rule, first, get the range of values for the variable, because we change all his values
     variable <- variable + 1
-    rango <- (max_valor_variables[variable - 1] + 1):max_valor_variables[variable]
+    range <- (maxVariableValues[variable - 1] + 1):maxVariableValues[variable]
     
     
-    if(mutation_type == 1){  #Valor de no participaci?n de la variable
+    if(mutation_type == 1){  #Erase the variable (put all values of the range 0 or 1)
       
-      cromosoma[rango] <- 0
+      chromosome[range] <- 0
       
-    } else {  #Asigna valor aleatorio en la variable
-      
-      cromosoma[rango] <- sample(x = 0:1 , size = length(rango), replace = TRUE)
+    } else {  
+      #Asign a random value (0 or 1) to each value of the range
+      #Note that this could erase the variable.
+      chromosome[range] <- sample(x = 0:1 , size = length(range), replace = TRUE)
       
     }
     
@@ -69,7 +72,7 @@
   
   
   
-  cromosoma  # Return
+  chromosome  # Return
   
 }
 
@@ -85,73 +88,76 @@
 #
 .truncOperator <- function(NonDominatedPop, elitePopSize, FitnessND ){
   #Calculate distance between individuals
-  distancia <- as.matrix( dist(x = FitnessND, method = "euclidean") ) ^2
+  distance <- as.matrix( dist(x = FitnessND, method = "euclidean") ) ^2
  
   #Distance between themselves eliminated.
-  diag(distancia) <- Inf
+  diag(distance) <- Inf
   
   #Order the distance matrix
-  sortedIndex <- apply(X = distancia, MARGIN = 1,FUN = order)
+  sortedIndex <- apply(X = distance, MARGIN = 1,FUN = order)
   
-  individuos <- NROW(NonDominatedPop)
-  noMantener <- logical(individuos)
+  individuals <- NROW(NonDominatedPop)
   
-  while(individuos > elitePopSize){
+  # True values indicates the elimination of the indivual
+  dontKeep <- logical(individuals)
+  
+  #Iterative removal of individuals until the size of the elite population is reached
+  while(individuals > elitePopSize){
     
     #Find the minimal distance among individuals
-    minimo <- which(distancia == min(distancia), arr.ind = TRUE,useNames = FALSE)
+    minimum <- which(distance == min(distance), arr.ind = TRUE,useNames = FALSE)
   
-    if(NROW(minimo) == 1){
+    if(NROW(minimum) == 1){
       #Remove the individual directly
-      noMantener[minimo[,2]] <- T
-      distancia[minimo[,2],  ] <- Inf
-      distancia[,minimo[,2]  ] <- Inf
+      dontKeep[minimum[,2]] <- T
+      distance[minimum[,2],  ] <- Inf
+      distance[,minimum[,2]  ] <- Inf
       
     } else {
       
-    fila <- minimo[1,1]
-    columna <- minimo[1,2]
+    row <- minimum[1,1]
+    column <- minimum[1,2]
     
     
     #We found the two closest individuals, now we have to erase one of them. This will be who have the minimum distance between his k-th closest neighbour
     pos <- 1
-    while(distancia[sortedIndex[pos,fila], fila]== distancia[sortedIndex[pos,columna], columna] & pos < NROW(distancia)){
+    while(distance[sortedIndex[pos,row], row]== distance[sortedIndex[pos,column], column] & pos < NROW(distance)){
       pos <- pos + 1
     }
  
     #Erase the closest individual
-    if(distancia[sortedIndex[pos,fila],fila] < distancia[sortedIndex[pos,columna],columna]){
+    if(distance[sortedIndex[pos,row],row] < distance[sortedIndex[pos,column],column]){
    
-      noMantener[fila] <- T
-      distancia[fila,  ] <- Inf
-      distancia[,fila  ] <- Inf
+      dontKeep[row] <- T
+      distance[row,  ] <- Inf
+      distance[,row  ] <- Inf
       
       #The position in sortedIndex is now the last.
-      sortedIndex <- apply(sortedIndex, MARGIN = 2, function(x, value, individuos){
-        x[which(x == value):(individuos - 1)] <- x[which(x == value):(individuos - 1) + 1];
-        x[individuos] <- value;
+      sortedIndex <- apply(sortedIndex, MARGIN = 2, function(x, value, individuals){
+        x[which(x == value):(individuals - 1)] <- x[which(x == value):(individuals - 1) + 1];
+        x[individuals] <- value;
         x
-      }, fila, individuos)
+      }, row, individuals)
       
     } else {
       
-      noMantener[columna] <- T
-      distancia[, columna] <- Inf
-      distancia[columna, ] <- Inf
+      dontKeep[column] <- T
+      distance[, column] <- Inf
+      distance[column, ] <- Inf
      
-      sortedIndex <- apply(sortedIndex, MARGIN = 2, function(x, value, individuos){
-            x[which(x == value):(individuos - 1)] <- x[which(x == value):(individuos - 1) + 1];
-            x[individuos] <- value;
+      sortedIndex <- apply(sortedIndex, MARGIN = 2, function(x, value, individuals){
+            x[which(x == value):(individuals - 1)] <- x[which(x == value):(individuals - 1) + 1];
+            x[individuals] <- value;
             x
-            }, columna, individuos)
+            }, column, individuals)
       
     }
     }
     
-    individuos <- individuos - 1
+    individuals <- individuals - 1
   }
  
- list(poblation = NonDominatedPop[which(! noMantener), , drop = F], individuals = which(! noMantener) )
+ list(poblation = NonDominatedPop[which(! dontKeep), , drop = F], individuals = which(! dontKeep) )
 }
 
 
@@ -355,7 +361,7 @@ MESDIF <- function(paramFile = NULL,
     if(length(output) != 3 )
       stop("You must specify three files to save the results.")
     
-    parametros <- list(seed = seed, 
+    parameters <- list(seed = seed, 
                        algorithm = "MESDIF",
                        outputData = output,
                        nEval = nEval, 
@@ -370,95 +376,100 @@ MESDIF <- function(paramFile = NULL,
                        Obj3 = Obj3,
                        Obj4 = Obj4,
                        targetClass = targetClass,
-                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
+                       targetVariable = if(is.na(targetVariable)) training$attributeNames[length(training$attributeNames)] else targetVariable)
   } else {
-  # Parametros --------------------------
-    parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
-    if(parametros$algorithm != "MESDIF") 
-      stop(paste("The algorithm specificied (", parametros$algorithm, ") in parameters file is not \"MESDIF\". Check parameters file. Aborting program..."))
+  # Parameters --------------------------
+    parameters <- .read.parametersFile2(file = paramFile)  # parameters of the algorithm
+    if(parameters$algorithm != "MESDIF") 
+      stop(paste("The algorithm specificied (", parameters$algorithm, ") in parameters file is not \"MESDIF\". Check parameters file. Aborting program..."))
     
-    test <- read.keel(file = parametros$inputData[2])        # test data
+    test <- read.keel(file = parameters$inputData[2])        # test data
     
-    training <- read.keel(file = parametros$inputData[1])   # training data
+    training <- read.keel(file = parameters$inputData[1])   # training data
   }
-  if(is.na(parametros$targetVariable))
-    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  if(is.na(parameters$targetVariable))
+    parameters$targetVariable <- training$attributeNames[length(training$attributeNames)]
   #Change target variable if it is neccesary
-  training <- changeTargetVariable(training, parametros$targetVariable)
-  test <- changeTargetVariable(test, parametros$targetVariable)
+  training <- changeTargetVariable(training, parameters$targetVariable)
+  test <- changeTargetVariable(test, parameters$targetVariable)
   #Check if the last variable is categorical.
-  if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
+  if(training$attributeTypes[length(training$attributeTypes)] != 'c' | test$attributeTypes[length(test$attributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   
   #Set the number of fuzzy labels
-  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
-  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
-  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
-  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
+  training <- modifyFuzzyCrispIntervals(training, parameters$nLabels)
+  training$sets <- .giveMeSets(data_types = training$attributeTypes, max = training$max, n_labels = parameters$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parameters$nLabels)
+  test$sets <- .giveMeSets(data_types = test$attributeTypes, max = test$max, n_labels = parameters$nLabels)
   #Set Covered
   #training$covered <- logical(training$Ns)
   test$covered <- logical(test$Ns)
   
     #Remove files
-  file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
+  file.remove(parameters$outputData[which(file.exists(parameters$outputData))])
  
-  
-  if(tolower(parametros$RulesRep) == "can"){
+  # Set the representation of rules (CAN or DNF)
+  if(tolower(parameters$RulesRep) == "can"){
     DNF = FALSE
   } else {
     DNF = TRUE
-    vars <-  Reduce(f = '+', x = training[["conjuntos"]], accumulate = TRUE)
+    vars <-  Reduce(f = '+', x = training[["sets"]], accumulate = TRUE)
     vars <- vars[length(vars)]
   }
   
-  .show_parameters(params = parametros, train = training, test = test)
-  contador <- 0
+  # Show information of the parameters to the user
+  .show_parameters(params = parameters, train = training, test = test)
+  counter <- 0
   
-  Objetivos <- .parseObjetives(parametros = parametros, "MESDIF", DNF)
+  #Get the quality measures uses as objectives
+  Objectives <- .parseObjectives(parameters = parameters, "MESDIF", DNF)
   
-  if(all(is.na(Objetivos[1:3]))) stop("No objective values selected. You must select, at least, one objective value. Aborting...")
+  if(all(is.na(Objectives[1:3]))) stop("No objective values selected. You must select, at least, one objective value. Aborting...")
   
-  cate <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'c'
-  num <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'r' | training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'e'
+  #Get which variable are categorical and numerical to improve the eficiency
+  cate <- training[["attributeTypes"]][- length(training[["attributeTypes"]])] == 'c'
+  num <- training[["attributeTypes"]][- length(training[["attributeTypes"]])] == 'r' | training[["attributeTypes"]][- length(training[["attributeTypes"]])] == 'e'
  
   
   #---------------------------------------------------
   
   
-  #----- OBTENCION DE LAS REGLAS -------------------
-  if(parametros$targetClass != "null"){ # Ejecuci?n para una clase
+  #----- EXECUTION OF THE ALGORITHM -------------------
+  if(parameters$targetClass != "null"){ # Execution for one value of the target class
     cat("\n", "\n", "Searching rules for only one value of the target class...", "\n", "\n", file ="", fill = TRUE) 
-    reglas <- .findRule(parametros$targetClass, "MESDIF", training, parametros, DNF, cate, num, Objetivos)
+    #Execution of the algorithm
+    rules <- .findRule(parameters$targetClass, "MESDIF", training, parameters, DNF, cate, num, Objectives)
     if(! DNF) 
-      reglas <-  matrix(unlist(reglas), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
+      rules <-  matrix(unlist(rules), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
     else 
-      reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
+      rules <-  matrix(unlist(rules), ncol = vars + 1 , byrow = TRUE)
     
-  } else {  #Ejecucion para todas las clases
+  } else {  #Execution for all classes
     
     cat("\n", "\n", "Searching rules for all values of the target class...", "\n", "\n", file ="", fill = TRUE)  
     
     #If we are on Windowns, we cant use mclapply because it use FORK() for parallelism
     if(Sys.info()[1] == "Windows")
-      reglas <- lapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos)
+      rules <- lapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parameters, DNF, cate, num, Objectives)
     else
-      reglas <- parallel::mclapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parametros, DNF, cate, num, Objetivos   , mc.cores = parallel::detectCores() - 1)
+      rules <- parallel::mclapply(X = training$class_names, FUN = .findRule, "MESDIF",training, parameters, DNF, cate, num, Objectives   , mc.cores = parallel::detectCores() - 1)
   
     
     if(! DNF) 
-      reglas <-  matrix(unlist(reglas), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
+      rules <-  matrix(unlist(rules), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
     else 
-      reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
+      rules <-  matrix(unlist(rules), ncol = vars + 1 , byrow = TRUE)
     
-  #Print Rules if we are not in Windows because mclapply doesnt show any output.
-  #if(Sys.info()[1] != "Windows")
+    
   }
-  for(i in seq_len(NROW(reglas))){
+  #Print rules to the user on console and save into a file
+  for(i in seq_len(NROW(rules))){
     cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
-    cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
-    .print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+    cat("GENERATED RULE", i,   file = parameters$outputData[2], sep = " ",fill = TRUE, append = TRUE)
+    #Print the rule into a human-readable format
+    .print.rule(rule = as.numeric( rules[i, - NCOL(rules)] ), max = training$sets, names = training$attributeNames, consecuent = rules[i, NCOL(rules)], types = training$attributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parameters$outputData[2])
     cat("\n","\n",  file = "", sep = "",fill = TRUE)
-    cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
+    cat("\n",  file = parameters$outputData[2], sep = "",fill = TRUE, append = TRUE)
   }
     
     
@@ -468,7 +479,9 @@ MESDIF <- function(paramFile = NULL,
   
   cat("\n", "\n", "Testing rules...", "\n", "\n", file = "", sep = " ", fill = TRUE)
   
-  #--------  Testeo de las reglas --------------------
+  #--------  Rule Testing --------------------
+  #
+  # Store accumulated values to show the 'Global' result as a mean of results
   sumNvars <- 0
   sumCov <- 0
   sumFsup <- 0
@@ -479,9 +492,10 @@ MESDIF <- function(paramFile = NULL,
   sumSign <- 0
   sumAccu <- 0
   
-  n_reglas <- NROW(reglas)
-  for(i in seq_len(n_reglas)){
-    val <- .probeRule2(rule = reglas[i, - NCOL(reglas)], testSet = test, targetClass = reglas[i, NCOL(reglas)], numRule = i, parametros = parametros, Objetivos = Objetivos, Pesos = c(0.7,0.3,0), cate = cate, num = num, DNF = DNF)
+  n_rules <- NROW(rules)
+  for(i in seq_len(n_rules)){
+    #Take the test values of each rule
+    val <- .proveRule(rule = rules[i, - NCOL(rules)], testSet = test, targetClass = rules[i, NCOL(rules)], numRule = i, parameters = parameters, Objectives = Objectives, Weights = c(0.7,0.3,0), cate = cate, num = num, DNF = DNF)
     test[["covered"]] <- val[["covered"]]
     sumNvars <- sumNvars + val[["nVars"]]
     sumCov <- sumCov + val[["coverage"]]
@@ -495,34 +509,34 @@ MESDIF <- function(paramFile = NULL,
   
   
   
-  #Medidas de calidad globales
+  #Global quality measures as a mean of individual values
   cat("Global:", file ="", fill = TRUE)
-  cat(paste("\t - N_rules:", NROW(reglas), sep = " "),
-      paste("\t - N_vars:", round(sumNvars / n_reglas, 6), sep = " "),
-      paste("\t - Coverage:", round(sumCov / n_reglas, 6), sep = " "),
-      paste("\t - Significance:", round(sumSign / n_reglas, 6), sep = " "),
-      paste("\t - Unusualness:", round(sumUnus / n_reglas, 6), sep = " "),
-      paste("\t - Accuracy:", round(sumAccu / n_reglas, 6), sep = " "),
+  cat(paste("\t - N_rules:", NROW(rules), sep = " "),
+      paste("\t - N_vars:", round(sumNvars / n_rules, 6), sep = " "),
+      paste("\t - Coverage:", round(sumCov / n_rules, 6), sep = " "),
+      paste("\t - Significance:", round(sumSign / n_rules, 6), sep = " "),
+      paste("\t - Unusualness:", round(sumUnus / n_rules, 6), sep = " "),
+      paste("\t - Accuracy:", round(sumAccu / n_rules, 6), sep = " "),
       paste("\t - CSupport:", round(sum(test[["covered"]] / test[["Ns"]]), 6), sep = " "),
-      paste("\t - FSupport:", round(sumFsup / n_reglas, 6), sep = " "),
-      paste("\t - FConfidence:", round(sumFconf / n_reglas, 6), sep = " "),
-      paste("\t - CConfidence:", round(sumCconf / n_reglas, 6), sep = " "),
+      paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
+      paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
+      paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
       file = "", sep = "\n"
   )
   
-  #Medidas de calidad globales (Save in testMeasures File)
+  #Save in testMeasures File the global results
   cat( "Global:",
-       paste("\t - N_rules:", nrow(reglas), sep = " "),
-       paste("\t - N_vars:", round(sumNvars / n_reglas, 6), sep = " "),
-       paste("\t - Coverage:", round(sumCov / n_reglas, 6), sep = " "),
-       paste("\t - Significance:", round(sumSign / n_reglas, 6), sep = " "),
-       paste("\t - Unusualness:", round(sumUnus / n_reglas, 6), sep = " "),
-       paste("\t - Accuracy:", round(sumAccu / n_reglas, 6), sep = " "),
+       paste("\t - N_rules:", nrow(rules), sep = " "),
+       paste("\t - N_vars:", round(sumNvars / n_rules, 6), sep = " "),
+       paste("\t - Coverage:", round(sumCov / n_rules, 6), sep = " "),
+       paste("\t - Significance:", round(sumSign / n_rules, 6), sep = " "),
+       paste("\t - Unusualness:", round(sumUnus / n_rules, 6), sep = " "),
+       paste("\t - Accuracy:", round(sumAccu / n_rules, 6), sep = " "),
        paste("\t - CSupport:", round(sum(test[["covered"]] / test[["Ns"]]), 6), sep = " "),
-       paste("\t - FSupport:", round(sumFsup / n_reglas, 6), sep = " "),
-       paste("\t - FConfidence:", round(sumFconf / n_reglas, 6), sep = " "),
-       paste("\t - CConfidence:", round(sumCconf / n_reglas, 6), sep = " "),
-       file = parametros$outputData[3], sep = "\n", append = TRUE
+       paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
+       paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
+       paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
+       file = parameters$outputData[3], sep = "\n", append = TRUE
   )
   
   #---------------------------------------------------
@@ -531,21 +545,21 @@ MESDIF <- function(paramFile = NULL,
 
 
 
-.findRule <- function(targetClass, algorithm, training, parametros, DNF, cate, num, Objetivos, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE, minCnf = 0.6){
+.findRule <- function(targetClass, algorithm, training, parameters, DNF, cate, num, Objectives, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE, minCnf = 0.6){
   #Check if target class is valid
   if(! any(training$class_names == targetClass)) stop("Invalid target class value provided.")
   #cat(" ? Target value:", targetClass ,"\n", file = "", sep = " ", fill = TRUE)
   
-  por_cubrir = training$examplesPerClass[[targetClass]]
-  rule <- .ejecutarga(algorithm = algorithm, dataset = training, targetClass = targetClass, n_vars = training$nVars, por_cubrir = por_cubrir, nLabels = parametros$nLabels, N_evals = parametros$nEval,  tam_pob = parametros$popLength, p_cross = parametros$crossProb, p_mut = parametros$mutProb, seed = parametros$seed, Objetivos = Objetivos, Pesos = c(0.7,0.3,0), DNFRules = DNF, cate = cate, num = num, elitism = parametros[["elitePop"]], porcCob = porcCob, strictDominance = strictDominance, reInit = reInit, minCnf = minCnf)     
+  to_cover = training$examplesPerClass[[targetClass]]
+  rule <- .executeGA(algorithm = algorithm, dataset = training, targetClass = targetClass, n_vars = training$nVars, to_cover = to_cover, nLabels = parameters$nLabels, N_evals = parameters$nEval,  tam_pob = parameters$popLength, p_cross = parameters$crossProb, p_mut = parameters$mutProb, seed = parameters$seed, Objectives = Objectives, Weights = c(0.7,0.3,0), DNFRules = DNF, cate = cate, num = num, elitism = parameters[["elitePop"]], porcCob = porcCob, strictDominance = strictDominance, reInit = reInit, minCnf = minCnf)     
   
   
-  reglas <- vector(mode = "list", length = NROW(rule))
+  rules <- vector(mode = "list", length = NROW(rule))
   if(length(rule > 0)){
     rule <- cbind(rule, targetClass)
-    for(i in seq_len(length(reglas))){
-      reglas[[i]] <- rule[i,]
+    for(i in seq_len(length(rules))){
+      rules[[i]] <- rule[i,]
     }
   }
-  reglas
+  rules
 }

@@ -648,7 +648,7 @@ read.keel <- function(file) {
       
       # Get the value of a variable that participate in a rule
       # If is categorical, the value is the name of the category
-      # If it is real, print the fuzzy definition as 'Label nº-label (minValue, mediumValue, maxValue)'
+      # If it is real, print the fuzzy definition as 'Label n-label (minValue, mediumValue, maxValue)'
       for (p in seq_len(length(participants))) {
         if (types[p] == 'c') {
           val[p] <- cate[[p]][values[p] + 1]

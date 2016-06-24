@@ -6,71 +6,74 @@
 #
 #
 
-.reInitPob <- function(elitePop, fitnessElite, coveredElite, crowdingDistance, pctVariables, cubiertoActual, dataset, maxRegla, cate, num, crispSets, targetClass, popSize){
-  salida <- matrix(ncol = NCOL(elitePop), nrow = popSize)
-  fitnessSalida <- matrix(ncol = 4, nrow = popSize*2)
+.reInitPob <- function(elitePop, fitnessElite, coveredElite, crowdingDistance, pctVariables, coveredNow, dataset, maxRule, cate, num, crispSets, targetClass, popSize){
+  #Allocate memory for all neccesary variables
+  returnn <- matrix(ncol = NCOL(elitePop), nrow = popSize)
+  fitnessReturnn <- matrix(ncol = 4, nrow = popSize*2)
   crowding <- numeric(popSize * 2)
   numVariables <- round(NCOL(elitePop) * pctVariables)
-  coveredSalida <- matrix(FALSE, nrow = NROW(coveredElite), ncol = popSize)
+  coveredReturn <- matrix(FALSE, nrow = NROW(coveredElite), ncol = popSize)
   
-  #Remove duplicated in elitePop and add this into salida
-  noDuplicados <- which(! duplicated(elitePop))
-
-  elitePop <- elitePop[noDuplicados,, drop = F]
-  fitnessElite <- fitnessElite[noDuplicados,, drop = F]
-  crowdingDistance <- crowdingDistance[noDuplicados]
-  coveredElite <- coveredElite[, noDuplicados, drop = F]
-  numIndividuos <- NROW(elitePop)
-
-    salida[seq_len(numIndividuos), ] <- elitePop
-    fitnessSalida[seq_len(NROW(fitnessElite)), ] <- fitnessElite
+  #Remove duplicated in elitePop and add this into returnn
+  notDuplicated <- which(! duplicated(elitePop))
+  elitePop <- elitePop[notDuplicated,, drop = F]
+  fitnessElite <- fitnessElite[notDuplicated,, drop = F]
+  crowdingDistance <- crowdingDistance[notDuplicated]
+  coveredElite <- coveredElite[, notDuplicated, drop = F]
+  numIndividuals <- NROW(elitePop)
+    
+  #Add the elitePop (the pareto front) to the returnn population
+    returnn[seq_len(numIndividuals), ] <- elitePop
+    fitnessReturnn[seq_len(NROW(fitnessElite)), ] <- fitnessElite
     crowding[seq_len(length(crowdingDistance))] <- crowdingDistance
-    coveredSalida[,seq_len(NCOL(coveredElite))] <- coveredElite
+    coveredReturn[,seq_len(NCOL(coveredElite))] <- coveredElite
 
-  restantes <- popSize - numIndividuos
+  remaining <- popSize - numIndividuals
   # Initialization based on coverage of the rest of the population 
   # Find an example not covered and has the target class
-
-  regla <- numeric(length(maxRegla))
+  rule <- numeric(length(maxRule))
   
-  for(i in seq_len(restantes)){
-    regla[] <- 0
-    regla <- regla + maxRegla
+  for(i in seq_len(remaining)){
+    rule[] <- 0
+    rule <- rule + maxRule  #Add the no-participation value to all variables
     
     # Find an example not covered and has the target class
-    noCubiertos <- which(! cubiertoActual)
-    noCubiertos <- which( dataset[NROW(dataset), noCubiertos] == targetClass )
+    notCovered <- which(! coveredNow)
+    notCovered <- which( dataset[NROW(dataset), notCovered] == targetClass )
     
-    if(length(noCubiertos) > 0)
-           if(length(noCubiertos > 1))
-            ejemplo <- dataset[seq_len(NROW(dataset) - 1), sample(noCubiertos, size = 1)]
+    if(length(notCovered) > 0)
+           if(length(notCovered > 1))  #If there is more than one example, select one randomly
+            example <- dataset[seq_len(NROW(dataset) - 1), sample(notCovered, size = 1)]
            else
-             ejemplo <- dataset[seq_len(NROW(dataset) - 1), noCubiertos]
-         else
-           ejemplo <- dataset[seq_len(NROW(dataset) - 1), sample(NCOL(dataset), size = 1)]
+             example <- dataset[seq_len(NROW(dataset) - 1), notCovered]
+         else # If all examples are covered, get one randomly
+           example <- dataset[seq_len(NROW(dataset) - 1), sample(NCOL(dataset), size = 1)]
       
-         #Get the values of all variable that cover the example
-            valores <- numeric(length(ejemplo))
-            for(ii in seq_len(length(valores))){
+         #Get the values of all variables that cover the example
+            values <- numeric(length(example))
+            for(ii in seq_len(length(values))){
               if(cate[ii])
-                valores[ii] <- ejemplo[ii] + 1
+                values[ii] <- example[ii] + 1   # +1 because categories are numbered from zero to maxValue -1
               
               if(num[ii]){ # Numerical variable
                 #Get the interval the variable belongs to
-               valores[ii] <- which( ejemplo[ii] > (crispSets[,1,ii] + .tolerance) & ejemplo[ii] <= (crispSets[,2,ii] + .tolerance)) - 1
+               values[ii] <- which( example[ii] > (crispSets[,1,ii] + .tolerance) & example[ii] <= (crispSets[,2,ii] + .tolerance)) - 1
               }
             }
             
-            #Get the value of the selected variables that covers the example
+            #Now we have a rule that fits perfectly the selected example.
+            #The next lines select a random number of these variales to generate a rule
+            #that cover the selected example but with less variables 
             numInterv <- sample(numVariables, size = 1)
-            vars <- sample(length(maxRegla), size = numInterv, replace = FALSE)
+            vars <- sample(length(maxRule), size = numInterv, replace = FALSE)
             
-            regla[vars] <- valores[vars]
-            numIndividuos <- numIndividuos + 1
-            salida[numIndividuos,] <- regla
+            rule[vars] <- values[vars]
+            numIndividuals <- numIndividuals + 1
+            returnn[numIndividuals,] <- rule
   }
   
-  list(pop = salida, fitness = fitnessSalida, crowd = crowding, cov = coveredSalida)
+  #Return 
+  list(pop = returnn, fitness = fitnessReturnn, crowd = crowding, cov = coveredReturn)
 }
 
 
@@ -84,12 +87,13 @@
 #
 
 .selectionNMEEF <- function(pop, popSize, rank, crowding, fitness, covered) {
-  salida <- matrix(nrow = popSize, ncol = ncol(pop))
-  fitnessSalida <- matrix(nrow = popSize, ncol = 4)
-  coveredSalida <- matrix(nrow = NROW(covered), ncol = popSize)
+  returnn <- matrix(nrow = popSize, ncol = ncol(pop))
+  fitnessReturnn <- matrix(nrow = popSize, ncol = 4)
+  coveredReturn <- matrix(nrow = NROW(covered), ncol = popSize)
   mating <- matrix(NA, nrow = 2, ncol = popSize)
   
   equals <- seq_len(popSize) # Tournaments among the same individual isnt allowed
+  #Precompute which individals are chosen for the tournament
  while(length(equals > 0)){
     mating[,equals] <- matrix(sample(seq_len(popSize), size = length(equals) * 2, replace = TRUE) , nrow = 2)
     equals <- which(mating[1,] == mating[2,])
@@ -99,42 +103,46 @@
   winners1 <- which(rank[mating[1,]] < rank[mating[2,]])
   winners2 <- which(rank[mating[2,]] < rank[mating[1,]])
   
+  # Put the winners individuals into the returned population
   pos <- 1
   if (length(winners1) > 0) {
-    salida[seq_len(length(winners1)),] <- pop[mating[1,winners1],]
-    fitnessSalida[seq_len(length(winners1)),] <- fitness[mating[1,winners1],]
-    coveredSalida[,seq_len(length(winners1))] <- covered[,mating[1,winners1]]
+    returnn[seq_len(length(winners1)),] <- pop[mating[1,winners1],]
+    fitnessReturnn[seq_len(length(winners1)),] <- fitness[mating[1,winners1],]
+    coveredReturn[,seq_len(length(winners1))] <- covered[,mating[1,winners1]]
     pos <- pos + length(winners1)
   }
   if (length(winners2) > 0) {
-    salida[pos:(pos+length(winners2) -1),] <- pop[mating[2,winners2],]
-    fitnessSalida[pos:(pos+length(winners2) -1 ),] <- fitness[mating[2,winners2],]
-    coveredSalida[,pos:(pos+length(winners2) -1 )] <- covered[,mating[2,winners2]]
+    returnn[pos:(pos+length(winners2) -1),] <- pop[mating[2,winners2],]
+    fitnessReturnn[pos:(pos+length(winners2) -1 ),] <- fitness[mating[2,winners2],]
+    coveredReturn[,pos:(pos+length(winners2) -1 )] <- covered[,mating[2,winners2]]
     pos <- pos + length(winners2)
   }
   
+  
   #If there are ties, we solve it by his crowding distance (more is better)
-  iguales <- which(rank[mating[2,]] == rank[mating[1,]])
-  if (length(iguales) > 0) {
-    mating <- mating[,iguales, drop = F]
+  equals <- which(rank[mating[2,]] == rank[mating[1,]])
+  if (length(equals) > 0) {
+    mating <- mating[,equals, drop = F]
     
     winners1 <- which(crowding[mating[1,]] >= crowding[mating[2,]])
     winners2 <- which(crowding[mating[2,]] > crowding[mating[1,]])
+    
+    #Put the winners into the returned population
     if (length(winners1) > 0) {
-      salida[pos:(pos+length(winners1) - 1),] <- pop[mating[1,winners1],]
-      fitnessSalida[pos:(pos+length(winners1) -1),] <- fitness[mating[1,winners1],]
-      coveredSalida[,pos:(pos+length(winners1) -1 )] <- covered[,mating[1,winners1]]
+      returnn[pos:(pos+length(winners1) - 1),] <- pop[mating[1,winners1],]
+      fitnessReturnn[pos:(pos+length(winners1) -1),] <- fitness[mating[1,winners1],]
+      coveredReturn[,pos:(pos+length(winners1) -1 )] <- covered[,mating[1,winners1]]
       pos <- pos + length(winners1)
     }
     if (length(winners2) > 0) {
-      salida[pos:(pos+length(winners2) -1),] <- pop[mating[2,winners2],]
-      fitnessSalida[pos:(pos+length(winners2) -1),] <- fitness[mating[2,winners2],]
-      coveredSalida[,pos:(pos+length(winners2) -1 )] <- covered[,mating[2,winners2]]
+      returnn[pos:(pos+length(winners2) -1),] <- pop[mating[2,winners2],]
+      fitnessReturnn[pos:(pos+length(winners2) -1),] <- fitness[mating[2,winners2],]
+      coveredReturn[,pos:(pos+length(winners2) -1 )] <- covered[,mating[2,winners2]]
     }
   }
   
   #Returns the selected population, the fitness of this individuals and his covered examples. (crowding distance will be computed after)
-  list(population = salida, fitness = fitnessSalida, cov = coveredSalida)
+  list(population = returnn, fitness = fitnessReturnn, cov = coveredReturn)
   
 }
 
@@ -153,23 +161,23 @@
 .calculateDominance <- function(q, p, strictDominance){
   #We calculate if p domain q only.
   
-  dominaP <- F
-  dominaQ <- F
+  domineP <- F
+  domineQ <- F
   
   if(strictDominance){
-    dominaP <- any(p > q)
-    dominaQ <- any(p < q)
+    domineP <- any(p > q)
+    domineQ <- any(p < q)
   } else {
-    dominaQ <- any(p < q)
-    dominaP <- any(p >= q)
+    domineQ <- any(p < q)
+    domineP <- any(p >= q)
   }
   
   #return
-  if(dominaQ == dominaP)
+  if(domineQ == domineP)
     return(0L)
-  if(dominaQ)
+  if(domineQ)
     return(1L)
-  if(dominaP)
+  if(domineP)
     return(-1L)
 }
 
@@ -190,33 +198,31 @@
   else
     size <- NROW(pop)
   
+ #Preallocate memory 
   distance <- numeric(size)
   measures <- numeric(size)
   num_measures <- seq_len(NCOL(pop))
   
-  
+  #Calculate the crowding distance
+  #If there are only two or less individuals, its crowding distance is infinity
   if(size <= 2){
     distance <- Inf
   } else {
-    #For every measure
+    #For every measure 
     for( i in num_measures){
       measures <- pop[,i]
-      #Order measures
+      #Order measures of individuals 
       indices <- order(measures, decreasing = FALSE)
-      
-      #/**/ REMOVE THIS AND USE ORDER
-      #indices <- .qsort(measures, 1, length(measures), seq_len(length(measures)))
-      #indices <- indices$indices
-      #/**/
-      
+
       #Set boundary individuals distance as infinity
+      #(For this reason, with size <= 2 we dont need to compute the distance)
       distance[c(indices[1], indices[size])] <- Inf
       
-      #Compute distance of the rest.
+      #Compute the crowding distance of the remaining individuals
       for(j in 2:(size - 1)){
-        distancia <- measures[indices[j + 1]] - measures[indices[j - 1]]
-        if(distancia != 0){
-          distance[indices[j]] <- distance[indices[j]] + (distancia / (measures[indices[size]] - measures[indices[1]]) )
+        auxDistance <- measures[indices[j + 1]] - measures[indices[j - 1]]
+        if(auxDistance != 0){
+          distance[indices[j]] <- distance[indices[j]] + (auxDistance / (measures[indices[size]] - measures[indices[1]]) )
         }
       }
     }
@@ -236,7 +242,7 @@
 #
 #
 
-.fillPopulation <- function(fronts, numFronts, fitness, coveredFrentes, popSize, nObjs){
+.fillPopulation <- function(fronts, numFronts, fitness, coveredFronts, popSize, nObjs){
   suma <- 0
   if(is.vector(fronts[[1]]))
     cols <- length(fronts[[1]])
@@ -247,15 +253,15 @@
   newRank <- numeric(popSize * 2) + Inf  #No ranked indivudals cant be selected
   distance <- numeric(popSize)
   fit <- matrix(ncol = 4, nrow = popSize)
-  frente <- 1
-  coveredbyInd <- matrix(FALSE, nrow = NROW(coveredFrentes[[1]]), ncol= popSize * 2)
+  front <- 1
+  coveredbyInd <- matrix(FALSE, nrow = NROW(coveredFronts[[1]]), ncol= popSize * 2)
   #Indicate if the last front introduced in the population fits perfectly or we have to make the ordering by crowding distance of the front
   FitPerfectly <- TRUE
   
-  #for(i in seq_len(length(fronts))){
+  
   for(i in seq_len(numFronts)){
     #If front fits in newPop, we introduce completely in it
-    frente <- i
+    front <- i
     if(! is.vector(fronts[[i]]))
       rows <- NROW(fronts[[i]])
     else 
@@ -269,34 +275,36 @@
       newPop[(suma+1):(rows + suma), ] <- fronts[[i]]
       newRank[(suma+1):(rows + suma)] <- i - 1
       fit[(suma+1):(rows + suma), ] <- fitness[[i]]
-      coveredbyInd[, (suma+1):(rows + suma)] <- coveredFrentes[[i]]
+      coveredbyInd[, (suma+1):(rows + suma)] <- coveredFronts[[i]]
       suma <- suma + rows
     } else {
       break
     }
   }
   
-    #If suma is less than popSize, front "frente" doesnt fit completely, so we must order by crowding distance
+    #If suma is less than popSize, front "front" doesnt fit completely, so we must order by crowding distance
+    #and insert only the best individuals
     if(suma < popSize){
       FitPerfectly <- FALSE
-      porRellenar <- popSize - suma
+      toFill <- popSize - suma
       #Calculate crowding distance
-      distancia <- .crowdingDistance(fitness[[frente]])
+      distance2 <- .crowdingDistance(fitness[[front]])
       
       #Order by crowding distance and get the best individuals till the population is filled
-      #orden <- order(distancia, decreasing = TRUE)[seq_len(porRellenar)]
-      orden <- .qsort(distancia, 1, length(distancia), index = seq_len(length(distancia)))
-      orden <- orden$indices[length(orden$vector):(length(orden$vector) - porRellenar + 1) ]
+      #orden <- order(distance2, decreasing = TRUE)[seq_len(toFill)]
+      orden <- .qsort(distance2, 1, length(distance2), index = seq_len(length(distance2)))
+      orden <- orden$indices[length(orden$vector):(length(orden$vector) - toFill + 1) ]
       
       #Fill the population and update parameters
-      newPop[(suma + 1):popSize, ] <- fronts[[frente]][orden, , drop = F]
-      distance[(suma + 1):popSize] <- distancia[orden]
-      newRank[(suma+1):popSize] <- frente - 1
-      fit[(suma + 1):popSize, ] <- fitness[[frente]][orden, , drop = F]
-      coveredbyInd[, (suma + 1):popSize] <- coveredFrentes[[frente]][,orden,drop = F]
+      newPop[(suma + 1):popSize, ] <- fronts[[front]][orden, , drop = F]
+      distance[(suma + 1):popSize] <- distance2[orden]
+      newRank[(suma+1):popSize] <- front - 1
+      fit[(suma + 1):popSize, ] <- fitness[[front]][orden, , drop = F]
+      coveredbyInd[, (suma + 1):popSize] <- coveredFronts[[front]][,orden,drop = F]
     }
   
-  list(population = newPop, distancia = distance, fitness = fit, rank = newRank, cov = coveredbyInd, fits = FitPerfectly)
+  #Return
+  list(population = newPop, distance = distance, fitness = fit, rank = newRank, cov = coveredbyInd, fits = FitPerfectly)
   
   
 }
@@ -312,37 +320,38 @@
 #
 #
 
-.mutateNMEEF <- function(cromosoma, variable, max_valor_variables, DNF_Rule){
+.mutateNMEEF <- function(chromosome, variable, maxVariableValues, DNF_Rule){
   
-  # Estos pesos hay que quitarlos una vez SDIGA funcione correctamente.
-  mutation_type <- sample(x = 1:2, size = 1, prob = c(6/11, 5/11))   # Tipo 1 - tipo 2 aleatoriamente
+
+  mutation_type <- sample(x = 1:2, size = 1, prob = c(6/11, 5/11))   # Type 1 - type 2 randomly
   
   
-  if(! DNF_Rule){  #Reglas can-nicas
+  if(! DNF_Rule){  #CAN Rules
     if(mutation_type == 1L){
+      #If type == 1, erase the variable
+      chromosome[variable] <- maxVariableValues[variable] #No participation value is the maximum value for the variable
       
-      cromosoma[variable] <- max_valor_variables[variable] #Se pone el valor de no participacion
-      
-    } else {  #Asigna valor aleatorio en la variable (NO incluye valor de eliminacion)
-      
-      value <- sample(x = 0:(max_valor_variables[variable] - 1), size = 1)
-      cromosoma[variable] <- value 
+    } else {  
+      #Assing a random value to the variable (no participation value is not taken into account)
+      value <- sample(x = 0:(maxVariableValues[variable] - 1), size = 1)
+      chromosome[variable] <- value 
       
     }
     
-  } else { #Reglas DNF
-    
+  } else { #DNF Rules
+    #Get the range where the values of the chromosome belongs to the variable
     variable <- variable + 1
-    rango <- (max_valor_variables[variable - 1] + 1):max_valor_variables[variable]
+    range <- (maxVariableValues[variable - 1] + 1):maxVariableValues[variable]
     
     
-    if(mutation_type == 1){  #Valor de no participaci-n de la variable
+    if(mutation_type == 1){  
+      #If a rule is DNF, to erase the variable we put all his values to 0
+      chromosome[range] <- 0
       
-      cromosoma[rango] <- 0
+    } else {  
+      #Assign a random value to each value within the range.
       
-    } else {  #Asigna valor aleatorio en la variable
-      
-      cromosoma[rango] <- sample(x = 0:1 , size = length(rango), replace = TRUE)
+      chromosome[range] <- sample(x = 0:1 , size = length(range), replace = TRUE)
       
     }
     
@@ -350,7 +359,7 @@
   
   
   
-  cromosoma  # Return
+  chromosome  # Return
   
 }
 
@@ -552,8 +561,10 @@ NMEEF_SD <- function(paramFile = NULL,
                      )
 {
  
+  
   if(is.null(paramFile)){
-    #Generate our "parameters file"
+    #Generate our "parameters file" from the variables of the function call
+    #Check conditions
     if(class(training) != "keel" | class(test) != "keel")
       stop("'training' or 'test' parameters is not a KEEL class")
     
@@ -566,7 +577,7 @@ NMEEF_SD <- function(paramFile = NULL,
     if(length(output) != 3 )
       stop("You must specify three files to save the results.")
     
-    parametros <- list(seed = seed, 
+    parameters <- list(seed = seed, 
                        algorithm = "NMEEFSD",
                        outputData = output,
                        nEval = nEval, 
@@ -583,111 +594,116 @@ NMEEF_SD <- function(paramFile = NULL,
                        porcCob = porcCob,
                        StrictDominance = StrictDominance,
                        targetClass = targetClass,
-                       targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
+                       targetVariable = if(is.na(targetVariable)) training$attributeNames[length(training$attributeNames)] else targetVariable)
   } else {
 
-    # Parametros --------------------------
-    parametros <- .read.parametersFile2(file = paramFile)  # parametros del algoritmo
+    # Parameters --------------------------
+    parameters <- .read.parametersFile2(file = paramFile)  # Algorithm Parameters
     
-    if(parametros[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for \"NMEEF-SD\"")
+    if(parameters[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for \"NMEEF-SD\"")
    
-    training <- read.keel(file = parametros$inputData[1])   # training data 
-    test <- read.keel(file = parametros$inputData[2])        # test data
+    training <- read.keel(file = parameters$inputData[1])   # training data 
+    test <- read.keel(file = parameters$inputData[2])        # test data
    
   }
-  if(is.na(parametros$targetVariable))
-    parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+  if(is.na(parameters$targetVariable))
+    parameters$targetVariable <- training$attributeNames[length(training$attributeNames)]
   #Change target variable if it is neccesary
-  training <- changeTargetVariable(training, parametros$targetVariable)
-  test <- changeTargetVariable(test, parametros$targetVariable)
+  training <- changeTargetVariable(training, parameters$targetVariable)
+  test <- changeTargetVariable(test, parameters$targetVariable)
   #Check if the last variable is categorical.
-  if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
+  if(training$attributeTypes[length(training$attributeTypes)] != 'c' | test$attributeTypes[length(test$attributeTypes)] != 'c')
     stop("Target variable is not categorical.")
   #Set the number of fuzzy labels
-  training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
-  training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
-  test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
-  test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
+  training <- modifyFuzzyCrispIntervals(training, parameters$nLabels)
+  training$sets <- .giveMeSets(data_types = training$attributeTypes, max = training$max, n_labels = parameters$nLabels)
+  test <- modifyFuzzyCrispIntervals(test, parameters$nLabels)
+  test$sets <- .giveMeSets(data_types = test$attributeTypes, max = test$max, n_labels = parameters$nLabels)
   #Set Covered
   #training$covered <- logical(training$Ns)
   test$covered <- logical(test$Ns)
   
-  file.remove(parametros$outputData[which(file.exists(parametros$outputData))])
+  #Remove older result file to overwrite it later.
+  file.remove(parameters$outputData[which(file.exists(parameters$outputData))])
  
-  if(tolower(parametros$RulesRep) == "can"){
+  # Set the rule representation for the genetic algorithm
+  if(tolower(parameters$RulesRep) == "can"){
     DNF = FALSE
   } else {
     DNF = TRUE
-    vars <-  Reduce(f = '+', x = training[["conjuntos"]], accumulate = TRUE)
+    vars <-  Reduce(f = '+', x = training[["sets"]], accumulate = TRUE)
     vars <- vars[length(vars)]
   }
   
-  .show_parameters(params = parametros, train = training, test = test)
+  #Show the execution parameters to the user
+  .show_parameters(params = parameters, train = training, test = test)
   contador <- 0
   
-  Objetivos <- .parseObjetives(parametros = parametros, "NMEEFSD", DNF)
+  Objectives <- .parseObjectives(parameters = parameters, "NMEEFSD", DNF)
   
-  if(all(is.na(Objetivos[1:3]))) stop("No objective values selected. You must select, at least, one objective value. Aborting...")
+  if(all(is.na(Objectives[1:3]))) stop("No objective values selected. You must select, at least, one objective value. Aborting...")
  
-   cate <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'c'
-  num <- training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'r' | training[["atributeTypes"]][- length(training[["atributeTypes"]])] == 'e'
+  #Determine which attibutes are numeric or categorical (this variables have different kind of computation)
+   cate <- training[["attributeTypes"]][- length(training[["attributeTypes"]])] == 'c'
+  num <- training[["attributeTypes"]][- length(training[["attributeTypes"]])] == 'r' | training[["attributeTypes"]][- length(training[["attributeTypes"]])] == 'e'
   
+
   
-  #---------------------------------------------------
-  
-  
-  #----- OBTENCION DE LAS REGLAS -------------------
-  if(parametros$targetClass != "null"){ # Ejecuci-n para una clase
+  #----- EXECUTION OF THE ALGORITHM  -------------------
+  if(parameters$targetClass != "null"){ # Execution for an only class
     cat("\n", "\n", "Searching rules for only one value of the target class...", "\n", "\n", file ="", fill = TRUE) 
-    reglas <- .findRule(parametros$targetClass, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes", minCnf)
+    #Execute the genetic algorithm
+    rules <- .findRule(parameters$targetClass, "NMEEFSD", training, parameters, DNF, cate, num, Objectives, as.numeric(parameters[["porcCob"]]), parameters[["StrictDominance"]] == "yes", parameters[["reInitPob"]] == "yes", minCnf)
     
-    if(! is.null(unlist(reglas)) ){
+    if(! is.null(unlist(rules)) ){
       if(! DNF) 
-        reglas <-  matrix(unlist(reglas), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
+        rules <-  matrix(unlist(rules), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
       else 
-        reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
+        rules <-  matrix(unlist(rules), ncol = vars + 1 , byrow = TRUE)
       
-      for(i in seq_len(NROW(reglas))){
+      #Print the rule in the console and save into the rules file.
+      for(i in seq_len(NROW(rules))){
         cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
-        cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
-        .print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+        cat("GENERATED RULE", i,   file = parameters$outputData[2], sep = " ",fill = TRUE, append = TRUE)
+        .print.rule(rule = as.numeric( rules[i, - NCOL(rules)] ), max = training$sets, names = training$attributeNames, consecuent = rules[i, NCOL(rules)], types = training$attributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parameters$outputData[2])
         cat("\n","\n",  file = "", sep = "",fill = TRUE)
-        cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
+        cat("\n",  file = parameters$outputData[2], sep = "",fill = TRUE, append = TRUE)
       }
     } else {
       cat("No rules found with a confidence greater than the specified", file = "", fill = TRUE)
-      cat("No rules found with a confidence greater than the specified\n", file = parametros$outputData[2], append = TRUE)
-      reglas <- numeric()
+      cat("No rules found with a confidence greater than the specified\n", file = parameters$outputData[2], append = TRUE)
+      rules <- numeric()
     }
     
-  } else {  #Ejecucion para todas las clases
+  } else {  #Execution for all classes
     
     cat("\n", "\n", "Searching rules for all values of the target class...", "\n", "\n", file ="", fill = TRUE)  
     
-    if(Sys.info()[1] == "Windows")
-      reglas <- lapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes", minCnf  )
-    else
-      reglas <- parallel::mclapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parametros, DNF, cate, num, Objetivos, as.numeric(parametros[["porcCob"]]), parametros[["StrictDominance"]] == "yes", parametros[["reInitPob"]] == "yes"   , mc.cores = parallel::detectCores() - 1, minCnf)
+    #Launch the genetic algorithm for each class, paralelize the process for a better performance
+    if(Sys.info()[1] == "Windows"){
+      rules <- lapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parameters, DNF, cate, num, Objectives, as.numeric(parameters[["porcCob"]]), parameters[["StrictDominance"]] == "yes", parameters[["reInitPob"]] == "yes", minCnf  )
+    } else { 
+      rules <- parallel::mclapply(X = training$class_names, FUN = .findRule, "NMEEFSD", training, parameters, DNF, cate, num, Objectives, as.numeric(parameters[["porcCob"]]), parameters[["StrictDominance"]] == "yes", parameters[["reInitPob"]] == "yes"   , mc.cores = parallel::detectCores() - 1, minCnf)
+    }  
     
-    if(! is.null(unlist(reglas)) ){
+    if(! is.null(unlist(rules)) ){
       if(! DNF) 
-        reglas <-  matrix(unlist(reglas), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
+        rules <-  matrix(unlist(rules), ncol =  training[["nVars"]] + 1 , byrow = TRUE)
       else 
-        reglas <-  matrix(unlist(reglas), ncol = vars + 1 , byrow = TRUE)
+        rules <-  matrix(unlist(rules), ncol = vars + 1 , byrow = TRUE)
       
-      #Print Rules (In windows, mclapply doesnt work, so the rules are printed by ".findRule" function)
-    #if(Sys.info()[1] != "Windows")
-      for(i in seq_len(NROW(reglas))){
+      #Print Rules in console and in the rules file
+      for(i in seq_len(NROW(rules))){
         cat("GENERATED RULE", i,   file = "", sep = " ",fill = TRUE)
-        cat("GENERATED RULE", i,   file = parametros$outputData[2], sep = " ",fill = TRUE, append = TRUE)
-        .print.rule(rule = as.numeric( reglas[i, - NCOL(reglas)] ), max = training$conjuntos, names = training$atributeNames, consecuente = reglas[i, NCOL(reglas)], types = training$atributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parametros$outputData[2])
+        cat("GENERATED RULE", i,   file = parameters$outputData[2], sep = " ",fill = TRUE, append = TRUE)
+        .print.rule(rule = as.numeric( rules[i, - NCOL(rules)] ), max = training$sets, names = training$attributeNames, consecuent = rules[i, NCOL(rules)], types = training$attributeTypes,fuzzySets = training$fuzzySets, categoricalValues = training$categoricalValues, DNF, rulesFile = parameters$outputData[2])
         cat("\n","\n",  file = "", sep = "",fill = TRUE)
-        cat("\n",  file = parametros$outputData[2], sep = "",fill = TRUE, append = TRUE)
+        cat("\n",  file = parameters$outputData[2], sep = "",fill = TRUE, append = TRUE)
       }
     } else {
       cat("No rules found with a confidence greater than the specified", file = "", fill = TRUE)
-      cat("No rules found with a confidence greater than the specified\n", file = parametros$outputData[2], append = TRUE)
-      reglas <- numeric()
+      cat("No rules found with a confidence greater than the specified\n", file = parameters$outputData[2], append = TRUE)
+      rules <- numeric()
     }
     
   }
@@ -696,8 +712,9 @@ NMEEF_SD <- function(paramFile = NULL,
   
   cat("\n", "\n", "Testing rules...", "\n", "\n", file = "", sep = " ", fill = TRUE)
   
-  #--------  Testeo de las reglas --------------------
-  if(length(reglas) > 0){
+  #--------  Rule testing --------------------
+  if(length(rules) > 0){
+    # Store accumulated values to create the 'Global' values as a mean of indivuals rules
   sumNvars <- 0
   sumCov <- 0
   sumFsup <- 0
@@ -708,9 +725,10 @@ NMEEF_SD <- function(paramFile = NULL,
   sumSign <- 0
   sumAccu <- 0
   
-  n_reglas <- NROW(reglas)
-  for(i in seq_len(n_reglas)){
-    val <- .probeRule2(rule = reglas[i, - NCOL(reglas)], testSet = test, targetClass = reglas[i, NCOL(reglas)], numRule = i, parametros = parametros, Objetivos = Objetivos, Pesos = c(0.7,0.3, 0), cate = cate, num = num, DNF = DNF)
+  n_rules <- NROW(rules)
+  #Print indivual quality measures for each rule in the console and into the quality measures file
+  for(i in seq_len(n_rules)){
+    val <- .proveRule(rule = rules[i, - NCOL(rules)], testSet = test, targetClass = rules[i, NCOL(rules)], numRule = i, parameters = parameters, Objectives = Objectives, Weights = c(0.7,0.3, 0), cate = cate, num = num, DNF = DNF)
     test[["covered"]] <- val[["covered"]]
     sumNvars <- sumNvars + val[["nVars"]]
     sumCov <- sumCov + val[["coverage"]]
@@ -724,42 +742,39 @@ NMEEF_SD <- function(paramFile = NULL,
   
   
   
-  #Medidas de calidad globales
+  #Print global quality measure on console
   cat("Global:", file ="", fill = TRUE)
-  cat(paste("\t - N_rules:", NROW(reglas), sep = " "),
-      paste("\t - N_vars:", round(sumNvars / n_reglas, 6), sep = " "),
-      paste("\t - Coverage:", round(sumCov / n_reglas, 6), sep = " "),
-      paste("\t - Significance:", round(sumSign / n_reglas, 6), sep = " "),
-      paste("\t - Unusualness:", round(sumUnus / n_reglas, 6), sep = " "),
-      paste("\t - Accuracy:", round(sumAccu / n_reglas, 6), sep = " "),
+  cat(paste("\t - N_rules:", NROW(rules), sep = " "),
+      paste("\t - N_vars:", round(sumNvars / n_rules, 6), sep = " "),
+      paste("\t - Coverage:", round(sumCov / n_rules, 6), sep = " "),
+      paste("\t - Significance:", round(sumSign / n_rules, 6), sep = " "),
+      paste("\t - Unusualness:", round(sumUnus / n_rules, 6), sep = " "),
+      paste("\t - Accuracy:", round(sumAccu / n_rules, 6), sep = " "),
       paste("\t - CSupport:", round(sum(test[["covered"]] / test[["Ns"]]), 6), sep = " "),
-      paste("\t - FSupport:", round(sumFsup / n_reglas, 6), sep = " "),
-      paste("\t - FConfidence:", round(sumFconf / n_reglas, 6), sep = " "),
-      paste("\t - CConfidence:", round(sumCconf / n_reglas, 6), sep = " "),
+      paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
+      paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
+      paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
       file = "", sep = "\n"
   )
   
-  #Medidas de calidad globales (Save in testMeasures File FOR THE WEB INTERFACE)
 
-  
-  #Medidas de calidad globales (Save in testMeasures File)
-  
+#Print global quality measures on the quality measures file  
   cat( "Global:",
-       paste("\t - N_rules:", nrow(reglas), sep = " "),
-       paste("\t - N_vars:", round(sumNvars / n_reglas, 6), sep = " "),
-       paste("\t - Coverage:", round(sumCov / n_reglas, 6), sep = " "),
-       paste("\t - Significance:", round(sumSign / n_reglas, 6), sep = " "),
-       paste("\t - Unusualness:", round(sumUnus / n_reglas, 6), sep = " "),
-       paste("\t - Accuracy:", round(sumAccu / n_reglas, 6), sep = " "),
+       paste("\t - N_rules:", nrow(rules), sep = " "),
+       paste("\t - N_vars:", round(sumNvars / n_rules, 6), sep = " "),
+       paste("\t - Coverage:", round(sumCov / n_rules, 6), sep = " "),
+       paste("\t - Significance:", round(sumSign / n_rules, 6), sep = " "),
+       paste("\t - Unusualness:", round(sumUnus / n_rules, 6), sep = " "),
+       paste("\t - Accuracy:", round(sumAccu / n_rules, 6), sep = " "),
        paste("\t - CSupport:", round(sum(test[["covered"]] / test[["Ns"]]), 6), sep = " "),
-       paste("\t - FSupport:", round(sumFsup / n_reglas, 6), sep = " "),
-       paste("\t - FConfidence:", round(sumFconf / n_reglas, 6), sep = " "),
-       paste("\t - CConfidence:", round(sumCconf / n_reglas, 6), sep = " "),
-       file = parametros$outputData[3], sep = "\n", append = TRUE
+       paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
+       paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
+       paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
+       file = parameters$outputData[3], sep = "\n", append = TRUE
   )
   } else {
     cat("No rules for testing", file = "", fill = TRUE)
-    cat("No rules for testing", file = parametros$outputData[2], append = TRUE)
+    cat("No rules for testing", file = parameters$outputData[2], append = TRUE)
   }
   #---------------------------------------------------
   

@@ -18,7 +18,7 @@
 #'
 #' Creates a random general rule
 #' 
-#' It creates a random general rule for a provided dataset with, at most, 50 %% of the variables.
+#' @details It creates a random general rule for a provided dataset with, at most, 50 %% of the variables.
 #' 
 #' @param dataset The keel dataset where getting the data
 #' @param tnorm The T-norm to use: 0 -> minimum T-norm, 1 -> product T-norm
@@ -361,7 +361,7 @@ Rule.addVariable <- function(rule, dataset){
   #'  
   #'  @param rule The rule we want to evaluate (Class "Rule").
   #'  @param dataset The keel dataset object with the examples to compare with the rule (Class "keel")
-  #'  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separar for this task and convert the list into a matrix)
+  #'  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
   #'  @param categoricalValues a logical vector indicating which attributes in the dataset are categorical
   #'  @param numericalValues a logical vector indicating which attributes in the dataset are numerical
   #'  @param t_norm The T-norm to use. 0 for minimum t-norm, 1 for product t-norm (default: 1)
@@ -389,7 +389,7 @@ Rule.addVariable <- function(rule, dataset){
                                  dataset = dataset, 
                                  noClass = data,
                                  nLabels = dim(dataset$fuzzySets)[1], 
-                                 max_regla = dataset$sets,
+                                 maxRule = dataset$sets,
                                  cate = categoricalValues, 
                                  num = numericalValues,
                                  t_norm = t_norm)
@@ -880,7 +880,7 @@ Rule.addVariable <- function(rule, dataset){
     
     AllClass <- as.logical(parameters[[16]])
     exampleClass <- unlist(.getClassAttributes(test$data))
-    datasetNoClass <- matrix(unlist(.separar(test)), nrow = test$nVars, ncol = test$Ns)
+    datasetNoClass <- matrix(unlist(.separate(test)), nrow = test$nVars, ncol = test$Ns)
     
     ###################
     #  TESTING RULES  #
@@ -991,15 +991,15 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
   if(frm == 1){ #Normalized Sum
     class_degrees <- numeric(length(dataset$class_names))
     classes <- integer(dim(df)[2])
-    ejemplo <- 1
+    example <- 1
     for(i in df){ #For each example
       cont <- 1
       for(j in i){ #For each rule
-        class_degrees[pop[[cont]]$clas + 1] <-  class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(ejemplo, cont))
+        class_degrees[pop[[cont]]$clas + 1] <-  class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(example, cont))
         cont <- cont + 1
       }
-      classes[ejemplo] <- which(class_degrees == max(class_degrees))[1] - 1
-      ejemplo <- ejemplo + 1
+      classes[example] <- which(class_degrees == max(class_degrees))[1] - 1
+      example <- example + 1
     }
     
     #Return
@@ -1017,16 +1017,16 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
     
     #Count the sumatory of rules.
     classes <- integer(dim(df)[2])
-    ejemplo <- 1
+    example <- 1
     for(i in df){ #For each example
       cont <- 1
       for(j in i){ #For each rule
-        class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(ejemplo, cont))
+        class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(example, cont))
         cont <- cont + 1
       }
       class_degrees <- class_degrees / class_cont
-      classes[ejemplo] <- which(class_degrees == max(class_degrees))[1] - 1
-      ejemplo <- ejemplo + 1
+      classes[example] <- which(class_degrees == max(class_degrees))[1] - 1
+      example <- example + 1
       class_degrees[] <- 0
     }
     
@@ -1049,7 +1049,7 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
 #'  
 #'  @param pop A list of 'Rule' objects.
 #'  @param dataset A 'keel' object with all the information of the dataset we are working
-#'  @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separar for this task and convert the list into a matrix)
+#'  @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
 #'  @param exampleClass Vector with the classes of all examples of the dataset
 #'  @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
 #'  @param categorical A logical vector indicating which attributes of the dataset are categorical.

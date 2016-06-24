@@ -12,6 +12,7 @@
   n_mats <- length(min)
   lst <- lapply(X = 1:n_mats, FUN = function(x) .FuzzyIntervals(min = min[x], max = max[x], num_sets = num_sets, types = types[x]))
   
+  #Collect on an array
   arr <- do.call(cbind, lst)
   dim(arr) <- c(num_sets, 3, n_mats)
   arr
@@ -32,18 +33,18 @@
   
   
   
-  cjto_fuzzy <- matrix(nrow = num_sets, ncol = 3)
+  fuzzySet <- matrix(nrow = num_sets, ncol = 3)
   
   for(j in 1:num_sets){ # For each fuzzy set
-    if(types != "c"){ 
+    if(types != "c"){ #If the variable is not categorical 
       xmax <- min + ( (max - min) / (num_sets - 1) ) * j
       
      
       
       #Save fuzzy set
-      cjto_fuzzy[j, 1] <- xmin
-      cjto_fuzzy[j, 2] <- xmedio
-      cjto_fuzzy[j, 3] <- xmax
+      fuzzySet[j, 1] <- xmin
+      fuzzySet[j, 2] <- xmedio
+      fuzzySet[j, 3] <- xmax
       
       #Modify variables 
       xmin <- xmedio
@@ -51,7 +52,7 @@
     }
   }
   #Return
-  cjto_fuzzy
+  fuzzySet
   
 }
 
@@ -61,7 +62,8 @@
 
 #-----------------------------------------------------------------------------------
 #    Creates crisp sets relative to the fuzzy sets generated before.
-#    This works because the fuzzy sets are all triangular. If it does not, it does not work
+#    This works because the fuzzy sets are all triangular and for a given fuzzy sets we know 
+#    the exact cut point. If we implement another kind of fuzzy set, this method does not work anymore
 #-----------------------------------------------------------------------------------
 
 .createCrispIntervals <- function(fuzzyIntervals){
@@ -85,15 +87,18 @@
 # 
 #
 .CrispIntervals <- function(fuzzyInterval){
-  n_vars <- dim(fuzzyInterval)[1] # Cada fila de la matriz es una variable
+  n_vars <- dim(fuzzyInterval)[1] # each row of the matrix is a variable
   
   crispMatrix <- matrix(nrow = n_vars, ncol = 2)
   min <- fuzzyInterval[1,1]
+  # The maximum of the crisp sets is the mean point between 'xmin' and 'xmedio' for the first fuzzy sets
   max <- (fuzzyInterval[1,3] + fuzzyInterval[1,2]) / 2
   crispMatrix[1,1] <- min
   crispMatrix[1,2] <- max
   for(i in 2:n_vars){
+    # The maximum before is now the new minimum
     min <- max
+    #For the second in advance, 'max' is the mean point between 'xmedio' and 'xmax' of the given set.
     max <- (fuzzyInterval[i,3] + fuzzyInterval[i,2]) / 2
     crispMatrix[i,1] <- min
     crispMatrix[i,2] <- max
@@ -115,27 +120,30 @@
 #   before execute this function.
 #
 #
-.grado_pertenencia5 <- function(x, xmin, xmedio, xmax, n_matrices){
+.fuzzyBelongingDegree <- function(x, xmin, xmedio, xmax, n_matrices){
   
   x <- as.numeric(x)
   
-  resultado <- numeric(length(x)) + 1
+  result <- numeric(length(x)) + 1
+  #Sum the tolerance value to the values
   xminX <- numeric(length(x)) + xmin + .tolerance
   xmedioX <- numeric(length(x)) + xmedio + .tolerance
   xmaxX <- numeric(length(x)) + xmax + .tolerance
   
+  #Calculate which values are out of bounds, are less than xmedio or greater then xmedio 
+  #because each one have a diferente belonging degree computation
+  outOfBounds <- which( x <= xminX | x >= xmaxX )
+  lessXMedio <- which( x < xmedioX & x > xminX )
+  greaterXMedio <- which( x > xmedioX & x < xmaxX )
   
-  fuera_limites <- which( x <= xminX | x >= xmaxX )
-  menorXMedio <- which( x < xmedioX & x > xminX )
-  mayorXMedio <- which( x > xmedioX & x < xmaxX )
+  #Calculate the belonging degree (TRIANGULAR SETS ONLY !)
+  result[outOfBounds] <- 0
+  result[lessXMedio] <- (( x[lessXMedio] - xminX[lessXMedio] ) * (1 / (xmedioX[lessXMedio] - xminX[lessXMedio] )))
+  result[greaterXMedio] <- (( xmaxX[greaterXMedio] - x[greaterXMedio] ) * (1 / (xmaxX[greaterXMedio] - xmedioX[greaterXMedio] )))
   
-  resultado[fuera_limites] <- 0
-  resultado[menorXMedio] <- (( x[menorXMedio] - xminX[menorXMedio] ) * (1 / (xmedioX[menorXMedio] - xminX[menorXMedio] )))
-  resultado[mayorXMedio] <- (( xmaxX[mayorXMedio] - x[mayorXMedio] ) * (1 / (xmaxX[mayorXMedio] - xmedioX[mayorXMedio] )))
+  result <- matrix(result, ncol = n_matrices, byrow = TRUE)
   
-  resultado <- matrix(resultado, ncol = n_matrices, byrow = TRUE)
-  
-  resultado
+  result
 }
 
 
@@ -143,18 +151,19 @@
 
 #
 #
-# It is like grado_pertenencia5 but for crisp belonging and you must specify the min and max
+# It is like fuzzyBelongingDegree but for crisp belonging and you must specify the min and max
 #   value for crisp sets
 #
 #
 
-.gradoPertenenciaCrisp2 <- function(x, xmin, xmax, DNF = FALSE){
+.crispBelongingDegree <- function(x, xmin, xmax, DNF = FALSE){
   
   x <- as.numeric(x)
   result <- numeric(length(x))
   
- 
+    #Gets elements inside crisp sets bounds
     resulta <- which((x > xmin + .tolerance) & x <= (xmax + .tolerance))
+    #Assing value of 1 to elements inside bounds
     result[resulta] <- 1
     result <- matrix(result, ncol = length(xmax), byrow = TRUE)
     result
@@ -168,14 +177,13 @@
 
 #
 #
-#  Return the maximum fuzzy degree for all variables that participe in a DNF rule.
+#  Return the fuzzy belonging degree for a DNF rule
 #
 #
-.getMaxFuzzyForAVariable2 <- function(values, ejemplo_num){
-
-  resultado <- .grado_pertenencia5(x = as.vector(ejemplo_num), xmin = values[2,], xmedio = values[3,], xmax = values[4,], n_matrices = NCOL(values))
- 
-  #Obtengo correctamente los grados de pertenencia, pero no consigo obtener el maximo de cada variable.  
+.getMaxFuzzyForAVariable2 <- function(values, example_num){
+  #Return fuzzy belonging degree of each value-variable 
+  result <- .fuzzyBelongingDegree(x = as.vector(example_num), xmin = values[2,], xmedio = values[3,], xmax = values[4,], n_matrices = NCOL(values))
+  
   a <- which(!duplicated(values[1,]))
   long <- length(a)
   rangos <- vector(mode = "list", length = long)
@@ -184,19 +192,19 @@
     if(! is.na(a[i +1 ])){
       rangos[[i]]  <- a[i]:(a[i + 1] - 1)  
     } else {
-      rangos[[i]] <- a[i]:NCOL(resultado)
+      rangos[[i]] <- a[i]:NCOL(result)
     }
   }
   
 
-if(NCOL(resultado) > 1){
-  resultado <- t( apply(X = resultado, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
-  resultado <- apply(X = resultado, MARGIN = 1, FUN = min)
+if(NCOL(result) > 1){
+  result <- t( apply(X = result, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
+  result <- apply(X = result, MARGIN = 1, FUN = min)
 } else {
-  resultado <- t( apply(X = resultado, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
+  result <- t( apply(X = result, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
   
 }
-  resultado
+  result
   
 }
 
@@ -212,9 +220,9 @@ if(NCOL(resultado) > 1){
 # The same but for crips set on DNF Rules
 #
 #
-.getMaxCrispForAVariable2 <- function(values, ejemplo_num){
-  resultado <- .gradoPertenenciaCrisp2(x = as.vector(ejemplo_num), xmin = values[2,], xmax = values[3,], DNF = TRUE)
-  #Obtengo correctamente los grados de pertenencia, pero no consigo obtener el maximo de cada variable.  
+.getMaxCrispForAVariable2 <- function(values, example_num){
+  result <- .crispBelongingDegree(x = as.vector(example_num), xmin = values[2,], xmax = values[3,], DNF = TRUE)
+
   a <- which(!duplicated(values[1,]))
   long <- length(a)
   rangos <- vector(mode = "list", length = long)
@@ -223,17 +231,17 @@ if(NCOL(resultado) > 1){
     if(! is.na(a[i +1 ])){
       rangos[[i]]  <- a[i]:(a[i + 1] - 1)  
     } else {
-      rangos[[i]] <- a[i]:NCOL(resultado)
+      rangos[[i]] <- a[i]:NCOL(result)
     }
   }
   
-  if(NCOL(resultado) > 1){
-    resultado <- t( apply(X = resultado, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
-    resultado <- apply(X = resultado, MARGIN = 1, FUN = min)
+  if(NCOL(result) > 1){
+    result <- t( apply(X = result, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
+    result <- apply(X = result, MARGIN = 1, FUN = min)
   } else {
-    resultado <- t( apply(X = resultado, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
+    result <- t( apply(X = result, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
     
   }
-  resultado
+  result
   
 }

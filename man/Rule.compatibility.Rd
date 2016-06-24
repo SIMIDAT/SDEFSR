@@ -4,11 +4,11 @@
 \alias{Rule.compatibility}
 \title{Return the compatibility degrees of a rule with all instances of a given dataset.}
 \usage{
-Rule.compatibility(ejemplo, rule_cat, rule_num, catParticip, numParticip, xmin,
+Rule.compatibility(example, rule_cat, rule_num, catParticip, numParticip, xmin,
   xmedio, xmax, n_matrices, max_cat, max_num, t_norm)
 }
 \arguments{
-\item{ejemplo}{The instances of the dataset, a matrix with one example PER COLUMN and without the CLASS ATTRIBUTE.}
+\item{example}{The instances of the dataset, a matrix with one example PER COLUMN and without the CLASS ATTRIBUTE.}
 
 \item{rule_cat}{Part of the rule with the categorical values.}
 

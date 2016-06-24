@@ -123,7 +123,7 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 # It works similar to compareCAN but for DNF rules.
 #
 
-.compareDNF4 <- function(example,  rule, rule_num, cat_particip, num_particip, max_rule_cat, max_rule_num, nLabels, fuzzySets, crispSet, valuesFuzzy, valuesCrisp){
+.compareDNF <- function(example,  rule, rule_num, cat_particip, num_particip, max_rule_cat, max_rule_num, nLabels, fuzzySets, crispSet, valuesFuzzy, valuesCrisp){
   ejemplo_cat <- as.vector( example[cat_particip, ] )
   
   dispFuzzy <- numeric(NCOL(example)) + 1
@@ -139,16 +139,16 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
     dispCrisp[fuera] <- 0
   }
   
-  ejemplo_num <- example[num_particip, which(dispFuzzy > 0), drop = F] 
+  example_num <- example[num_particip, which(dispFuzzy > 0), drop = F] 
   
   #Numerical Values
-  if(length(ejemplo_num) > 0){
+  if(length(example_num) > 0){
     
-    ejemplo_num <- ejemplo_num[valuesFuzzy[1,], ]
+    example_num <- example_num[valuesFuzzy[1,], ]
     #Fuzzy Computation
-    dispFuzzy[which(dispFuzzy > 0)] <- .getMaxFuzzyForAVariable2(values = valuesFuzzy, ejemplo_num = ejemplo_num)
+    dispFuzzy[which(dispFuzzy > 0)] <- .getMaxFuzzyForAVariable2(values = valuesFuzzy, example_num = example_num)
     #Crisp Computation
-    dispCrisp[which(dispCrisp > 0)] <- .getMaxCrispForAVariable2(valuesCrisp, ejemplo_num)
+    dispCrisp[which(dispCrisp > 0)] <- .getMaxCrispForAVariable2(valuesCrisp, example_num)
   }
   
   list(fuzzy = dispFuzzy, crisp = dispCrisp)
@@ -468,14 +468,14 @@ changeTargetVariable <- function(dataset, variable){
 # Gets the variables that participate in a rule
 #
 #
-.getParticipants <- function(rule, max_rule, DNFRules){
+.getParticipants <- function(rule, maxRule, DNFRules){
   if(!DNFRules){
-    participants <- as.logical( (rule < max_rule) ) 
+    participants <- as.logical( (rule < maxRule) ) 
   }else{
     
-    participants <- logical(length(max_rule) - 1)
-    for(i in 2:length(max_rule)){
-      ruleValues <- rule[(max_rule[i - 1] + 1):max_rule[i]]
+    participants <- logical(length(maxRule) - 1)
+    for(i in 2:length(maxRule)){
+      ruleValues <- rule[(maxRule[i - 1] + 1):maxRule[i]]
       participants[i-1] <- !(all(ruleValues == 1) | all(ruleValues == 0))
     }
   }
@@ -556,7 +556,7 @@ changeTargetVariable <- function(dataset, variable){
 #
 #
 .getFuzzyValues <- function(rule_num, fuzzy,  crisp = FALSE){
-  a <- .getMatrixSelector(rule_num = rule_num, valor = 1)
+  a <- .getMatrixSelector(rule_num = rule_num, value = 1)
   variables <- a[,3]
   
   if(! crisp){
