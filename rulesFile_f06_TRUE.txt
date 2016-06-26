@@ -1,0 +1,8 @@
+@Number of rules: 5
+@Average number of variables: 1.6
+
+1: IF Age IS L_2 AND Year IS L_0 THEN positive with Rule Weight: 0.088117489989086
+2: IF Age IS L_0 AND Positive IS L_0 THEN negative with Rule Weight: 0.810010331762893
+3: IF Year IS L_1 AND Positive IS L_0 THEN negative with Rule Weight: 0.761467889905297
+4: IF Positive IS L_0 THEN negative with Rule Weight: 0.781181619255304
+5: IF Year IS L_1 THEN negative with Rule Weight: 0.695121951217921

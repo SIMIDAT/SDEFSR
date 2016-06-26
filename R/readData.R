@@ -673,6 +673,7 @@ read.keel <- function(file) {
     } else {
       #Print DNF rule
       
+      #Get the position of the last value that belongs to a variable
       max <- Reduce(f = '+', x = max, accumulate = TRUE)
       
       before <- 1

@@ -51,6 +51,8 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, class = NULL ){
                               qm_Unus = numeric(1),              # Unusualness
                               qm_Sup = numeric(1),               # Support
                               qm_Cov = numeric(1),               # Coverage
+                              qm_tpr = numeric(1),               # True Positive Rate
+                              qm_fpr = numeric(1),               # False Positive Rate
                               
                               #Variables for ranking NSGA-II
                               rank = integer(1),
@@ -382,7 +384,7 @@ Rule.addVariable <- function(rule, dataset){
         compatibility_matching_examples <- numeric(1)
         matching_examples <- integer(1)
         compatibility_correctly_matching_examples <- numeric(1)
-        correctly_matching_examples <- integer(1)
+        correctly_matching_examples <- integer(1) #TP
         
         #Get compatibility
         perts <- .fitnessFuGePSD(rule = Rule.toCANVectorRepresentation(rule, dataset), 
@@ -397,6 +399,7 @@ Rule.addVariable <- function(rule, dataset){
         
         #Calculate covered examples.
         covered <- which(perts > 0) 
+        notCovered <- which(perts == 0)
         classes <- unlist(.getClassAttributes(dataset$data[covered]))
         correctly_matching_examples_by_clas[as.integer(names(table(classes + 1)))] <- table(classes + 1)
         matching_examples <- length(covered)
@@ -408,8 +411,16 @@ Rule.addVariable <- function(rule, dataset){
         }
         
         corr_covered <- covered[which(classes == rule$clas)]
+        #False positives: Examples covered with a distinct consecuent
+        fp <- length(covered[which(classes != rule$clas)])
+        #True negatives: Examples not covered with distinc consecuent
+        tn <- length(notCovered[which(classes != rule$clas)])
+        #False negatives: Examples not covered with the same consecuent
+        fn <- length(notCovered[which(classes == rule$clas)])
+        
         compatibility_correctly_matching_examples <- sum(perts[corr_covered])
         correctly_matching_examples <- length(corr_covered)
+        
         rule$ideal <- length(corr_covered)  #Number of ideal covered examples for token competition procedure
         
         #Mark tokens of the rule
@@ -433,7 +444,10 @@ Rule.addVariable <- function(rule, dataset){
         }
         
         rule$qm_Unus <- rule$qm_Cov * (rule$qm_Cnf_n - (dataset$examplesPerClass[[rule$clas + 1]] / dataset$Ns))
-          
+        #TPR and FPR
+        rule$qm_tpr <- correctly_matching_examples / (correctly_matching_examples + fn)
+        rule$qm_fpr <- fp / (fp + tn)
+        
         #Significance computation
         by_class <- which(correctly_matching_examples_by_clas > 0)
         values <- unlist(dataset$examplesPerClass[by_class])
@@ -616,6 +630,7 @@ Rule.addVariable <- function(rule, dataset){
   #' @param dropProb Sets the dropping probability. We recommend a number in [0,1].
   #' @param tournamentSize Sets the number of individuals that will be chosen in the tournament selection procedure. This number must be greater than or equal to 2.
   #' @param globalFitnessWeights A numeric vector of length 4 specifying the weights used in the computation of the Global Fitness Parameter. 
+  #' @param minCnf A value in [0,1] to filter rules with a minimum confidence
   #' @param ALL_CLASS if TRUE, the algorithm returns, at least, the best rule for each target class, even if it does not pass the filters. If FALSE, it only returns, at least, the best rule if there are not rules that passes the filters.
   #' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
   #' 
@@ -752,6 +767,7 @@ Rule.addVariable <- function(rule, dataset){
                       dropProb = 0.15,
                       tournamentSize = 2,
                       globalFitnessWeights = c(0.7, 0.1, 0.05, 0.2),
+                      minCnf = 0.6,
                       ALL_CLASS = TRUE,
                       targetVariable = NA
                       ){
@@ -892,12 +908,11 @@ Rule.addVariable <- function(rule, dataset){
     bestPop <- pop[[1]]
     lapply(seq_len(length(bestPop)), function(x){bestPop[[x]]$evaluated <<- FALSE; invisible()})
     classes <- vapply(bestPop, function(x){x$clas}, integer(1)) + 1L
-    filtros <- c(0.6, 0.7, 0.8, 0.9)
+   
     
     #SCREENING FUNCTION
-   for(f in filtros){
      examples_class <- logical(length(training$class_names))
-     pasan_filtro <- which(pop[[2]] >= f & pop[[3]] >= 0.6)
+     pasan_filtro <- which(pop[[2]] >= minCnf & pop[[3]] >= 0.6)
      new_pop <- bestPop[pasan_filtro]
      
      if(length(new_pop) > 0){
@@ -944,23 +959,43 @@ Rule.addVariable <- function(rule, dataset){
      #Change the name of the output file by the following: $fileName$_filtro_AllClass.txt for rules file with filter 'filtro'
      #                                                     $fileName$_filtro_AllClass_QM.txt
      ruleFileName <- paste(substr(parameters$outputData[2], 1, regexpr("\\.[^\\.]*$", parameters$outputData[2]) - 1),
-                                "_f", paste(substr(as.character(f), 1, 1) , substr(as.character(f), 3, 3) , sep = ""), "_", 
+                                "_f", paste(substr(as.character(minCnf), 1, 1) , substr(as.character(minCnf), 3, 3) , sep = ""), "_", 
                                 AllClass, ".txt", sep = "")
      
      testQMFileName <- paste(substr(parameters$outputData[2], 1, regexpr("\\.[^\\.]*$", parameters$outputData[2]) - 1),
-                           "_f", paste(substr(as.character(f), 1, 1) , substr(as.character(f), 3, 3) , sep = ""), "_", 
+                           "_f", paste(substr(as.character(minCnf), 1, 1) , substr(as.character(minCnf), 3, 3) , sep = ""), "_", 
                            AllClass, "_QM", ".txt", sep = "")
       
-      cat("\n\n---- FILTER: ", f, " ----\n\n", sep = "")
+      cat("\n\n---- FILTER: ", minCnf, " ----\n\n", sep = "")
      
       writeRuleFile(new_pop, training, ruleFileName)
       cat("\n QUALITY MEASURES OF THE RULES GENERATED: \n\n")
       writeTestQMFile(new_pop, testQMFileName, test$Ns)
    
-   }
+      #Create the rulesToReturn structure to return the rules
+      ##Add values to the rulesToReturn Object
+      rulesToReturn <- vector(mode = "list", length = length(new_pop))
+      count <- 1
+      for(i in new_pop){
+      #Create the CAN vector representation of the rule with the string of the class to add it to the rule object
+      ruleAsCAN <- c(as.vector(Rule.toCANVectorRepresentation(rule = new_pop[[count]], dataset = training)), training$class_names[new_pop[[count]]$clas + 1])
+      rulesToReturn[[count]] <- list(rule = createHumanReadableRule(ruleAsCAN, training, FALSE), #FuGePSD does not have DNF representation !
+                                nVars = length(i$antecedent),
+                                qualityMeasures = list(Coverage = i$qm_Cov,
+                                                       Unusualness = i$qm_Unus,
+                                                       Significance = i$qm_Sig,
+                                                       FuzzySupport = i$qm_Sup,
+                                                       FuzzyConfidence = i$qm_Cnf_f,
+                                                       CrispConfidence = i$qm_Cnf_n,
+                                                       Tpr = i$qm_tpr,
+                                                       Fpr = i$qm_fpr))
+      count <- count + 1
+      }
    
    cat("\n\nAlgorithm finished. \nExecution time: ", parseTime(as.numeric(Sys.time()), init_time),  "\n\n", sep = "")
     
+   #return
+   rulesToReturn
   }
   
   

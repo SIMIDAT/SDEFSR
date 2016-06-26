@@ -305,7 +305,7 @@ SDIGA <- function(parameters_file = NULL,
   training$sets <- .giveMeSets(data_types = training$attributeTypes, max = training$max, n_labels = parameters$nLabels)
   test <- modifyFuzzyCrispIntervals(test, parameters$nLabels)
   test$sets <- .giveMeSets(data_types = test$attributeTypes, max = test$max, n_labels = parameters$nLabels)
-  #Set Covered
+  #Set Covered (examples are not covered yet)
   training$covered <- logical(training$Ns)
   test$covered <- logical(test$Ns)
   
@@ -321,7 +321,8 @@ SDIGA <- function(parameters_file = NULL,
   #Get quality measures used as objective
   Objectives <- .parseObjectives(parameters = parameters, "SDIGA", DNF)
   if(all(is.na(Objectives[1:3]))) stop("No objetive values selected. You must select, at least, one objective value. Aborting...")
-
+  
+  #Set the weight of each quality measure
   Weights <- c(parameters$w1, parameters$w2, parameters$w3)
   if(sum(Weights) == 0) stop("Sum of weigths must be a value greater than zero.")
   
@@ -379,7 +380,7 @@ SDIGA <- function(parameters_file = NULL,
         rule[length(rule) + 1] <- targetClass
         rules[[contador]] <- rule
         to_cover <- x$porCubrir
-        if(to_cover <= 0) Best <- FALSE #Si no quedan ejemplos por cubrir no volvemos a llamar al gen-tico.
+        if(to_cover <= 0) Best <- FALSE #If number of examples to cover is zero, it is not neccesary to call the genetic algorithm again.
         
       } else {
         cat(" GENERATED RULE", ":",file = "", sep = " ", fill = TRUE)
@@ -394,7 +395,7 @@ SDIGA <- function(parameters_file = NULL,
     
     
     
-  } else {  #Ejecucion para todas las clases
+  } else {  #Execution for all classes
     cat("\n", "\n", "Searching rules for all values of the target class...", "\n", "\n", file ="", fill = TRUE)  
     #For each value of the target class execute the algorithm...
     for(i in seq_len(length(training[["class_names"]]))) {
@@ -476,8 +477,12 @@ SDIGA <- function(parameters_file = NULL,
   sumUnus <- 0
   sumSign <- 0
   sumAccu <- 0
+  sumTpr <- 0
+  sumFpr <- 0
   
   n_rules <- length(rules)
+  rulesToReturn <- vector(mode = "list", length = n_rules)
+  
   for(i in 1:n_rules){
     val <- .proveRule(rule = rules[[i]][-length(rules[[i]])], testSet = test, targetClass = rules[[i]][length(rules[[i]])], numRule = i, parameters = parameters, Objectives = Objectives, Weights = Weights, cate = cate, num = num, DNF = DNF)
     test[["covered"]] <- val[["covered"]]
@@ -489,6 +494,20 @@ SDIGA <- function(parameters_file = NULL,
     sumUnus <- sumUnus + val[["unusualness"]]
     sumSign <- sumSign + val[["significance"]]
     sumAccu <- sumAccu + val[["accuracy"]]
+    sumTpr <- sumTpr + val[["tpr"]]
+    sumFpr <- sumFpr + val[["fpr"]]
+    
+    #Add values to the rulesToReturn Object
+    rulesToReturn[[i]] <- list(rule = createHumanReadableRule(rules[[i]], training, DNF),
+                                nVars = val[["nVars"]],
+                                qualityMeasures = list(Coverage = val[["coverage"]],
+                                                       Unusualness = val[["unusualness"]],
+                                                       Significance = val[["significance"]],
+                                                       FuzzySupport = val[["fsupport"]],
+                                                       FuzzyConfidence = val[["fconfidence"]],
+                                                       CrispConfidence = val[["cconfidence"]],
+                                                       Tpr = val[["tpr"]],
+                                                       Fpr = val[["fpr"]]))
   }
   
   
@@ -505,6 +524,8 @@ SDIGA <- function(parameters_file = NULL,
       paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
       paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
       paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
+      paste("\t - True Positive Rate:", round(sumTpr / n_rules, 6), sep = " "),
+      paste("\t - False Positive Rate:", round(sumFpr / n_rules, 6), sep = " "),
       file = "", sep = "\n"
   )
   
@@ -520,6 +541,8 @@ SDIGA <- function(parameters_file = NULL,
       paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
       paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
       paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
+      paste("\t - True Positive Rate:", round(sumTpr / n_rules, 6), sep = " "),
+      paste("\t - False Positive Rate:", round(sumFpr / n_rules, 6), sep = " "),
       file = parameters$outputData[3], sep = "\n", append = TRUE
   )
   
@@ -527,8 +550,8 @@ SDIGA <- function(parameters_file = NULL,
   
   
   #---------------------------------------------------
-  
-  #rules  # Return
+  class(rulesToReturn) <- "SDR_Rules"
+  rulesToReturn  # Return
   
 }
 
@@ -560,6 +583,9 @@ SDIGA <- function(parameters_file = NULL,
   Fsup <- round(.Fsupport(values), 6)
   Ccnf <- round(.confidence(values), 6)
   Fcnf <- round(.fuzzyConfidence(values), 6)
+  tpr <- round(p[[2]]$tpr, 6)
+  fpr <- round(p[[2]]$fpr, 6)
+  
   
   if(DNF) {
     participants <- .getParticipants(rule = rule,  maxRule = maxRule, DNFRules = TRUE) 
@@ -579,6 +605,8 @@ SDIGA <- function(parameters_file = NULL,
       paste("\t - FSupport:", Fsup, sep = " "),
       paste("\t - CConfidence:", Ccnf, sep = " "),
       paste("\t - FConfidence:", Fcnf, sep = " "),
+      paste("\t - True Positive Rate:", tpr, sep = " "),
+      paste("\t - False Positive Rate:", fpr, "\n", sep = " "),
     file = "", sep = "\n"
   )
   cat("\n", file = "", sep = "\n")
@@ -595,7 +623,9 @@ SDIGA <- function(parameters_file = NULL,
       paste("\t - CSupport:", Csup, sep = " "),
       paste("\t - FSupport:", Fsup, sep = " "),
       paste("\t - CConfidence:", Ccnf, sep = " "),
-      paste("\t - FConfidence:", Fcnf, "\n", sep = " "),
+      paste("\t - FConfidence:", Fcnf, sep = " "),
+      paste("\t - True Positive Rate:", tpr, sep = " "),
+      paste("\t - False Positive Rate:", fpr, "\n", sep = " "),
       file = parameters$outputData[3], sep = "\n", append = TRUE
   )
   
@@ -609,7 +639,9 @@ SDIGA <- function(parameters_file = NULL,
                 csupport = Csup,
                 fsupport = Fsup,
                 cconfidence = Ccnf,
-                fconfidence = Fcnf) 
+                fconfidence = Fcnf,
+                tpr = tpr,
+                fpr = fpr) 
 }
 
 

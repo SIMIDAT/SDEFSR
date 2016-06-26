@@ -10,7 +10,7 @@
 #        
 #------------------------------------------------------------------------
 
-# 'x' is a list of values obteined by the .getValuesForQualityMeasures() function
+# 'x' is a list of values obtained by the .getValuesForQualityMeasures() function
 .coverage <- function(x){
   c <- x[[1]] / x[[4]]
   if(is.nan(c)){

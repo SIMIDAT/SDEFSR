@@ -8,8 +8,9 @@
 #
 #
 .create_fuzzyIntervals <- function(min, max, num_sets, types){
-  #mapply(.FuzzyIntervals, min, max, num_sets, types, SIMPLIFY = FALSE)
+  
   n_mats <- length(min)
+  #Creates the fuzzy intervals for each variable
   lst <- lapply(X = 1:n_mats, FUN = function(x) .FuzzyIntervals(min = min[x], max = max[x], num_sets = num_sets, types = types[x]))
   
   #Collect on an array
@@ -46,7 +47,7 @@
       fuzzySet[j, 2] <- xmedio
       fuzzySet[j, 3] <- xmax
       
-      #Modify variables 
+      #Modify variables to calculate the next set
       xmin <- xmedio
       xmedio <- xmax
     }
@@ -115,7 +116,7 @@
 # Compute the belonging degree of an entire example set for the specified
 #   fuzzy sets, this sets must be specified by means of their min, max 
 #   and half value.
-#   If you want to get the belonging degree for a subset of variables. Then
+#   If you want to get the belonging degree for a subset of variables,
 #   you must get only the values of the example corresponding to those variables
 #   before execute this function.
 #
@@ -196,7 +197,8 @@
     }
   }
   
-
+# Calculate the fuzzy belonging degree as the minimum of each variable. The value of each variable is the maximum
+# belonging degree of a value that participate in the rule
 if(NCOL(result) > 1){
   result <- t( apply(X = result, MARGIN = 1, FUN = function(x, rangos)  vapply(X = rangos, FUN = function(x, vector) max(vector[x]), FUN.VALUE = 1, x) , rangos) )
   result <- apply(X = result, MARGIN = 1, FUN = min)

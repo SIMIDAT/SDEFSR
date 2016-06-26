@@ -387,7 +387,6 @@
 #' @param popLength An integer to set the number of individuals in the population.
 #' @param crossProb Sets the crossover probability. A number in [0,1].
 #' @param mutProb Sets the mutation probability. A number in [0,1].
-#' @param RulesRep Representation used in the rules. "can" for canonical rules, "dnf" for DNF rules.
 #' @param Obj1 Sets the Objective number 1. See \code{Objective values} for more information about the possible values.
 #' @param Obj2 Sets the Objective number 2. See \code{Objective values} for more information about the possible values.
 #' @param Obj3 Sets the Objective number 3. See \code{Objective values} for more information about the possible values.
@@ -548,7 +547,7 @@ NMEEF_SD <- function(paramFile = NULL,
                      popLength = 100, 
                      mutProb = 0.1,
                      crossProb = 0.6,
-                     RulesRep = "can",
+                     #RulesRep = "can",
                      Obj1 = "CSUP",
                      Obj2 = "CCNF",
                      Obj3 = "null",
@@ -561,7 +560,7 @@ NMEEF_SD <- function(paramFile = NULL,
                      )
 {
  
-  
+  RulesRep <- "can" #NMEEF-SD use always CAN rules
   if(is.null(paramFile)){
     #Generate our "parameters file" from the variables of the function call
     #Check conditions
@@ -724,8 +723,11 @@ NMEEF_SD <- function(paramFile = NULL,
   sumUnus <- 0
   sumSign <- 0
   sumAccu <- 0
+  sumTpr <- 0
+  sumFpr <- 0
   
   n_rules <- NROW(rules)
+  rulesToReturn <- vector(mode = "list", length = n_rules)
   #Print indivual quality measures for each rule in the console and into the quality measures file
   for(i in seq_len(n_rules)){
     val <- .proveRule(rule = rules[i, - NCOL(rules)], testSet = test, targetClass = rules[i, NCOL(rules)], numRule = i, parameters = parameters, Objectives = Objectives, Weights = c(0.7,0.3, 0), cate = cate, num = num, DNF = DNF)
@@ -738,6 +740,20 @@ NMEEF_SD <- function(paramFile = NULL,
     sumUnus <- sumUnus + val[["unusualness"]]
     sumSign <- sumSign + val[["significance"]]
     sumAccu <- sumAccu + val[["accuracy"]]
+    sumTpr <- sumTpr + val[["tpr"]]
+    sumFpr <- sumFpr + val[["fpr"]]
+    
+    #Add values to the rulesToReturn Object
+    rulesToReturn[[i]] <- list(rule = createHumanReadableRule(rules[i,], training, DNF),
+                                nVars = val[["nVars"]],
+                                qualityMeasures = list(Coverage = val[["coverage"]],
+                                                       Unusualness = val[["unusualness"]],
+                                                       Significance = val[["significance"]],
+                                                       FuzzySupport = val[["fsupport"]],
+                                                       FuzzyConfidence = val[["fconfidence"]],
+                                                       CrispConfidence = val[["cconfidence"]],
+                                                       Tpr = val[["tpr"]],
+                                                       Fpr = val[["fpr"]]))
   }
   
   
@@ -754,6 +770,8 @@ NMEEF_SD <- function(paramFile = NULL,
       paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
       paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
       paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
+      paste("\t - True Positive Rate:", round(sumTpr / n_rules, 6), sep = " "),
+      paste("\t - False Positive Rate:", round(sumFpr / n_rules, 6), sep = " "),
       file = "", sep = "\n"
   )
   
@@ -770,12 +788,19 @@ NMEEF_SD <- function(paramFile = NULL,
        paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
        paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
        paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),
+       paste("\t - True Positive Rate:", round(sumTpr / n_rules, 6), sep = " "),
+       paste("\t - False Positive Rate:", round(sumFpr / n_rules, 6), sep = " "),
        file = parameters$outputData[3], sep = "\n", append = TRUE
   )
+  
+  class(rulesToReturn) <- "SDR_Rules"
+  rulesToReturn # Return
   } else {
     cat("No rules for testing", file = "", fill = TRUE)
     cat("No rules for testing", file = parameters$outputData[2], append = TRUE)
+    NULL # return
   }
   #---------------------------------------------------
   
+
 }

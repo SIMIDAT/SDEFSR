@@ -1,0 +1,39 @@
+Rule 1 :
+	 - N_vars: 2
+	 - Coverage: 0.016129
+	 - Significance: 0.278358
+	 - Unusualness: -0.00026
+	 - Accuracy: 0.333333
+	 - CSupport: 0
+	 - FSupport: 0.005583
+	 - CConfidence: 0
+	 - FConfidence: 0.272727
+	 - True Positive Rate: 0
+	 - False Positive Rate: 0.022222 
+
+Rule 2 :
+	 - N_vars: 3
+	 - Coverage: 0
+	 - Significance: 0
+	 - Unusualness: 0
+	 - Accuracy: 0.5
+	 - CSupport: 0
+	 - FSupport: 0
+	 - CConfidence: 0
+	 - FConfidence: 0
+	 - True Positive Rate: 0
+	 - False Positive Rate: 0 
+
+Global:
+	 - N_rules: 2
+	 - N_vars: 2.5
+	 - Coverage: 0.008065
+	 - Significance: 0.139179
+	 - Unusualness: -0.00013
+	 - Accuracy: 0.416666
+	 - CSupport: 0
+	 - FSupport: 0.002792
+	 - FConfidence: 0.136364
+	 - CConfidence: 0
+	 - True Positive Rate: 0
+	 - False Positive Rate: 0.011111

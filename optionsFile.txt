@@ -1,0 +1,26 @@
+
+------------------------------------------------------
+Algorithm: FuGePSD
+Relation: haberman
+Training file: habermanTra object
+Test file: habermanTst object
+Seed: 0
+Number of Labels: 3
+Number of Generations: 10
+Initial Number of Rules: 100
+Crossover Probability: 0.5
+Mutation Probability: 0.2
+Insertion Probability: 0.15
+Dropping Condition Probability: 0.15
+Fuzzy Reasoning Method: normalized_sum
+T-norm/T-conorm for the Computation of the Compatibility Degree: product_t-norm
+Rule Weight: certainty_factor
+Tournament Selection Size: 2
+Global Fitness Weight 1: 0.7
+Global Fitness Weight 2: 0.1
+Global Fitness Weight 3: 0.05
+Global Fitness Weight 4: 0.7
+Target Variable: Survival
+All Class: TRUE
+-----------------------------------------------------------
+

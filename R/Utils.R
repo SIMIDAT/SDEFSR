@@ -172,6 +172,8 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 # -  [[10]] Fuzzy sum of belonging degree of the examples covered
 # -  [[11]] Fuzzy sum of the belonging degree of correctly covered examples
 # -  [[12]] Fuzzy sum of the belonging degree of new correctle covered examples
+# -  [[13]] True positive rate
+# -  [[14]] False positive rate
 # 
 # ---------------------------------------------------------------
 
@@ -182,10 +184,15 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
   
   coveredExamples <- 0L
   fuzzySumExCovered <- 0
-  corrCoverdExamples <- 0L
+  corrCoverdExamples <- 0L  #TP
   fuzzySumCorrCoveredExamples <- 0
   newExamplesCovered <- 0L
   fuzzySumNewExamples <- 0
+  
+  #Variables for the confusion matrix
+  fp <- 0L
+  tn <- 0L
+  fn <- 0L
   
   # information about the dataset
 
@@ -220,6 +227,14 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
   corrCoverdExamples <- sum(p1)
   fuzzySumCorrCoveredExamples <- sum(fuzzyPerts[coveredFuzzy[p]])
   
+  #False positives: Examples covered with a distinct consecuent
+  fp <- sum(classNames[ dataset[N_vars,coveredCrisp] + 1] != targetClass)
+  
+  #True negatives: Examples not covered with distinc consecuent
+  tn <- sum(classNames[ dataset[N_vars, - coveredCrisp] + 1] != targetClass)
+  
+  #False negatives: Examples not covered with the same consecuent
+  fn <- sum(classNames[ dataset[N_vars, - coveredCrisp] + 1] == targetClass)
   
   #Correctly Covered examples that aren't covered before (new covered examples)  
   i <- cov[coveredFuzzy] == FALSE
@@ -229,6 +244,12 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
   newExamplesCovered <- length(obj_notCoveredCrisp) #NCOL( dataset[ , obj_notCovered])
   fuzzySumNewExamples <- sum(fuzzyPerts[coveredFuzzy[obj_notCoveredFuzzy]])
   
+  #Calculate TPR and FPR (In next versions, it is possible to return the confusion)
+  tpr <- corrCoverdExamples / (corrCoverdExamples + fn)
+  fpr <- fp / (fp + tn)
+  if(is.nan(tpr)) tpr <- 0
+  if(is.nan(fpr)) fpr <- 0
+ 
   #Mark new covered examples (if neccesary)
   if(mark){
     if(! fuzzy){
@@ -237,7 +258,7 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
       cov[coveredFuzzy[p & i]] <- TRUE # If FUZZY SUPPORT is used
     }
     
-    l <- list(coveredExamples, corrCoverdExamples, NA, Ns, NROW(p[p]), cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples ) 
+    l <- list(coveredExamples, corrCoverdExamples, NA, Ns, NROW(p[p]), cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples, tpr = tpr, fpr = fpr) 
     conf <- .confidence(l)
     if( ! test) return(list(cov, conf)) 
     return(list(cov, l) )
@@ -247,10 +268,10 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
     
     #Return 
     if(!NMEEF){
-      return( list(coveredExamples, corrCoverdExamples, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples ) )
+      return( list(coveredExamples, corrCoverdExamples, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples, tpr = tpr, fpr = fpr) )
     }else{
       cover <- (fuzzyPerts > 0 | crispPerts > 0) & classNames[dataset[N_vars, ] + 1]== targetClass
-      return( list(coveredExamples, corrCoverdExamples, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples, cover ) )
+      return( list(coveredExamples, corrCoverdExamples, NA, Ns, examples_perClass[[targetClass]], cov_examplesCrisp, examples_perClass, newExamplesCovered, to_cover, fuzzySumExCovered, fuzzySumCorrCoveredExamples, fuzzySumNewExamples, cover , tpr = tpr, fpr = fpr) )
     }
   }
   
@@ -804,6 +825,85 @@ improvedTable <- function(dataset, classNames){
   tabla
 }
 
+
+
+#' 
+#' Creates a human-readable representation of a rule for insert into a 'SDR_Rules' object
+#' 
+#' This function creates an string representation of a given rule
+#' @param rule The rule we want to get the representation
+#' @param DNF Logical value indicating if the rule is in DNF format
+#' @param FuGePSD Logical value indicatin if rule is in the format of the FuGePS algorithm
+#' 
+#' @return A string with the representation of the rule.
+#' 
+createHumanReadableRule <- function(rule, dataset, DNF = FALSE){
+  class <- rule[length(rule)]
+  antecedent <- as.numeric(rule[- length(rule)])
+  count <- 1
+  string <- character()
+
+    if(!DNF){
+      #CAN Rules
+      for(i in seq_len(length(antecedent))){
+        if(antecedent[i] < dataset$sets[i]){
+          #If variable participates in the rule
+          if(dataset$attributeTypes[i] != "c"){
+             #Print real attribute
+            string[count] <- paste(dataset$attributeNames[i],"= Label", antecedent[i], "(", dataset$fuzzySets[antecedent[i] + 1,1,i], ",", dataset$fuzzySets[antecedent[i] + 1,2,i], ",", dataset$fuzzySets[antecedent[i] + 1,3,i], ")", sep = " ")
+          } else {
+            #Print categorical attribute
+            string[count] <- paste(dataset$attributeNames[i],"=", dataset$categoricalValues[[i]][antecedent[i] + 1])
+          }
+          count <- count + 1
+        }
+      }
+      #join values of variables
+      string <- paste(string, collapse = " AND ")
+      #Add target class and add the IF clausure
+      string <- paste("IF", string, "THEN", class )
+      
+     
+    } else {
+      #DNF Rules
+      #Get the position of the last value that belongs to a variable
+      max <- Reduce(f = '+', x = dataset$sets, accumulate = TRUE)
+      before <- 1
+      pos <- 1
+      count <- 1
+      for (i in max) {
+        variable <- rule[before:i]
+        notParticipate <- all(variable == 1) | all(variable == 0)
+        if (!notParticipate) {
+          values <- which(variable == 1)  # A variable with '1' indicate that this value participate in the rule
+          variableName <- dataset$attributeNames[pos]
+          if (dataset$attributeTypes[pos] == 'c') { 
+            #Print categorical Variable
+            valueNames <- dataset$categoricalValues[[pos]][values]
+            valueNames <- paste(valueNames, sep = " ", collapse = " OR ")
+          } else {
+            # Print numerical variable
+            valueNames <- paste("Label", values - 1, "(", dataset$fuzzySets[values,1,pos], ",", dataset$fuzzySets[values,2,pos], ",",dataset$fuzzySets[values,3,pos], ")", sep = " ", collapse = " OR ")
+          }
+          #Join to the return string
+          string[count] <- paste("Variable", variableName, valueNames,  sep = " ")
+          count <- count+1
+          
+        }
+        pos <- pos + 1
+        before <- i + 1 # This is the first position of a value that belongs to the next variable to process
+      }
+      
+      #join all string values:
+      string <- paste(string, collapse = " AND ")
+      #Add the target variable to the final string
+      string <- paste("IF", string, "THEN", class, sep = " ")
+    
+    }
+#return
+string
+
+}
 
 
 #' S3 function to summary a keel object
