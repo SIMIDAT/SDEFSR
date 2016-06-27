@@ -148,7 +148,7 @@ read.keel <- function(file) {
     )
     
     
-    class(lista) <- "keel"
+    class(lista) <- "keel"  #Cambiar por 'SDR_Dataset'
     lista
   } else if(ext == ".arff"){
     keelFromARFF(file)
@@ -266,6 +266,7 @@ read.keel <- function(file) {
   input_data <-
     strsplit(x = input_string, split = " ", fixed = TRUE)[[1]]
   
+  #Parse outputs
   output_data <- character(4) # Rules, tra_qua, tra_seg y tst_quac
   
   input_string <-
@@ -805,7 +806,8 @@ read.keel <- function(file) {
 .processData <- function(data, categoricalValues, types, fromDataFrame = FALSE) {
   line <- as.character(data)
   if(!fromDataFrame){
-    line <- gsub(pattern = ",[[:blank:]]*", replacement = " ", x = line) # Split as a comma-separated values
+    # Split as a comma-separated values
+    line <- gsub(pattern = ",[[:blank:]]*", replacement = " ", x = line) 
     line <- strsplit(x = line, split = " ",fixed = TRUE)[[1]]
   }
   cat <- which(types == 'c')
@@ -1284,6 +1286,105 @@ keelFromARFF <- function(file){
   #Restore option warn of the user.
   options(warn = warnPrevio)
   lista
+}
+
+
+
+
+#'
+#' Reads a CSV file and return a SDR_Dataset object to be executed by an algorithm of the SDR package
+#' 
+#' @param file The path to the csv file.
+#' @param relation_name The name of the relation to use
+#' @param sep Separator used to separate between values in the file, as it is csv, the default is ","
+#' @param quote The character used to identify strings in the csv file
+#' @param dec The character used to identify decimal values. By default it is "."
+#' @param na.strings The character used to identify lost data. By default it is "?"
+#' 
+#' @return An \code{SDR_Dataset} object that contains all neccesary information to execute the algorithms
+#' 
+#' @author Angel M. Garcia <agvico@ujaen.es>
+#' 
+SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec = ".", na.strings = "?"){
+  #read the csv
+  data <- read.csv(file = file, sep = sep, quote = quote, dec = dec, na.strings = na.strings)
+  
+  #get attribute names
+  attNames <- colnames(data)
+  
+  #get attributes types:
+  types <- sapply(data, function(x){
+    if(class(x) %in% c("numeric", "integer", "double")){
+      "r"
+    } else {
+      "c"
+    }
+  })
+  
+  #get mins and max values
+  minMax <- sapply(data, function(x){
+    if(class(x) %in% c("numeric", "integer", "double")){
+      c(min(x, na.rm = T), max(x, na.rm = T))
+    } else {
+      c(0, length(levels(x)))
+    }
+  })
+  
+  min <- minMax[1,]
+  max <- minMax[2,]
+  
+  #Get number of variables (except class)
+  nvars <- ncol(data) - 1
+  
+  #get class names
+  class_names <- levels(data[,ncol(data)])
+  
+  #get examples per class
+  examplesClass <- as.list(table(data[,ncol(data)]))
+  
+  #get cataegorical values variable
+  catValues <- lapply(data, function(x){
+    if(class(x) == "numeric"){
+      NA
+    } else{
+      levels(x)
+    }
+    })
+  
+  #Get number of examples
+  numExamples <- nrow(data)
+  
+  #Now, parse the data (the most expensive part)
+  #execute on parallel for better performance
+  if (Sys.info()[1] != "Windows"){
+    data <- parallel::mclapply(as.data.frame(t(data), stringsAsFactors = F), .processData, categoricalValues = catValues, types = types, fromDataFrame = TRUE, mc.cores = parallel::detectCores() - 1)
+  } else {
+    #In Windows mclapply does not work (look 'snow' package)
+    data <- parallel::mclapply(as.data.frame(t(data), stringsAsFactors = F), .processData, categoricalValues = catValues, types = types, fromDataFrame = TRUE, mc.cores = 1)
+  }
+  
+  #Generate the SDR_Dataset Object
+  dataset <- list(relation = relation_name,
+                  attributeNames = attNames,
+                  attributeTypes = types,
+                  min = min,
+                  max = max,
+                  nVars = nvars,
+                  data = data,
+                  class_names = class_names,
+                  examplesPerClass = examplesClass,
+                  lostData = NA,
+                  covered = logical(numExamples),
+                  fuzzySets <- NA,
+                  crispSets <- NA, 
+                  sets <- NA,
+                  categoricalValues = catValues,
+                  Ns = numExamples)
+  
+  class(dataset) <- "SDR_Dataset"
+  
+  #Return the object
+  dataset
 }
 
 

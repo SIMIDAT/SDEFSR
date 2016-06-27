@@ -467,7 +467,7 @@
 #' targetClass = Iris-setosa
 #' }
 #'   
-#'   @section Objective values:
+#' @section Objective values:
 #'      You can use the following quality measures in the ObjX value of the parameter file using this values:
 #'       \itemize{
 #'         \item Unusualness -> \code{unus}
@@ -504,7 +504,6 @@
 #'                popLength = 100, 
 #'                mutProb = 0.1,
 #'                crossProb = 0.6,
-#'                RulesRep = "can",
 #'                Obj1 = "CSUP",
 #'                Obj2 = "CCNF",
 #'                Obj3 = "null",
@@ -525,7 +524,6 @@
 #'                popLength = 100, 
 #'                mutProb = 0.1,
 #'                crossProb = 0.6,
-#'                RulesRep = "can",
 #'                Obj1 = "CSUP",
 #'                Obj2 = "CCNF",
 #'                Obj3 = "null",
@@ -536,7 +534,7 @@
 #'                targetClass = "null"
 #'                )
 #'      }
-#'  @export       
+#' @export       
 NMEEF_SD <- function(paramFile = NULL, 
                      training = NULL, 
                      test = NULL, 
@@ -564,11 +562,16 @@ NMEEF_SD <- function(paramFile = NULL,
   if(is.null(paramFile)){
     #Generate our "parameters file" from the variables of the function call
     #Check conditions
+   
+    
+    if(is.null(training)) 
+      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
+    
+    if(is.null(test))
+      test <- training #To execute only one dataset
+    
     if(class(training) != "keel" | class(test) != "keel")
       stop("'training' or 'test' parameters is not a KEEL class")
-    
-    if(is.null(training) | is.null(test)) 
-      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
     
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
@@ -602,8 +605,11 @@ NMEEF_SD <- function(paramFile = NULL,
     if(parameters[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for \"NMEEF-SD\"")
    
     training <- read.keel(file = parameters$inputData[1])   # training data 
-    test <- read.keel(file = parameters$inputData[2])        # test data
-   
+    if(is.na(parameters$inputData[2])){
+      test <- training
+    } else {
+      test <- read.keel(file = parameters$inputData[2])        # test data
+    }
   }
   if(is.na(parameters$targetVariable))
     parameters$targetVariable <- training$attributeNames[length(training$attributeNames)]

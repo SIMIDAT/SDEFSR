@@ -17,4 +17,4 @@ PackageUseDevtools: Yes
 PackageInstallArgs: --no-multiarch --with-keep.source
 PackageBuildArgs: --resave-data --compact-vignettes=gs+qpdf
 PackageCheckArgs: --as-cran
-PackageRoxygenize: vignette
+PackageRoxygenize: rd,collate,vignette

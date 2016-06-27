@@ -349,11 +349,16 @@ MESDIF <- function(paramFile = NULL,
  
   if(is.null(paramFile)){
     #Generate our "parameters file"
+   
+    
+    if(is.null(training)) 
+      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
+    
+    if(is.null(test))
+      test <- training #To execute only one dataset
+    
     if(class(training) != "keel" | class(test) != "keel")
       stop("'training' or 'test' parameters is not a KEEL class")
-    
-    if(is.null(training) | is.null(test)) 
-      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
     
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
@@ -383,10 +388,14 @@ MESDIF <- function(paramFile = NULL,
     if(parameters$algorithm != "MESDIF") 
       stop(paste("The algorithm specificied (", parameters$algorithm, ") in parameters file is not \"MESDIF\". Check parameters file. Aborting program..."))
     
-    test <- read.keel(file = parameters$inputData[2])        # test data
-    
     training <- read.keel(file = parameters$inputData[1])   # training data
+    if(is.na(parameters$inputData[2])){
+      test <- training
+    } else {
+      test <- read.keel(file = parameters$inputData[2])        # test data
+    }
   }
+  
   if(is.na(parameters$targetVariable))
     parameters$targetVariable <- training$attributeNames[length(training$attributeNames)]
   #Change target variable if it is neccesary
@@ -561,6 +570,7 @@ MESDIF <- function(paramFile = NULL,
   )
   
   #---------------------------------------------------
+  class(rulesToReturn) <- "SDR_Rules"
   rulesToReturn # Return
 }
 

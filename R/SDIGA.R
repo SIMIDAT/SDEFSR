@@ -251,10 +251,13 @@ SDIGA <- function(parameters_file = NULL,
   
   if(is.null(parameters_file)){
     #Generate our "parameters file" if no parameters file is provided
+   
+    if(is.null(training)) 
+      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
+    if(is.null(test))
+      test <- training #To execute only one dataset
     if(class(training) != "keel" | class(test) != "keel")
       stop("'training' or 'test' parameters is not a KEEL class")
-    if(is.null(training) | is.null(test)) 
-      stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
     if(length(output) != 3 )
@@ -285,10 +288,14 @@ SDIGA <- function(parameters_file = NULL,
   parameters <- .read.parametersFile2(file = parameters_file)  # Algorithm parameters
     if(parameters$algorithm != "SDIGA")
       stop("Parameters file is not for \"SDIGA\"")
-  
-  test <- read.keel(file = parameters$inputData[2])        # test data
-  
   training <- read.keel(file = parameters$inputData[1])   # training data
+  if(is.na(parameters$inputData[2])){
+    test <- training
+  } else {
+    test <- read.keel(file = parameters$inputData[2])        # test data
+  }
+  
+
   }
   if(is.na(parameters$targetVariable))
     parameters$targetVariable <- training$attributeNames[length(training$attributeNames)]

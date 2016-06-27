@@ -776,6 +776,11 @@ Rule.addVariable <- function(rule, dataset){
     
     if(is.null(paramFile)){
       #Generate our parameters file
+     
+      
+      if(is.null(test))
+        test <- training #To execute only one dataset
+      
       if(class(training) != "keel" | class(test) != "keel")
         stop("Training or test or both object must be 'keel' class.")
       if(training[[1]] != test[[1]] )
@@ -813,11 +818,15 @@ Rule.addVariable <- function(rule, dataset){
       #Print parameters in console
       printFuGePSDParameters(parameters, training, FALSE)
     } else {
-      #Start of the algorithm
+      #Read parameters file
       parameters <- .read.parametersFile2(paramFile)
-      
+      #Read traing/test data
       training <- read.keel(parameters$inputData[1])
-      test <- read.keel(parameters$inputData[2])
+      if(is.na(parameters$inputData[2])){
+        test <- training
+      } else {
+        test <- read.keel(file = parameters$inputData[2])        # test data
+      }
       
       #Print parameters in console
       printFuGePSDParameters(parameters, training, FALSE)
@@ -995,6 +1004,7 @@ Rule.addVariable <- function(rule, dataset){
    cat("\n\nAlgorithm finished. \nExecution time: ", parseTime(as.numeric(Sys.time()), init_time),  "\n\n", sep = "")
     
    #return
+   class(rulesToReturn) <- "SDR_Rules"
    rulesToReturn
   }
   
@@ -1082,18 +1092,19 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
 #'
 #'  Evaluates the entire population for the Global Fitness computation procedure.
 #'  
-#'  @param pop A list of 'Rule' objects.
-#'  @param dataset A 'keel' object with all the information of the dataset we are working
-#'  @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
-#'  @param exampleClass Vector with the classes of all examples of the dataset
-#'  @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
-#'  @param categorical A logical vector indicating which attributes of the dataset are categorical.
-#'  @param numerical A logical vector indicating which attributes of the dataset are numerical.
-#'  @param t_norm An integer specifying the t-norm to use. 0 for minimum t_norm, other value for product t-norm.
-#'  @param weights A numeric vector of length 4 indicating the weights used to calculate the global fitness of this population.
+#' @param pop A list of 'Rule' objects.
+#' @param dataset A 'keel' object with all the information of the dataset we are working
+#' @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
+#' @param exampleClass Vector with the classes of all examples of the dataset
+#' @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
+#' @param categorical A logical vector indicating which attributes of the dataset are categorical.
+#' @param numerical A logical vector indicating which attributes of the dataset are numerical.
+#' @param t_norm An integer specifying the t-norm to use. 0 for minimum t_norm, other value for product t-norm.
+#' @param weights A numeric vector of length 4 indicating the weights used to calculate the global fitness of this population.
 #'  
-#'  @return A number which indicate the global fitness for this population.
+#' @return A number which indicate the global fitness for this population.
 #'  
+#' @noRd
 Pop.evaluate <- function(pop, dataset, examplesNoClass, exampleClass, frm, categorical, numerical, t_norm, weights){
   nLabels <- dim(dataset$fuzzySets)[1]
   
