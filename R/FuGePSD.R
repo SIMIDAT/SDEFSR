@@ -20,7 +20,7 @@
 #' 
 #' @details It creates a random general rule for a provided dataset with, at most, 50 %% of the variables.
 #' 
-#' @param dataset The keel dataset where getting the data
+#' @param dataset The SDR_Dataset dataset where getting the data
 #' @param tnorm The T-norm to use: 0 -> minimum T-norm, 1 -> product T-norm
 #' @param tconorm The T-conorm to use: 0 -> maximum T-conorm, 1 -> Probabilistic sum t-conorm
 #' @param rule_weight The Rule Weighting method: 0 -> Wining Rule, 1 -> Normalized sum, 2 -> Arithmetic mean
@@ -92,7 +92,7 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, class = NULL ){
 #' Creates a random fuzzy antecedent for a specific variable
 #' 
 #' @param  variable The position of the variable to use.
-#' @param dataset The keel dataset where the function takes the data.
+#' @param dataset The SDR_Dataset dataset where the function takes the data.
 #' 
 #' 
 #' 
@@ -230,7 +230,7 @@ Rule.addVariable <- function(rule, dataset){
   #'  @return the same rule but with the params reinitialized and marked as non evaluated.
   #'  
   Rule.addLabel <- function(rule, variable, dataset){
-    if(class(rule) == "Rule" & class(dataset) == "keel"){
+    if(class(rule) == "Rule" & class(dataset) == "SDR_Dataset"){
       
       if(variable > length(rule$antecedent)){
         stop("Can not add label to this rule. Variable used is grater than antecedent size.")
@@ -362,7 +362,7 @@ Rule.addVariable <- function(rule, dataset){
   #'  Evaluate a single rule. 
   #'  
   #'  @param rule The rule we want to evaluate (Class "Rule").
-  #'  @param dataset The keel dataset object with the examples to compare with the rule (Class "keel")
+  #'  @param dataset The SDR_Dataset dataset object with the examples to compare with the rule (Class "SDR_Dataset")
   #'  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
   #'  @param categoricalValues a logical vector indicating which attributes in the dataset are categorical
   #'  @param numericalValues a logical vector indicating which attributes in the dataset are numerical
@@ -376,7 +376,7 @@ Rule.addVariable <- function(rule, dataset){
   #' @return The rule evaluated.
   #' 
   Rule.evaluate <- function(rule, dataset, data, categoricalValues, numericalValues, t_norm = 1, ruleWeight = 0){
-    if(class(rule) == "Rule" & class(dataset) == "keel"){
+    if(class(rule) == "Rule" & class(dataset) == "SDR_Dataset"){
       if(! rule$evaluated){
         
         correctly_matching_examples_by_clas <- integer(length(dataset$class_names)) # For calculate significance
@@ -503,7 +503,7 @@ Rule.addVariable <- function(rule, dataset){
   #' of evaluation of rule (.fit13 or .fitnessMESDIF) that are available inside the package SDR
   #' 
   #' @param rule The rule that we want to evaluate.
-  #' @param dataset The keel dataset which rule refers to.
+  #' @param dataset The SDR_Dataset dataset which rule refers to.
   #' 
   #' @return a matrix with one column to use easily with fitness functions of this package
   #' 
@@ -545,7 +545,7 @@ Rule.addVariable <- function(rule, dataset){
   #' Perfom the mutation operator for FuGePSD algorithm.
   #' 
   #' @param rule The rule object to be mutated.
-  #' @param dataset a keel object associated with the rule.
+  #' @param dataset a SDR_Dataset object associated with the rule.
   #' @return a new rule object with the rule mutated.
   #'
   FuGePSD_Mutation <- function(rule, dataset){
@@ -602,9 +602,9 @@ Rule.addVariable <- function(rule, dataset){
   #' @title Fuzzy Genetic Programming-based learning for Subgroup Discovery (FuGePSD) Algorithm.
   #' @description Make a subgroup discovery task using the FuGePSD algorithm.
   #' 
-  #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
-  #' @param training A \code{keel} class variable with training data.
-  #' @param test A \code{keel} class variable with test data.
+  #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables
+  #' @param training A \code{SDR_Dataset} class variable with training data.
+  #' @param test A \code{SDR_Dataset} class variable with test data.
   #' @param output Character vector with the paths where store information file, rules file and test quality measures file, respectively. For rules and quality measures files, the algorithm generate 4 files, each one with the results of a given filter of fuzzy confidence.
   #' @param seed An integer to set the seed used for generate random numbers.
   #' @param nLabels The number of fuzzy labels to use with numeric variables. By default 3. We recommend an odd number between 3 and 9.
@@ -781,8 +781,8 @@ Rule.addVariable <- function(rule, dataset){
       if(is.null(test))
         test <- training #To execute only one dataset
       
-      if(class(training) != "keel" | class(test) != "keel")
-        stop("Training or test or both object must be 'keel' class.")
+      if(class(training) != "SDR_Dataset" | class(test) != "SDR_Dataset")
+        stop("Training or test or both object must be 'SDR_Dataset' class.")
       if(training[[1]] != test[[1]] )
         stop("datasets ('training' and 'test') does not have the same relation name.")
       if(length(output) != 3 )
@@ -821,11 +821,11 @@ Rule.addVariable <- function(rule, dataset){
       #Read parameters file
       parameters <- .read.parametersFile2(paramFile)
       #Read traing/test data
-      training <- read.keel(parameters$inputData[1])
+      training <- read.dataset(parameters$inputData[1])
       if(is.na(parameters$inputData[2])){
         test <- training
       } else {
-        test <- read.keel(file = parameters$inputData[2])        # test data
+        test <- read.dataset(file = parameters$inputData[2])        # test data
       }
       
       #Print parameters in console
@@ -1013,7 +1013,7 @@ Rule.addVariable <- function(rule, dataset){
 #' Calcultes the Fuzzy Reasoning Method for all examples for a given rule population
 #' 
 #' @param pop A list with all rule object that define the population
-#' @param dataset the keel object with the dataset information.
+#' @param dataset the SDR_Dataset object with the dataset information.
 #' @param examplesNoClass matrix with all examples of the dataset without the class attribute. One examples per column.
 #' @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
 #' @param categorical Logical vector indicating which attributes of the dataset are categorical.
@@ -1093,7 +1093,7 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
 #'  Evaluates the entire population for the Global Fitness computation procedure.
 #'  
 #' @param pop A list of 'Rule' objects.
-#' @param dataset A 'keel' object with all the information of the dataset we are working
+#' @param dataset A 'SDR_Dataset' object with all the information of the dataset we are working
 #' @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
 #' @param exampleClass Vector with the classes of all examples of the dataset
 #' @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
@@ -1138,7 +1138,7 @@ Pop.evaluate <- function(pop, dataset, examplesNoClass, exampleClass, frm, categ
 #' Runs a token competition procedure.
 #' 
 #' @param pop A list of 'Rule' objects.
-#' @param dataset A 'keel' object with all the information about the dataset we are working.
+#' @param dataset A 'SDR_Dataset' object with all the information about the dataset we are working.
 #' 
 #' @return A list of 'Rule' objects with that rules that pass this token competition procedure.
 #' 
@@ -1183,7 +1183,7 @@ tokenCompetition <- function(pop, dataset){
 #' Writes rules into a human-readable format into a file.
 #'
 #' @param pop A list of 'Rule' objects with the population we want to save.
-#' @param dataset A 'keel' object with all the information about the dataset the rules are pointing.
+#' @param dataset A 'SDR_Dataset' object with all the information about the dataset the rules are pointing.
 #' @param fileName String with the path to store the rules.
 #' 
 #' @details 
@@ -1290,7 +1290,7 @@ writeTestQMFile <- function(pop, fileName, numExamples){
 #' specified by this parameters.
 #' 
 #' @param parameters A list with all neccesary parameters.
-#' @param dataset A \code{keel} object with all the information about the dataset.
+#' @param dataset A \code{SDR_Dataset} object with all the information about the dataset.
 #' @param inputFromFiles A logical indicating if the input datasets are given from a file or from an object in the R environment.
 #' 
 printFuGePSDParameters <- function(parameters, dataset, inputFromFiles = TRUE){

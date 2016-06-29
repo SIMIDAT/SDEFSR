@@ -377,9 +377,9 @@
 #' @title Non-dominated Multi-objective Evolutionary algorithm for Extracting Fuzzy rules in Subgroup Discovery (NMEEF-SD)
 #' @description Perfoms a subgroup discovery task executing the algorithm NMEEF-SD
 #'
-#' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
-#' @param training A \code{keel} class variable with training data.
-#' @param test A \code{keel} class variable with training data.
+#' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables
+#' @param training A \code{SDR_Dataset} class variable with training data.
+#' @param test A \code{SDR_Dataset} class variable with training data.
 #' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
 #' @param nLabels Number of fuzzy labels defined in the datasets.
@@ -570,8 +570,8 @@ NMEEF_SD <- function(paramFile = NULL,
     if(is.null(test))
       test <- training #To execute only one dataset
     
-    if(class(training) != "keel" | class(test) != "keel")
-      stop("'training' or 'test' parameters is not a KEEL class")
+    if(class(training) != "SDR_Dataset" | class(test) != "SDR_Dataset")
+      stop("'training' or 'test' parameters is not a SDR_Dataset class")
     
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
@@ -604,11 +604,11 @@ NMEEF_SD <- function(paramFile = NULL,
     
     if(parameters[[1]] != "NMEEFSD") stop("Parameters file has parameters for another algorithm, no for \"NMEEF-SD\"")
    
-    training <- read.keel(file = parameters$inputData[1])   # training data 
+    training <- read.dataset(file = parameters$inputData[1])   # training data 
     if(is.na(parameters$inputData[2])){
       test <- training
     } else {
-      test <- read.keel(file = parameters$inputData[2])        # test data
+      test <- read.dataset(file = parameters$inputData[2])        # test data
     }
   }
   if(is.na(parameters$targetVariable))

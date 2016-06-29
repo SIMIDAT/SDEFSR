@@ -4,7 +4,7 @@
 \name{habermanTst}
 \alias{habermanTst}
 \title{Haberman survival data set}
-\format{A keel class with 62 instances, 3 variables (without the target variable) and 2 values for the target variable.
+\format{A SDR_Dataset class with 62 instances, 3 variables (without the target variable) and 2 values for the target variable.
     Three fuzzy labels for each numerical variable are defined.}
 \source{
 Haberman, S. J. (1976). Generalized Residuals for Log-Linear Models, 

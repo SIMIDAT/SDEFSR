@@ -4,7 +4,7 @@
 \name{germanTst}
 \alias{germanTst}
 \title{German Credit data set}
-\format{A keel class with 200 instances, 20 variables (without the target variable)
+\format{A SDR_Dataset class with 200 instances, 20 variables (without the target variable)
     and 2 values for the target class.}
 \source{
 \url{http://sci2s.ugr.es/keel/dataset.php?cod=88}

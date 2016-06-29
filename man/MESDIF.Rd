@@ -12,11 +12,11 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
   targetClass = "null")
 }
 \arguments{
-\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}
+\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables}
 
-\item{training}{A \code{keel} class variable with training data.}
+\item{training}{A \code{SDR_Dataset} class variable with training data.}
 
-\item{test}{A \code{keel} class variable with test data.}
+\item{test}{A \code{SDR_Dataset} class variable with test data.}
 
 \item{output}{character vector with the paths where store information file, rules file and test quality measures file, respectively.}
 

@@ -14,11 +14,11 @@ FUGEPSD(paramFile = NULL, training = NULL, test = NULL,
   ALL_CLASS = TRUE, targetVariable = NA)
 }
 \arguments{
-\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables}
+\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables}
 
-\item{training}{A \code{keel} class variable with training data.}
+\item{training}{A \code{SDR_Dataset} class variable with training data.}
 
-\item{test}{A \code{keel} class variable with test data.}
+\item{test}{A \code{SDR_Dataset} class variable with test data.}
 
 \item{output}{Character vector with the paths where store information file, rules file and test quality measures file, respectively. For rules and quality measures files, the algorithm generate 4 files, each one with the results of a given filter of fuzzy confidence.}
 

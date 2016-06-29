@@ -1,26 +1,21 @@
-
-------------------------------------------------------
-Algorithm: FuGePSD
-Relation: haberman
-Training file: habermanTra object
-Test file: habermanTst object
-Seed: 0
-Number of Labels: 3
-Number of Generations: 10
-Initial Number of Rules: 100
-Crossover Probability: 0.5
-Mutation Probability: 0.2
-Insertion Probability: 0.15
-Dropping Condition Probability: 0.15
-Fuzzy Reasoning Method: normalized_sum
-T-norm/T-conorm for the Computation of the Compatibility Degree: product_t-norm
-Rule Weight: certainty_factor
-Tournament Selection Size: 2
-Global Fitness Weight 1: 0.7
-Global Fitness Weight 2: 0.1
-Global Fitness Weight 3: 0.05
-Global Fitness Weight 4: 0.7
-Target Variable: Survival
-All Class: TRUE
------------------------------------------------------------
-
+-------------------------------- 
+ Algorithm: MESDIF 
+ Relation: haberman 
+ Training file: 
+ Test file: 
+ Rules Representation:  CAN 
+ Number of evaluations: 300 
+ Number of fuzzy partitions: 3 
+ Population Length: 100 
+ Elite Population Length: 3 
+ Crossover Probability: 0.6 
+ Mutation Probability: 0.01 
+ Obj1: CSUP   (Weigth:  ) 
+ Obj2: CCNF   (Weigth:  ) 
+ Obj3: null   (Weigth:  ) 
+ Obj4: null 
+ Number of examples in training: 306 
+ Number of examples in test: 306 
+ Target Variable: Survival 
+ Target Class: All Variables 
+ --------------------------------

@@ -365,13 +365,13 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 
 #' Modifiy the number of Fuzzy Labels of the dataset.
 #' 
-#' This function change the number of fuzzy labels defined in the current KEEL dataset.
+#' This function change the number of fuzzy labels defined in the current SDR_Dataset dataset.
 #' 
-#' @details The fuzzy definitions used in the \code{keel} class are triangular.
+#' @details The fuzzy definitions used in the \code{SDR_Dataset} class are triangular.
 #'     Because you can only specify the number of fuzzy definitions, all those definitions
 #'     has the same width. With this function you can re-calculate this triangular fuzzy sets.
 #' 
-#' @param dataset The dataset to modify their fuzzy labels definitions. Must be a \code{keel} class.
+#' @param dataset The dataset to modify their fuzzy labels definitions. Must be a \code{SDR_Dataset} class.
 #' @param nLabels The new number of fuzzy labels. An integer greater than zero.
 #' 
 #' @return  This function returns the same dataset with their fuzzy definitions modified.
@@ -401,11 +401,11 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 
 
 #'
-#' Change the target Variable of a \code{'keel'} Dataset
+#' Change the target Variable of a \code{'SDR_Dataset'} Dataset
 #' 
 #' Change the actual target variable for another one if it is categorical.
 #' 
-#' @param dataset The KEEL dataset class
+#' @param dataset The SDR_Dataset dataset class
 #' @param variable The position (or the name) of the variable to set as target Variable.
 #' @return The dataset with the variables changed
 #' 
@@ -421,7 +421,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' 
 #' 
 changeTargetVariable <- function(dataset, variable){
-  if(class(dataset) != "keel") stop( paste("'",substitute(dataset),"' is not a keel class", sep = ""))
+  if(class(dataset) != "SDR_Dataset") stop( paste("'",substitute(dataset),"' is not a SDR_Dataset class", sep = ""))
   #if(variable >= dataset$nVars + 1) stop("variable is the same of the actual variable or is out of range")
   
   if(is.character(variable)){
@@ -661,6 +661,15 @@ changeTargetVariable <- function(dataset, variable){
 #' @export
  SDR_GUI <- function(){
    packages <- installed.packages()[,1]
+   
+   if(! "ggplot2" %in% packages){
+     if(tolower(.yesno("Package 'ggplot2' is not installed and must be installed to run this GUI. Do you want to install it? (Y/n): ")) == "y")
+       install.packages("ggplot2")
+     } else {
+       stop("Package 'ggplot2' not available")
+     }
+   } 
+   
    if(! "shiny" %in% packages){
      if(tolower(.yesno("Package 'shiny' is not installed and must be installed to run this GUI. Do you want to install it? (Y/n): ")) == "y"){
        install.packages("shiny")
@@ -922,14 +931,14 @@ string
 
 
 
-#' S3 function to summary a keel object
+#' S3 function to summary a SDR_Dataset object
 #' 
-#' Summary relevant data of a \code{keel} dataset.
+#' Summary relevant data of a \code{SDR_Dataset} dataset.
 #' 
-#' @param object A \code{keel} class.
+#' @param object A \code{SDR_Dataset} class.
 #' @param ... Additional arguments to the summary function.
 #' 
-#' @details This function show important information about the \code{keel} dataset for the user. Note that it does not 
+#' @details This function show important information about the \code{SDR_Dataset} dataset for the user. Note that it does not 
 #' show all the information available. The rest is only for the algorithms. The values that appear are accesible by the
 #' \code{$} operator, e.g. dataset$relation or dataset$examplesPerClass.
 #' 
@@ -938,8 +947,8 @@ string
 #' summary(carTra) 
 #' 
 #' @export
-summary.keel <- function(object, ...){
-  cat(paste("Summary of the keel object: '", substitute(object),"'", sep = ""),
+summary.SDR_Dataset <- function(object, ...){
+  cat(paste("Summary of the SDR_Dataset object: '", substitute(object),"'", sep = ""),
       paste("\t- relation:", object$relation),
       paste("\t- nVars:", object$nVars),
       paste("\t- Ns:", object$Ns),
@@ -959,16 +968,16 @@ summary.keel <- function(object, ...){
 #'  
 #'  This function shows the matrix of data uncoded.
 #'  
-#' @param x The \code{keel} object to view
+#' @param x The \code{SDR_Dataset} object to view
 #' @param ... Additional arguments passed to the print function
 #'  
-#' @details This function show the matix of data. Internally, a \code{keel} object has a list of of examples
+#' @details This function show the matix of data. Internally, a \code{SDR_Dataset} object has a list of of examples
 #'  and this examples are coded numerically. This function decode these examples and convert the list into a matrix.
 #'  
 #' @return a matrix with the dataset uncoded.
 #'  
 #' @export
-print.keel <- function(x, ...){
+print.SDR_Dataset <- function(x, ...){
   data <- lapply(x$data,
                  function(x, categoricos)
                    vapply(seq_len(length(x)), function(i, example, cateValues){
@@ -1028,19 +1037,19 @@ plotRules <- function(ruleSet){
   #Crea lista con los datos (Falta meter el string que indica "Rule x")
   s <- lapply(1:length(ruleSet), 
               function(count, x){ 
-                data.frame(value = c(x[[count]]$qualityMeasures$Tpr, - x[[count]]$qualityMeasures$Fpr), #Fpr goes in negative to show correctly in the graph
-                           qualityMeasure = c("TPR", "FPR"), #To show the legend and set colours of the bars
-                           Rule = c(paste("Rule", count), paste("Rule", count)))
+                data.frame(Rule = c(paste("Rule", count), paste("Rule", count)),
+                           value = c(x[[count]]$qualityMeasures$Tpr, - x[[count]]$qualityMeasures$Fpr), #Fpr goes in negative to show correctly in the graph
+                           qualityMeasure = c("TPR", "FPR") #To show the legend and set colours of the bars
+                           )
               }, ruleSet)
   #Join all elements of the list into a single data.frame
   s <- do.call(rbind,s)
   
   #Create the graph with ggplot
-  ggplot2::ggplot(data = s, mapping = ggplot2::aes(x = s$Rule, y = s$value, fill = s$qualityMeasure)) +
-    ggplot2::geom_bar(data=subset(s,qualityMeasure=="TPR"), stat = "identity") + 
-    ggplot2::geom_bar(data=subset(s,qualityMeasure=="FPR"), stat = "identity") +
-    ggplot2::coord_flip()
-  
+  ggplot2::ggplot(data = s, mapping = ggplot2::aes(x = Rule, y = value, fill = qualityMeasure)) +
+    ggplot2::geom_bar(data=subset(s,qualityMeasure=="TPR"), stat = "identity", position = "identity") + 
+    ggplot2::geom_bar(data=subset(s,qualityMeasure=="FPR"), stat = "identity", position = "identity") +
+    ggplot2::scale_y_continuous(limits = c(-1,1)) + ggplot2::coord_flip()
 }
 
 

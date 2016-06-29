@@ -9,7 +9,7 @@ FuGePSD_Mutation(rule, dataset)
 \arguments{
 \item{rule}{The rule object to be mutated.}
 
-\item{dataset}{a keel object associated with the rule.}
+\item{dataset}{a SDR_Dataset object associated with the rule.}
 }
 \value{
 a new rule object with the rule mutated.

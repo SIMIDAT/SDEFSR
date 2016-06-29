@@ -2,12 +2,12 @@
 % Please edit documentation in R/Utils.R
 \name{changeTargetVariable}
 \alias{changeTargetVariable}
-\title{Change the target Variable of a \code{'keel'} Dataset}
+\title{Change the target Variable of a \code{'SDR_Dataset'} Dataset}
 \usage{
 changeTargetVariable(dataset, variable)
 }
 \arguments{
-\item{dataset}{The KEEL dataset class}
+\item{dataset}{The SDR_Dataset dataset class}
 
 \item{variable}{The position (or the name) of the variable to set as target Variable.}
 }

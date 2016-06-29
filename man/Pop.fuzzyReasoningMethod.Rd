@@ -10,7 +10,7 @@ Pop.fuzzyReasoningMethod(pop, dataset, examplesNoClass, frm, categorical,
 \arguments{
 \item{pop}{A list with all rule object that define the population}
 
-\item{dataset}{the keel object with the dataset information.}
+\item{dataset}{the SDR_Dataset object with the dataset information.}
 
 \item{examplesNoClass}{matrix with all examples of the dataset without the class attribute. One examples per column.}
 

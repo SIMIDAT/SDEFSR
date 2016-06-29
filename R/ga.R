@@ -1060,7 +1060,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 #
 
 .gaFuGePSD <- function(type,           # Type of execution (1 for One vs All, != 1 for normal execution)
-                       dataset,        # keel object asociated to this genetic Algorithm (training file)
+                       dataset,        # SDR_Dataset object asociated to this genetic Algorithm (training file)
                        selection ,     # Selection function !
                        crossover ,     # Crossover function !
                        mutation ,      # mutation function
@@ -1080,8 +1080,8 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
                       )
 {
   #First of all, we must check types of all attributes
-  if(class(dataset) != "keel")
-    stop("'dataset' must be a keel dataset object.")
+  if(class(dataset) != "SDR_Dataset")
+    stop("'dataset' must be a SDR_Dataset dataset object.")
   if(! is.function(selection))
     stop("'selection' must be function.")
   if(! is.function(crossover))
@@ -1140,7 +1140,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 
 
 executionPSD <- function(clas = NULL,   # number of the class to generate rules.
-                       dataset,        # keel object asociated to this genetic Algorithm (training file)
+                       dataset,        # SDR_Dataset object asociated to this genetic Algorithm (training file)
                        selection ,     # Selection function !
                        crossover ,     # Crossover function !
                        mutation ,      # mutation function
@@ -2098,10 +2098,10 @@ if(DNFRules) {
 #' Obtains the belonging degree of every example of a dataset to a given rule
 #' 
 #' @param rule The rule to compare example. This rule must be in canonica vector representation. (See Rule.toRuleCANRepresentation function)
-#' @param dataset The complete keel dataset object to get the examples
+#' @param dataset The complete SDR_Dataset dataset object to get the examples
 #' @param noClass a matrix with all examples without the class attribute. One examples PER COLUMN
 #' @param nLabels number of fuzzy Labels that have numerical attributes
-#' @param maxRule maximum value of all attributes ($sets of the keel dataset)
+#' @param maxRule maximum value of all attributes ($sets of the SDR_Dataset dataset)
 #' @param cate logical vector indicating which attributes are categorical
 #' @param num logical vector indicating which attributes are numerical
 #' @param The T-norm to use. 0 to Minimum T-norm, 1 to Product T-norm.

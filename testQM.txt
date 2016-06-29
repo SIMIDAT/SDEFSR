@@ -1,39 +1,91 @@
 Rule 1 :
-	 - N_vars: 2
-	 - Coverage: 0.016129
-	 - Significance: 0.278358
-	 - Unusualness: -0.00026
-	 - Accuracy: 0.333333
-	 - CSupport: 0
-	 - FSupport: 0.005583
-	 - CConfidence: 0
-	 - FConfidence: 0.272727
-	 - True Positive Rate: 0
-	 - False Positive Rate: 0.022222 
+	 - N_vars: 3
+	 - Coverage: 0.003268
+	 - Significance: 1.154473
+	 - Unusualness: 0.003247
+	 - Accuracy: 0.666667
+	 - CSupport: 0.003268
+	 - FSupport: 0.004159
+	 - CConfidence: 1
+	 - FConfidence: 0.846512
+	 - True Positive Rate: 0.012346
+	 - False Positive Rate: 0 
 
 Rule 2 :
 	 - N_vars: 3
-	 - Coverage: 0
-	 - Significance: 0
-	 - Unusualness: 0
-	 - Accuracy: 0.5
-	 - CSupport: 0
-	 - FSupport: 0
-	 - CConfidence: 0
-	 - FConfidence: 0
-	 - True Positive Rate: 0
+	 - Coverage: 0.065359
+	 - Significance: 4.298886
+	 - Unusualness: 0.025973
+	 - Accuracy: 0.590909
+	 - CSupport: 0.039216
+	 - FSupport: 0.06032
+	 - CConfidence: 0.6
+	 - FConfidence: 0.49421
+	 - True Positive Rate: 0.148148
+	 - False Positive Rate: 0.035556 
+
+Rule 3 :
+	 - N_vars: 2
+	 - Coverage: 0.905229
+	 - Significance: 0.441829
+	 - Unusualness: -0.018017
+	 - Accuracy: 0.240143
+	 - CSupport: 0.215686
+	 - FSupport: 0.193188
+	 - CConfidence: 0.238267
+	 - FConfidence: 0.226529
+	 - True Positive Rate: 0.814815
+	 - False Positive Rate: 0.937778 
+
+Rule 4 :
+	 - N_vars: 3
+	 - Coverage: 0.48366
+	 - Significance: 0.269365
+	 - Unusualness: 0.054744
+	 - Accuracy: 0.76
+	 - CSupport: 0.369281
+	 - FSupport: 0.340258
+	 - CConfidence: 0.763514
+	 - FConfidence: 0.765954
+	 - True Positive Rate: 0.502222
+	 - False Positive Rate: 0.432099 
+
+Rule 5 :
+	 - N_vars: 2
+	 - Coverage: 0.905229
+	 - Significance: 0.441829
+	 - Unusualness: 0.032808
+	 - Accuracy: 0.759857
+	 - CSupport: 0.689542
+	 - FSupport: 0.659628
+	 - CConfidence: 0.761733
+	 - FConfidence: 0.773471
+	 - True Positive Rate: 0.937778
+	 - False Positive Rate: 0.814815 
+
+Rule 6 :
+	 - N_vars: 3
+	 - Coverage: 0.019608
+	 - Significance: 1.602467
+	 - Unusualness: 0.016852
+	 - Accuracy: 0.875
+	 - CSupport: 0.019608
+	 - FSupport: 0.035398
+	 - CConfidence: 1
+	 - FConfidence: 0.83587
+	 - True Positive Rate: 0.026667
 	 - False Positive Rate: 0 
 
 Global:
-	 - N_rules: 2
-	 - N_vars: 2.5
-	 - Coverage: 0.008065
-	 - Significance: 0.139179
-	 - Unusualness: -0.00013
-	 - Accuracy: 0.416666
-	 - CSupport: 0
-	 - FSupport: 0.002792
-	 - FConfidence: 0.136364
-	 - CConfidence: 0
-	 - True Positive Rate: 0
-	 - False Positive Rate: 0.011111
+	 - N_rules: 6
+	 - N_vars: 2.666667
+	 - Coverage: 0.397059
+	 - Significance: 1.368142
+	 - Unusualness: 0.019268
+	 - Accuracy: 0.648763
+	 - CSupport: 0.947712
+	 - FSupport: 0.215492
+	 - FConfidence: 0.657091
+	 - CConfidence: 0.727252
+	 - True Positive Rate: 0.406996
+	 - False Positive Rate: 0.370041

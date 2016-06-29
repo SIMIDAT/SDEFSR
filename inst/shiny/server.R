@@ -27,6 +27,8 @@ options(shiny.maxRequestSize= MAX_SIZE_MB * 1024^2)
 # The colors for the graphs (obtened from Material Design: http://www.google.ch/design/spec/style/color.html#color-color-palette)
 colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176", 
             "#FFEB3B", "#FDD835", "#F9A825")
+#Add more colors
+colorsWithContrast <- grDevices::rainbow(30)[c(1,10,20,30,4,14,24,6,16,28)]
 
 
 
@@ -43,10 +45,14 @@ shinyServer(function(input, output, session) {
   rutaTra <- ""
   rutaTst <- ""
   
+  ruleSet <- NULL
   data <- NULL
   datos <- NULL
   graficoSectores <- T
   fileAnterios <- "Tra"
+  
+  ranges1 <- NULL
+  ranges2 <- NULL
   
   lastValue <- 0
   
@@ -61,13 +67,131 @@ shinyServer(function(input, output, session) {
   
   
   
+  #Observe "Keep this data" button
+  observe({
+    
+      input$filterData
+    
+     if(isolate(input$traTstRadio) == "Training File"){
+       # Keep the data on variable vs variable, look at ranges1 and ranges2
+       if(isolate(input$visualization) == "Variable vs Variable"){
+         pos1 <- which(data[[2]] == isolate(input$Variables1))
+         pos2 <- which(data[[2]] == isolate(input$Variables2))
+         toKeep <- intersect(ranges1, ranges2)
+         datos <<- datos[,toKeep]
+         #Store data toKeep
+         data$data <<- dataTra$data <<- dataTra$data[toKeep]
+         #Modify Ns value
+         data$Ns <<- dataTra$Ns <<- length(toKeep)
+         #Modify examplesPerClass
+         clValues <- unlist(lapply(data$data, '[', data$nVars + 1))
+         examplesPerClass <- lapply(X = seq_len(length(data$class_names)) - 1, FUN = function(x, data) sum(data == x), clValues)
+         names(examplesPerClass) <- data$class_names
+         data$examplesPerClass <<- dataTra$examplesPerClass <<- examplesPerClass
+         #Modify min and max
+         data$min[pos1] <<- dataTra$min[pos1] <<- isolate(input$numericRange1)[1]
+         data$min[pos2] <<- dataTra$min[pos2] <<- isolate(input$numericRange2)[1]
+         data$max[pos1] <<- dataTra$max[pos1] <<- isolate(input$numericRange1)[2]
+         data$max[pos2] <<- dataTra$max[pos2] <<- isolate(input$numericRange2)[2]
+       } else if(isolate(input$visualization) == "Pie Chart"){
+         toKeep <- which((datos[nrow(datos),] +1) %in% which(data$class_names %in% isolate(input$classNames)))
+         datos <<- datos[,toKeep]
+         #Store data toKeep
+         data$data <<- dataTra$data <<- dataTra$data[toKeep]
+         #Modify Ns value
+         data$Ns <<- dataTra$Ns <<- length(toKeep)
+         #Modify examplesPerClass
+         clValues <- unlist(lapply(data$data, '[', data$nVars + 1))
+         examplesPerClass <- lapply(X = seq_len(length(data$class_names)) - 1, FUN = function(x, data) sum(data == x), clValues)
+         names(examplesPerClass) <- data$class_names
+         data$examplesPerClass <<- dataTra$examplesPerClass <<- examplesPerClass
+         #Modify max value
+         pos <- which(data[[2]] == isolate(input$targetClassSelect))
+         data$max <<- dataTra$max <<- length(isolate(input$classNames))
+       } else {
+         toKeep <- ranges1
+         datos <<- datos[,toKeep]
+         #Store data toKeep
+         data$data <<- dataTra$data <<- dataTra$data[toKeep]
+         #Modify Ns value
+         data$Ns <<- dataTra$Ns <<- length(toKeep)
+         #Modify examplesPerClass
+         clValues <- unlist(lapply(data$data, '[', data$nVars + 1))
+         examplesPerClass <- lapply(X = seq_len(length(data$class_names)) - 1, FUN = function(x, data) sum(data == x), clValues)
+         names(examplesPerClass) <- data$class_names
+         data$examplesPerClass <<- dataTra$examplesPerClass <<- examplesPerClass
+         #Modify min and max
+         pos <- which(data[[2]] == isolate(input$targetClassSelect))
+         data$min[pos] <<- dataTra$min[pos] <<- isolate(input$numericRangeVisualization)[1]
+         data$max[pos] <<- dataTra$max[pos] <<- isolate(input$numericRangeVisualization)[2]
+
+       } 
+     } else {
+       #Test File
+       if(isolate(input$visualization) == "Variable vs Variable"){
+         pos1 <- which(data[[2]] == isolate(input$Variables1))
+         pos2 <- which(data[[2]] == isolate(input$Variables2))
+         toKeep <- intersect(ranges1, ranges2)
+         datos <<- datos[,toKeep]
+         #Store data toKeep
+         data$data <<- dataTst$data <<- dataTst$data[toKeep]
+         #Modify Ns value
+         data$Ns <<- dataTst$Ns <<- length(toKeep)
+         #Modify examplesPerClass
+         clValues <- unlist(lapply(data$data, '[', data$nVars + 1))
+         examplesPerClass <- lapply(X = seq_len(length(data$class_names)) - 1, FUN = function(x, data) sum(data == x), clValues)
+         names(examplesPerClass) <- data$class_names
+         data$examplesPerClass <<- dataTst$examplesPerClass <<- examplesPerClass
+         #Modify min and max
+         data$min[pos1] <<- dataTst$min[pos1] <<- isolate(input$numericRange1)[1]
+         data$min[pos2] <<- dataTst$min[pos2] <<- isolate(input$numericRange2)[1]
+         data$max[pos1] <<- dataTst$max[pos1] <<- isolate(input$numericRange1)[2]
+         data$max[pos2] <<- dataTst$max[pos2] <<- isolate(input$numericRange2)[2]
+       } else if(isolate(input$visualization) == "Pie Chart"){
+         toKeep <- which((datos[nrow(datos),] +1) %in% which(data$class_names %in% isolate(input$classNames)))
+         datos <<- datos[,toKeep]
+         #Store data toKeep
+         data$data <<- dataTst$data <<- dataTst$data[toKeep]
+         #Modify Ns value
+         data$Ns <<- dataTst$Ns <<- length(toKeep)
+         #Modify examplesPerClass
+         clValues <- unlist(lapply(data$data, '[', data$nVars + 1))
+         examplesPerClass <- lapply(X = seq_len(length(data$class_names)) - 1, FUN = function(x, data) sum(data == x), clValues)
+         names(examplesPerClass) <- data$class_names
+         data$examplesPerClass <<- dataTst$examplesPerClass <<- examplesPerClass
+         #Modify max value
+         pos <- which(data[[2]] == isolate(input$targetClassSelect))
+         data$max <<- dataTst$max <<- length(isolate(input$classNames))
+       } else {
+         toKeep <- ranges1
+         datos <<- datos[,toKeep]
+         #Store data toKeep
+         data$data <<- dataTst$data <<- dataTst$data[toKeep]
+         #Modify Ns value
+         data$Ns <<- dataTst$Ns <<- length(toKeep)
+         #Modify examplesPerClass
+         clValues <- unlist(lapply(data$data, '[', data$nVars + 1))
+         examplesPerClass <- lapply(X = seq_len(length(data$class_names)) - 1, FUN = function(x, data) sum(data == x), clValues)
+         names(examplesPerClass) <- data$class_names
+         data$examplesPerClass <<- dataTst$examplesPerClass <<- examplesPerClass
+         #Modify min and max
+         pos <- which(data[[2]] == isolate(input$targetClassSelect))
+         data$min[pos] <<- dataTst$min[pos] <<- isolate(input$numericRangeVisualization)[1]
+         data$max[pos] <<- dataTst$max[pos] <<- isolate(input$numericRangeVisualization)[2]
+         
+       } #Falta el histograma y la funcion en test
+     }
+    
+  })
+  
   
   output$statistics <- renderTable({
-    #----Inputs de los que escucha ------
+    #----Inputs this function is executed ------
     input$traTstRadio
     input$classNames
     input$traFile
     input$tstFile
+    input$filterData
     #------------------------------
     if(input$targetClassSelect == "NA" || length(input$targetClassSelect) == 0 || is.null(input$targetClassSelect))
       return(NULL)
@@ -94,12 +218,38 @@ shinyServer(function(input, output, session) {
      }
   })
 
-
+  
+  
+  #Observer input target class
+  observe({
+    # ---- Inputs to listen --------
+    input$targetClassSelect
+    input$Variables1
+    input$Variables2
+    input$filterData
+    #-------------------------------
+    
+   
+    if(!is.null(ranges2)){
+      pos <- which(data[[2]] == input$Variables1)
+      updateSliderInput(session, "numericRange1", min = min(datos[pos,]), max = max(datos[pos,]), value = c(min(datos[pos,]), max(datos[pos,])), step = (max(datos[pos,]) - min(datos[pos,])) / 250)
+    }
+    
+    if(!is.null(ranges1)){
+      pos <- which(data[[2]] == input$Variables2)
+      updateSliderInput(session, "numericRange2", min = min(datos[pos,]), max = max(datos[pos,]), value = c(min(datos[pos,]), max(datos[pos,])), step = (max(datos[pos,]) - min(datos[pos,])) / 250)
+    }
+    
+  })
+  
+  
+ #---------------- PLOT EXPLORATORY ANALISIS ----------------------------------
+  
   output$datasetInfo <- renderPlot({
     
     #----Inputs de los que escucha ------
     tra <- input$traTstRadio
-    graficoSectores <- input$visualizacion == "Pie Chart"
+    graficoSectores <- input$visualization == "Pie Chart"
     input$traTstRadio
     input$ejecutar
     #------------------------------------
@@ -133,44 +283,87 @@ shinyServer(function(input, output, session) {
         }
     
     
-    } else {
-      updateRadioButtons(session, "visualizacion", selected = "Histogram")
+    } else if(input$visualization != "Variable vs Variable"){
+      updateRadioButtons(session, "visualization", selected = "Histogram")
       if(categorico){
         posiciones <- NULL
         for(i in input$classNames){
           p <- which(data[[15]][[pos]][datos[pos,] + 1] == i)
           if(length(p) > 0 )
             posiciones <- c(posiciones, p)
-        }
-        updateRadioButtons(session, "visualizacion", selected = "Histogram")
+        } 
+        updateSliderInput(session, "numericRangeVisualization", min = 0, max = 0, value = 0)
+        updateRadioButtons(session, "visualization", selected = "Histogram")
         barplot(tabla <- table(data[[15]][[pos]][datos[pos,]+1][posiciones]),
                 main = "Distribution of examples over variables",
                 col = colors
                 )
-      } else if(input$visualizacion == "Histogram") {
-        updateRadioButtons(session, "visualizacion", selected = "Histogram")
-        hist(x = datos[pos,],
+      } else if(input$visualization == "Histogram") {
+        updateRadioButtons(session, "visualization", selected = "Histogram")
+        ranges1 <<- which(datos[pos,] >= input$numericRangeVisualization[1] & datos[pos,] <= input$numericRangeVisualization[2])
+          hist(x = datos[pos, ranges1],
              col = colors,
              main = "Distribution of examples over variables",
              ylab = "Frequency",
              xlab = "Value")
-      } else if(input$visualizacion == "Box Plot"){
-        updateRadioButtons(session, "visualizacion", selected = "Box Plot")
-        boxplot(datos[pos,], 
+      } else if(input$visualization == "Box Plot"){
+        updateRadioButtons(session, "visualization", selected = "Box Plot")
+        ranges1 <<- which(datos[pos,] >= input$numericRangeVisualization[1] & datos[pos,] <= input$numericRangeVisualization[2])
+        boxplot(datos[pos, ranges1], 
                 main = "Distribution of examples over variables",
                 xlab = input$targetClassSelect, 
                 ylab = "Value", 
                 col = "royalblue2",
                 outcol="red"
-                ) #Ponerlo mas bonito si eso.
+                ) 
+      } 
+    } else {
+      #Variable vs Variable visualization
+      updateRadioButtons(session, "visualization", selected = "Variable vs Variable")
+      #Get positions of the variables
+      pos1 <- which(data[[2]] == input$Variables1)
+      pos2 <- which(data[[2]] == input$Variables2)
+      
+      #There are 3 plots possibilities:
+      # - Categorical vs numeric: 
+      # - Categorical vs Categorical:  Bar plots
+      # - Numeric vs numeric:  Scatter plots
+      if(data$attributeTypes[pos1] == "c" & data$attributeTypes[pos1] == "c"){
+        #Categorigcal vs categorical
+          mat <- print(data)
+          plot(x = as.factor(mat[,pos1]), 
+               y = as.factor(mat[,pos2]),
+               col = colorsWithContrast,   #Change this colors to other with high contrast
+               main = "Variable vs Variable Plot")
+      } else if((data$attributeTypes[pos1] == "r" | data$attributeTypes[pos1] == "e") & (data$attributeTypes[pos2] == "r" | data$attributeTypes[pos2] == "e")){
+        #Numeric vs numeric
+        cols <- colorsWithContrast[datos[nrow(datos), ] + 1]
+        ranges1 <<- which(datos[pos1,] >= input$numericRange1[1] & datos[pos1,] <= input$numericRange1[2])
+        ranges2 <<- which(datos[pos2,] >= input$numericRange2[1] & datos[pos2,] <= input$numericRange2[2])
+        #Take the intersection of examples that match both ranges to have the same number of examples on both axis.
+        valuesToShow <- intersect(ranges1, ranges2) 
+        #Show the plot
+        plot(x = datos[pos1, valuesToShow],
+             y = datos[pos2, valuesToShow],
+             main = "Variable vs Variable Plot",
+             pch = 19,
+             col = cols,
+             xlab = data$attributeNames[pos1],
+             ylab = data$attributeNames[pos2]
+             )
+        #Make the legend
+        legend("bottomright", legend = data$class_names, pch = 19, title = "Class", col = colorsWithContrast[1:length(data$class_names)])
+      } else {
+        #Categorical vs numeric
+        NULL
       }
     }
     
   })
   
+
   
-  
-  
+
   
   # Observe Training File
  observe({
@@ -181,10 +374,18 @@ shinyServer(function(input, output, session) {
       file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
       file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
       rutaTra <<- paste(input$traFile[,1],input$traFile[,4])
-      dataTra <<- SDR::read.keel(file$datapath)
+      dataTra <<- SDR::read.dataset(file$datapath)
       updateSelectInput(session = session, 
                         inputId = "targetClassSelect", 
                         label = "Select the target variable", 
+                        choices = dataTra[[2]], selected = dataTra[[2]][length(dataTra[[2]])])
+      updateSelectInput(session = session, 
+                        inputId = "Variables1", 
+                        label = "Variable X", 
+                        choices = dataTra[[2]], selected = dataTra[[2]][length(dataTra[[2]])])
+      updateSelectInput(session = session, 
+                        inputId = "Variables2", 
+                        label = "Variable Y", 
                         choices = dataTra[[2]], selected = dataTra[[2]][length(dataTra[[2]])])
       updateSelectInput(session = session, 
                         inputId = "targetValueSelect", 
@@ -203,6 +404,8 @@ shinyServer(function(input, output, session) {
       datosTra <<- matrix(unlist(dataTra$data), nrow = dataTra$nVars + 1)
       datos <<- datosTra
       .updateAttributes(session, dataTra[[2]][length(dataTra[[2]])], data)
+      ranges1 <<- 1:ncol(datos)
+      ranges2 <<- 1:ncol(datos)
     }
      } , error = function(e) print(e)) 
    }
@@ -218,10 +421,18 @@ shinyServer(function(input, output, session) {
         file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
         file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
         rutaTst <<- paste(input$tstFile[,1], input$tstFile[,4])
-        dataTst <<- SDR::read.keel(file$datapath)
+        dataTst <<- SDR::read.dataset(file$datapath)
         updateSelectInput(session = session, 
                           inputId = "targetClassSelect", 
                           label = "Select the target variable", 
+                          choices = dataTst[[2]], selected = dataTst[[2]][length(dataTst[[2]])])
+        updateSelectInput(session = session, 
+                          inputId = "Variables1", 
+                          label = "Variable 1", 
+                          choices = dataTst[[2]], selected = dataTst[[2]][length(dataTst[[2]])])
+        updateSelectInput(session = session, 
+                          inputId = "Variables2", 
+                          label = "Variable 2", 
                           choices = dataTst[[2]], selected = dataTst[[2]][length(dataTst[[2]])])
         updateSelectInput(session = session, 
                           inputId = "targetValueSelect", 
@@ -239,7 +450,8 @@ shinyServer(function(input, output, session) {
         datosTst <<- matrix(unlist(dataTst$data), nrow = dataTst$nVars + 1)
         datos <<- datosTst
         .updateAttributes(session, dataTst[[2]][length(dataTst[[2]])], data)
-        
+        ranges1 <<- 1:ncol(datos)
+        ranges2 <<- 1:ncol(datos)
       }
     }
   })
@@ -268,7 +480,16 @@ shinyServer(function(input, output, session) {
                         else
                           "This is not a categorical variable!"
       )
-      
+      updateSelectInput(session = session, 
+                        inputId = "Variables1", 
+                        label = "Variable 1", 
+                        choices = data[[2]], selected = data[[2]][length(data[[2]])])
+      updateSelectInput(session = session, 
+                        inputId = "Variables2", 
+                        label = "Variable 2", 
+                        choices = data[[2]], selected = data[[2]][length(data[[2]])])
+      ranges1 <<- 1:ncol(datos)
+      ranges2 <<- 1:ncol(datos)
       .updateAttributes(session, data[[2]][length(data[[2]])], data)
       
     } else if(file == "Test File" & fileAnterios == "Tra") {
@@ -287,8 +508,19 @@ shinyServer(function(input, output, session) {
                         else
                           "This is not a categorical variable!"
       )
+      updateSelectInput(session = session, 
+                        inputId = "Variables1", 
+                        label = "Variable 1", 
+                        choices = data[[2]], selected = data[[2]][length(data[[2]])])
+      updateSelectInput(session = session, 
+                        inputId = "Variables2", 
+                        label = "Variable 2", 
+                        choices = data[[2]], selected = data[[2]][length(data[[2]])])
+      
+      
       .updateAttributes(session, data[[2]][length(data[[2]])], data)
-   
+      ranges1 <<- 1:ncol(datos)
+      ranges2 <<- 1:ncol(datos)
       }
   })
   
@@ -370,7 +602,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             SDR::SDIGA(training = dataTra, 
+             ruleSet <<- SDR::SDIGA(training = dataTra, 
                    test = dataTst, 
                    seed = seed, 
                    nLabels = nLabels, 
@@ -405,7 +637,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             SDR::MESDIF(training = dataTra,
+             ruleSet <<- SDR::MESDIF(training = dataTra,
                     test = dataTst,
                     seed = seed,
                     nLabels = nLabels,
@@ -433,8 +665,8 @@ shinyServer(function(input, output, session) {
              reInit <- if(isolate(input$reInitPob)) "yes" else "no"
              porcCob <- isolate(input$porcCob)
              
-             #Execute te algorithm
-             SDR::NMEEF_SD(training = dataTra,
+             #Execute the algorithm
+             ruleSet <<- SDR::NMEEF_SD(training = dataTra,
                       test = dataTst,
                       seed = seed,
                       nLabels = nLabels,
@@ -442,7 +674,6 @@ shinyServer(function(input, output, session) {
                       popLength = popSize,
                       mutProb = mutProb,
                       crossProb = crossProb,
-                      RulesRep = rulesRep,
                       Obj1 = Obj1,
                       Obj2 = Obj2,
                       Obj3 = Obj3,
@@ -454,7 +685,6 @@ shinyServer(function(input, output, session) {
                       targetClass = targetValue)
            },
            "FuGePSD" = {
-             # /**/
              t_norm <- isolate(input$tnorm)
              ruleWeight <- isolate(input$ruleWeight)
              frm <- isolate(input$frm)
@@ -464,7 +694,7 @@ shinyServer(function(input, output, session) {
              gfw <- c(isolate(input$gfw1), isolate(input$gfw2), isolate(input$gfw3), isolate(input$gfw4) )
              allClass <- isolate(input$allClass)
              
-             SDR::FUGEPSD(paramFile = NULL,
+             ruleSet <<- SDR::FUGEPSD(paramFile = NULL,
                           training = dataTra,
                           test = dataTst,
                           seed = seed,
@@ -501,7 +731,7 @@ shinyServer(function(input, output, session) {
   })
 
   
-  
+  #---- Observe the algorithm choosed to change values -----
   observe({
     algo <- input$algoritmo
     if(algo == "FuGePSD"){
@@ -517,69 +747,23 @@ shinyServer(function(input, output, session) {
   })
   
   
-  # RESULTADOS 
+  
+  
+  # ------------ DATA TABLE OF RULES OBTAINED -------------
   
   output$resultados <- renderDataTable({
     
     input$ejecutar
+    dataMatrix <- t(sapply(1:length(ruleSet), function(x,b) c(x, b[[x]]$rule), ruleSet))
     
-    algoritmo <- isolate(input$algoritmo)
-    if(algoritmo == "FuGePSD"){
-      file <- which(c(file.exists("rulesFile_f06_TRUE.txt"), file.exists("rulesFile_f06_FALSE.txt")))
-      file <- c("rulesFile_f06_TRUE.txt", "rulesFile_f06_FALSE.txt")[file]
-      contents <- readChar(file, file.info(file)$size)
-      contents <- gsub(pattern = "[0-9]+:", replacement = "", x = contents)
-      contents <- strsplit(x = contents, split = "\n", fixed = TRUE)[[1]]
-      contents <- contents[- c(1,2,3)]
-      #Eliminate the "with rule weight":
-      contents <- gsub(pattern = "\\bwith Rule Weight\\b:", replacement = "", x = contents)
-      reglas <- gsub(pattern = "[[:blank:]]{2}-?[0-9.]+", replacement = "", x = contents)
-      weigths <- strsplit(paste(contents, collapse = " "), split = "  ")[[1]]
-      weigths <- weigths[which(seq_len(length(weigths)) %% 2 == 0)]
-      mat <- matrix(NA, nrow = length(reglas), ncol = 3)
-      colnames(mat) <- c("Num Rule", "Rule", "Weight")
-      mat[,1] <- as.character(seq_len(length(reglas)))
-      mat[,2] <- reglas
-      mat[,3] <- weigths
-      
-      junk <- dir(".", "[^QM].txt")
-      options <- which(junk == "optionsFile.txt")
-      if(length(options) > 0)
-        junk <- junk[- options]
-      
-      file.remove(junk)
-      
-      as.data.frame(mat)
-      
-    } else {
-      if(file.exists("rulesFile.txt")){
-      #get and parse the results
-      contents <- readChar("rulesFile.txt", file.info("rulesFile.txt")$size)
-      rules <- strsplit(contents, "GENERATED RULE ", fixed = TRUE )
-      if(length(rules[[1]]) > 1){
-        rules <- substr(rules[[1]][2:length(rules[[1]])] , 3, stop = nchar(rules[[1]][2:length(rules[[1]])]))
-        
-        invalid <- grep(" # Invalid (Low confidence or support)", rules, fixed = T) 
-        if(length(invalid) > 0) rules <- rules[ - invalid ]
-        
-        rules <- gsub(" - Target value: .*", "", rules, perl = T)
-        rules <- sub(":", "", rules, fixed = FALSE)
-        rules <- gsub(pattern = "\n", x = rules, replacement = "<br/>", fixed = T)
-      }
-      file.remove("rulesFile.txt")
-      
-      # Show the results
-      rules <- matrix(c(seq_len(length(rules)), rules), ncol = 2)
-      colnames(rules) <- c("Num Rule", "Rule")
-     
-      as.data.frame(rules)
-      }
-    }
+    #Return 
+    data.frame(Rule_Number = dataMatrix[,1], Value = dataMatrix[,2])
+    
 }, escape = FALSE, options = list(pageLength = 10))
   
   
   
-  
+  # ------- FOR THE EXECUTION INFO TAB --------------------------
   output$execInfo <- renderUI({
     input$ejecutar
     if(file.exists("optionsFile.txt")){
@@ -594,54 +778,46 @@ shinyServer(function(input, output, session) {
     }
   })
   
-  
+  # ------- FOR THE QUALITY MEASURES TAB  --------------------------
   output$medidas <- renderDataTable({
     input$ejecutar
-    algoritmo <- isolate(input$algoritmo)
-    if(algoritmo == "FuGePSD"){
-      if(file.exists("rulesFile_f06_TRUE_QM.txt") || file.exists("rulesFile_f06_FALSE_QM.txt")){
-        #get and process results
-        file <- which(c(file.exists("rulesFile_f06_TRUE_QM.txt"), file.exists("rulesFile_f06_FALSE_QM.txt")))
-        file <- c("rulesFile_f06_TRUE_QM.txt", "rulesFile_f06_FALSE_QM.txt")[file]
-        contents <- readChar(file, file.info(file)$size)
-        contents <- gsub(x = contents, pattern = "[^0-9.]+",replacement = " ")
-        contents <- strsplit(x = contents, split = " ", fixed = TRUE)[[1]][-1]
-        contents <- as.numeric(contents)
-        
-        mat <- matrix(contents, ncol = 9, byrow = TRUE)
-        mat[seq_len(nrow(mat) - 1) , 1] <- NA
-        colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Sensitivity", "Support", "FConfidence", "CConfidence")
-        rownames(mat) <- c( seq_len((length(contents) / 9 - 1)), "Global: ")
-        
-        junk <- dir(".", "[*QM].txt")
+    if(input$ejecutar > 0){
+    dataMatrix <- t(sapply(ruleSet, function(x) c(x$nVars,
+                                                  x$qualityMeasures$Coverage,
+                                                  x$qualityMeasures$Unusualness,
+                                                  x$qualityMeasures$Significance,
+                                                  x$qualityMeasures$FuzzySupport,
+                                                  x$qualityMeasures$FuzzyConfidence,
+                                                  x$qualityMeasures$CrispConfidence,
+                                                  x$qualityMeasures$Tpr,
+                                                  x$qualityMeasures$Fpr)))
     
-        file.remove(junk)
-        
-        #Show results as html
-        #as.table(mat)
-        as.data.frame(mat, stringsAsFactors = FALSE)
-      }
-    } else {
-      if(file.exists("testQM.txt")){
-        #get and process results
-        contents <- readChar("testQM.txt", file.info("testQM.txt")$size)
-        contents <- gsub(x = contents, pattern = "[^0-9.]+",replacement = " ")
-        contents <- strsplit(x = contents, split = " ", fixed = TRUE)[[1]][-1]
-        contents <- as.numeric(contents)
-       
-        
-        mat <- matrix(contents, ncol = 10, byrow = TRUE)
-
-        mat[seq_len(nrow(mat) - 1) , 1] <- NA
-        colnames(mat) <- c("nRules", "nVars", "Coverage", "Significance", "Unusualness", "Accuracy", "CSupport", "FSupport", "CConfidence", "FConfidence")
-      
-        file.remove("testQM.txt")
-        as.data.frame(mat, stringsAsFactors = FALSE)
-       
-      }
+    #Add means
+    dataMatrix <- rbind(dataMatrix, colMeans(dataMatrix))
+    dataMatrix <- cbind(c(1:length(ruleSet), "MEAN: "), dataMatrix)
+    colnames(dataMatrix) <- c("Rule_Number", "Num_Variables", "Coverage", "Unusualness", "Significance", "Fuzzy_Support", "Fuzzy_Confidence", "Crisp_Confidence", "TPR","FPR")
+    as.data.frame(dataMatrix)
     }
   })
-
+  
+  
+  # UI FOR PLOTTING QUALITY MEASURES
+  output$plotResultUI <- renderUI({
+    #the button shows the rules plot or hides it
+    if(input$displayWMGraph %% 2 == 1 & isolate(input$ejecutar) > 0){ 
+      plotOutput("rulesPlot")
+    } else {
+      NULL
+    }
+  })
+  
+  
+#PLOT OF THE QUALITY MEASURES
+  output$rulesPlot <- renderPlot({
+    print(SDR::plotRules(ruleSet))
+  })
+  
+  
 })
 
 .getObjetives <- function(obj){

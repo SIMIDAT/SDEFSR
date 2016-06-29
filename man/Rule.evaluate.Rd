@@ -5,7 +5,7 @@
 \title{Evaluate a single rule. 
  
  @param rule The rule we want to evaluate (Class "Rule").
- @param dataset The keel dataset object with the examples to compare with the rule (Class "keel")
+ @param dataset The SDR_Dataset dataset object with the examples to compare with the rule (Class "SDR_Dataset")
  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
  @param categoricalValues a logical vector indicating which attributes in the dataset are categorical
  @param numericalValues a logical vector indicating which attributes in the dataset are numerical
@@ -27,7 +27,7 @@ The rule evaluated.
 Evaluate a single rule. 
  
  @param rule The rule we want to evaluate (Class "Rule").
- @param dataset The keel dataset object with the examples to compare with the rule (Class "keel")
+ @param dataset The SDR_Dataset dataset object with the examples to compare with the rule (Class "SDR_Dataset")
  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
  @param categoricalValues a logical vector indicating which attributes in the dataset are categorical
  @param numericalValues a logical vector indicating which attributes in the dataset are numerical

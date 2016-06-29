@@ -1,9 +1,9 @@
 #'
+#'
 #' Reads a KEEL data format file or an ARFF data format file.
 #'
-#' This function reads a KEEL (.dat) or ARFF (.arff) dataset file and store the information
-#'   in a \code{keel} class. This function also create fuzzy sets definitions for numeric variables
-#'   for execute in SDIGA, MESDIF, NMEEF-SD and FuGePSD algorithms
+#' This function reads a KEEL (.dat), ARFF (.arff) or CSV dataset file and store the information
+#'   in a \code{SDR_Dataset} class. 
 #'
 #' @param file The path of the file in KEEL ".dat" or ARFF format
 #'
@@ -27,26 +27,28 @@
 #' @examples
 #'     \dontrun{
 #'        Reads a KEEL dataset from a file.
-#'        read.keel(file = "C:\KEELFile.dat")
+#'        read.dataset(file = "C:\KEELFile.dat")
 #'
-#'        read.keel(file = "C:\KEELFile.dat", nLabels = 7)
+#'        read.dataset(file = "C:\KEELFile.dat", nLabels = 7)
 #'        
 #'      Reads an ARFF dataset from a file.
-#'        read.keel(file = "C:\ARFFFile.arff")
+#'        read.dataset(file = "C:\ARFFFile.arff")
 #'
-#'        read.keel(file = "C:\ARFFFile.arff", nLabels = 7)
+#'        read.dataset(file = "C:\ARFFFile.arff", nLabels = 7)
 #'     }
 #'     
 #' @export
-read.keel <- function(file) {
+read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = "?") {
  
   if(length(file) > 1){
     stop(paste(substitute(file), "must be of length 1."))
   }
+  
   #Detect extension
   ext <- regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]]
   
   if(ext == ".dat"){
+    #Reads a keel file
     data <- .readFile(file)
     value <- which(data == "@data") - 1
     if (length(value) == 0)
@@ -109,7 +111,7 @@ read.keel <- function(file) {
       )
     
     
-    #Prepare the rest of attributes of the keel object
+    #Prepare the rest of attributes of the SDR_Dataset object
     
     covered <- NA     #Examples covered
     fuzzySets <- NA   # Fuzzy sets definitons
@@ -127,7 +129,7 @@ read.keel <- function(file) {
     
     lostData <- FALSE 
     
-    # Creation of the keel object as a list
+    # Creation of the SDR_Dataset object as a list
     lista <- list(
       relation = relation,                    # Relation name
       attributeNames = atribs_names,          # Names of the attributes
@@ -148,12 +150,16 @@ read.keel <- function(file) {
     )
     
     
-    class(lista) <- "keel"  #Cambiar por 'SDR_Dataset'
+    class(lista) <- "SDR_Dataset"  
     lista
   } else if(ext == ".arff"){
-    keelFromARFF(file)
-  } else {
-    stop("Invalid format. Valid formats are: '.arff' or '.dat'")
+    #Reads an ARFF from WEKA.
+    SDR_DatasetFromARFF(file)
+  } else if(ext == ".csv"){
+    #Reads a CSV file
+    SDR_DatasetFromCSV(file, relation_name = basename(file), sep = sep, quote = quote, dec = dec, na.strings = na.strings)
+  } else{
+    stop("Invalid format. Valid formats are: '.arff', '.dat' or '.csv'")
   }
   
 }
@@ -885,14 +891,14 @@ read.keel <- function(file) {
 }
 
 
-#' Saves a \code{keel} dataset into a KEEL dataset format file.
+#' Saves a \code{SDR_Dataset} dataset into a KEEL dataset format file.
 #'
-#' This function exports a keel dataset stored in the R environment into a KEEL format file on the hard disk.
+#' This function exports a SDR_Dataset dataset stored in the R environment into a KEEL format file on the hard disk.
 #' This function can not save information about the fuzzy
-#' definition created by the function \link{read.keel} because the KEEL format does not
+#' definition created by the function \link{read.dataset} because the SDR_Dataset format does not
 #' define that kind of information.
 #'
-#' @param dataset The \code{keel} object stored in R environment.
+#' @param dataset The \code{SDR_Dataset} object stored in R environment.
 #' @param file The file name (or path) to save the KEEL dataset.
 #'
 #' @details  A KEEL data file must have the following structure:
@@ -911,7 +917,7 @@ read.keel <- function(file) {
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #' 
 #' 
-save.keel <- function(dataset, file) {
+save.SDR_Dataset <- function(dataset, file) {
   #First, we need to ask the user if he want to save the file
   
   if (is.null(file) | is.na(file) | missing(file)) {
@@ -922,8 +928,8 @@ save.keel <- function(dataset, file) {
     stop("'file' must be of length 1.")
   }
   
-  if (class(dataset) != "keel") {
-    stop("'dataset' must be of class 'keel'.")
+  if (class(dataset) != "SDR_Dataset") {
+    stop("'dataset' must be of class 'SDR_Dataset'.")
   }
   
   answer <-
@@ -977,7 +983,7 @@ save.keel <- function(dataset, file) {
             result <-
               lapply(
                 X = seq_len(length(pos)), FUN = function(y, pos, data) {
-                  data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]   # Catch the categorical value of a categorical variable, in a keel object, this values are coded into a number that specify the position of the value in the 'categoricalValues' variable
+                  data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]   # Catch the categorical value of a categorical variable, in a SDR_Dataset object, this values are coded into a number that specify the position of the value in the 'categoricalValues' variable
                   data[pos[y]]
                 }, categ, x
               )
@@ -1021,12 +1027,12 @@ save.keel <- function(dataset, file) {
 
 
 #'
-#' Add one or a set of instances to a KEEL dataset.
+#' Add one or a set of instances to a SDR_Dataset dataset.
 #'
-#' Take a data vector or a list of data vectors and inserts at the end of a \code{keel} data set.
+#' Take a data vector or a list of data vectors and inserts at the end of a \code{SDR_Dataset} data set.
 #' 
 #' @param items Vector or list of instance/s
-#' @param dataset The \code{keel} dataset to insert the data.
+#' @param dataset The \code{SDR_Dataset} dataset to insert the data.
 #' 
 #' @details You can add the data in four ways:
 #' \itemize{
@@ -1043,7 +1049,7 @@ save.keel <- function(dataset, file) {
 #' }
 #' 
 #' Coded means that vectors of data are all numeric (including class) and, obviously, 
-#' all values are within the bounds stablished. This way is the returned after a \code{read.keel()} call
+#' all values are within the bounds stablished. This way is the returned after a \code{read.dataset()} call
 #' and it is the ideal for introduce data from one dataset to another, for example.
 #' 
 #'  Uncoded means that vectors of data are characters, because it has at least one value that is a string (class value) and values are valid. This is common when we read
@@ -1051,7 +1057,7 @@ save.keel <- function(dataset, file) {
 #' 
 #' @return Returns the new dataset with data introduced. This dataset is a list with a vectors of every instace.  
 #' This dataset should be stored into the \code{$data}
-#' field of a \code{keel} class variable.
+#' field of a \code{SDR_Dataset} class variable.
 #' 
 #' @author Angel M. Garcia <amgv0009@@red.ujaen.es>
 #'
@@ -1059,9 +1065,9 @@ save.keel <- function(dataset, file) {
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #'
 #' 
-addKeelRegister <- function(items, dataset) {
-  if (class(dataset) != "keel") {
-    stop("Provided dataset is not of class 'keel'.")
+addSDR_DatasetRegister <- function(items, dataset) {
+  if (class(dataset) != "SDR_Dataset") {
+    stop("Provided dataset is not of class 'SDR_Dataset'.")
   }
   
   
@@ -1126,7 +1132,7 @@ addKeelRegister <- function(items, dataset) {
   if (class(item) == "numeric") {
     # If all item elements are numeric it is because:
     # 1.- all his attributes are numeric
-    # 2.- categorical values are coded into a numeric number, this is how read.keel() do the reading of data.
+    # 2.- categorical values are coded into a numeric number, this is how read.dataset() do the reading of data.
     all(item < dataset$max)
     
   } else {
@@ -1177,15 +1183,15 @@ addKeelRegister <- function(items, dataset) {
 #' 
 #' Reads an ARFF file
 #' 
-#' This function reads an ARFF file and get the subyacent \code{keel} object
+#' This function reads an ARFF file and get the subyacent \code{SDR_Dataset} object
 #'
 #' @param file The ARFF file to read.
 #' 
 #' 
 #' 
-#' @return a 'keel' object ready to use with the algorithms that are in the package
+#' @return a 'SDR_Dataset' object ready to use with the algorithms that are in the package
 #' 
-keelFromARFF <- function(file){
+SDR_DatasetFromARFF <- function(file){
   warnPrevio <- getOption("warn")
   options(warn = -1)
   set <- read_arff(file)
@@ -1281,7 +1287,7 @@ keelFromARFF <- function(file){
     categoricalValues = categoricalLength,
     Ns = Ns
   )
-  class(lista) <- "keel"
+  class(lista) <- "SDR_Dataset"
   
   #Restore option warn of the user.
   options(warn = warnPrevio)
@@ -1389,9 +1395,9 @@ SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec
 
 
 #'
-#' Creates a \code{keel} object from a \code{data.frame}
+#' Creates a \code{SDR_Dataset} object from a \code{data.frame}
 #' 
-#' Creates a \code{keel} object from a \code{data.frame} and create fuzzy labels for numerical variables too.
+#' Creates a \code{SDR_Dataset} object from a \code{data.frame} and create fuzzy labels for numerical variables too.
 #' 
 #' @param data A data.frame object with all neccesary information. See details.
 #' @param relation A string that indicate the name of the relation.
@@ -1411,22 +1417,22 @@ SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec
 #' 
 #' For \code{'classNames'} if it is NA, the function returns unique values of the last attribute of the data.frame that is considered the class attribute.
 #' 
-#' @return A \code{keel} object with all the information of the dataset.
+#' @return A \code{SDR_Dataset} object with all the information of the dataset.
 #' 
 #' @examples 
 #' library(SDR)
 #' df <- data.frame(matrix(runif(1000), ncol = 10))
 #' #Add class attribute
 #' df[,11] <- c("0", "1")
-#' keelObject <- keelFromDataFrame(df, "random")
+#' SDR_DatasetObject <- SDR_DatasetFromDataFrame(df, "random")
 #' invisible()
 #' 
-#' @seealso \code{\link{read.keel}}
+#' @seealso \code{\link{read.dataset}}
 #' 
 #' @author Angel M Garcia <amgv0009@@red.ujaen.es>
 #' 
 #' @export
-keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
+SDR_DatasetFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
   #check data.frame
   if(! is.data.frame(data))
     stop(paste(substitute(data), "must be a data.frame"))
@@ -1541,7 +1547,7 @@ keelFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = N
     categoricalValues = categoricalValues,
     Ns = Ns
   )
-  class(lista) <- "keel"
+  class(lista) <- "SDR_Dataset"
   lista
   
   

@@ -20,6 +20,7 @@ Depends:
 License: LGPL (>= 3) | file LICENSE
 LazyData: TRUE
 Imports:
+    grDevices,
     methods,
     parallel,
     stats,

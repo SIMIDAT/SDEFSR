@@ -1,11 +1,36 @@
 GENERATED RULE 1
+Variable Year = Label 0 ( 52.5 , 58 , 63.5 )
 Variable Positive = Label 2 ( 26 , 52 , 78 ) 
- THEN positive
+ THEN 
+positive
 
 
 GENERATED RULE 2
-Variable Age = Label 0 ( 3.5 , 30 , 56.5 )
-Variable Positive = Label 2 ( 26 , 52 , 78 ) 
+Variable Age = Label 1 ( 30 , 56.5 , 83 )
+Variable Positive = Label 1 ( 0 , 26 , 52 ) 
  THEN positive
+
+
+GENERATED RULE 3
+Variable Positive = Label 0 ( -26 , 0 , 26 ) 
+ THEN positive
+
+
+GENERATED RULE 4
+Variable Year = Label 1 ( 58 , 63.5 , 69 )
+Variable Positive = Label 0 ( -26 , 0 , 26 ) 
+ THEN negative
+
+
+GENERATED RULE 5
+Variable Positive = Label 0 ( -26 , 0 , 26 ) 
+ THEN negative
+
+
+GENERATED RULE 6
+Variable Age = Label 2 ( 56.5 , 83 , 109.5 )
+Variable Year = Label 2 ( 63.5 , 69 , 74.5 ) 
+ THEN 
+negative
 
 

@@ -9,7 +9,7 @@ Rule.toCANVectorRepresentation(rule, dataset)
 \arguments{
 \item{rule}{The rule that we want to evaluate.}
 
-\item{dataset}{The keel dataset which rule refers to.}
+\item{dataset}{The SDR_Dataset dataset which rule refers to.}
 }
 \value{
 a matrix with one column to use easily with fitness functions of this package
