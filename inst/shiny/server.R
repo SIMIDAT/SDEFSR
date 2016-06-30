@@ -6,19 +6,7 @@
 #
 
 library(shiny)
-# library(graphics)
-#library(GA)
 
-#Sources-----------------
-# source("leerDatos.R")
-# source("Difuso.R")
-# source("ga.R")
-# source("MESDIF.R")
-# source("NMEEFSD.R")
-# source("PruebasEficiencia.R")
-# source("QualityMeasures.R")
-# source("SDIGA.R")
-#---------------------------
 
 #Limit size for an input file
 MAX_SIZE_MB = 10
@@ -31,7 +19,7 @@ colors <- c("#E8F5E9", "#A5D6A7", "#4CAF50", "#388E3C", "#FFF9C4", "#FFF176",
 colorsWithContrast <- grDevices::rainbow(30)[c(1,10,20,30,4,14,24,6,16,28)]
 
 
-
+#Starts the server logic
 shinyServer(function(input, output, session) {
   
   
@@ -179,7 +167,7 @@ shinyServer(function(input, output, session) {
          data$min[pos] <<- dataTst$min[pos] <<- isolate(input$numericRangeVisualization)[1]
          data$max[pos] <<- dataTst$max[pos] <<- isolate(input$numericRangeVisualization)[2]
          
-       } #Falta el histograma y la funcion en test
+       } 
      }
     
   })
@@ -229,15 +217,18 @@ shinyServer(function(input, output, session) {
     input$filterData
     #-------------------------------
     
-   
+    posClass <- which(data[[2]] == input$targetClassSelect)
     if(!is.null(ranges2)){
       pos <- which(data[[2]] == input$Variables1)
       updateSliderInput(session, "numericRange1", min = min(datos[pos,]), max = max(datos[pos,]), value = c(min(datos[pos,]), max(datos[pos,])), step = (max(datos[pos,]) - min(datos[pos,])) / 250)
+      updateSliderInput(session, "numericRangeVisualization", min = min(datos[posClass,]), max = max(datos[posClass,]), value = c(min(datos[posClass,]), max(datos[posClass,])), step = (max(datos[posClass,]) - min(datos[posClass,])) / 250)
+      
     }
     
     if(!is.null(ranges1)){
       pos <- which(data[[2]] == input$Variables2)
       updateSliderInput(session, "numericRange2", min = min(datos[pos,]), max = max(datos[pos,]), value = c(min(datos[pos,]), max(datos[pos,])), step = (max(datos[pos,]) - min(datos[pos,])) / 250)
+    
     }
     
   })
@@ -538,6 +529,11 @@ shinyServer(function(input, output, session) {
                           "This is not a categorical variable!"
       )
       .updateAttributes(session, input$targetClassSelect, data)
+      
+      if(data$attributeTypes[pos] != 'c'){
+        ranges1 <<- which(datos[pos,] >= min(datos[pos,]) & datos[pos,] <= max(datos[pos,]))
+        updateNumericInput(session, "numericRangeVisualization", min = min(datos[pos,]), max = max(datos[pos,]))
+      }
     }
   })
   
