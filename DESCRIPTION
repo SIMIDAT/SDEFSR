@@ -1,6 +1,6 @@
-Package: SDR
+Package: SDEFSR
 Type: Package
-Title: Subgroup Discovery Algorithms for R
+Title: Subgroup Discovery with Evolutionary Fuzzy Systems in R
 Version: 0.7.0.90
 Date: 2016-07-27
 Authors@R: c(person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role = c("aut", "cre")),
@@ -9,11 +9,10 @@ Authors@R: c(person("Angel M.", "Garcia", email = "amgv0009@red.ujaen.es", role 
     person("Francisco", "Charte", email = "francisco@fcharte.com", role = "ctb")
     )
 Maintainer: Angel M. Garcia <amgv0009@red.ujaen.es>
-Description: Implementation of some algorithms for the data mining task called
+Description: Implementation of evolutionary fuzzy systems for the data mining task called
     "subgroup discovery" without package dependencies. It also provide a Shiny App
     for make the analysis easier. The algorithms works with data sets provided in
-    KEEL or ARFF format files and data.frame objects. If you want more information about KEEL format, please
-    refer to < http://www.keel.es > .
+    KEEL, ARFF and CSV format and also with data.frame objects. 
 URL: https://github.com/aklxao2/SDR
 Depends:
     R (>= 3.0.0)

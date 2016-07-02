@@ -9,7 +9,7 @@ library(shiny)
 
 shinyUI(fluidPage( theme = NULL,
   
-  titlePanel(h1("Execute Subgroup Discovery Algorithms with R ", id = "textoPrincipal", align = "center"),windowTitle = "Execute Subgroup Discovery Algorithms with R"), 
+  titlePanel(h1("Subgroup Discovery with Evolutionary Fuzzy Systems in R ", id = "textoPrincipal", align = "center"),windowTitle = "Execute Subgroup Discovery Algorithms with R"), 
   br(),
   sidebarLayout(
     sidebarPanel( 
@@ -66,7 +66,7 @@ shinyUI(fluidPage( theme = NULL,
                     )
              ) ,
            
-           actionButton("filterData", "Keep this data", style = "background-color:#303F9F;color:#FFFFFF"), #Button to filter the data
+           actionButton("filterData", HTML("<strong title = 'Remove instances in the dataset that are not selected or within the ranges'>Keep this data</strong>"), style = "background-color:#303F9F;color:#FFFFFF"), #Button to filter the data
           
            
            fluidRow(

@@ -166,9 +166,9 @@
 #' @title Multiobjective Evolutionary Subgroup DIscovery Fuzzy rules (MESDIF) Algorithm
 #' @description Performs a subgroup discovery task executing the algorithm MESDIF
 #' 
-#' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables
-#' @param training A \code{SDR_Dataset} class variable with training data.
-#' @param test A \code{SDR_Dataset} class variable with test data.
+#' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{SDEFSR_Dataset} variables
+#' @param training A \code{SDEFSR_Dataset} class variable with training data.
+#' @param test A \code{SDEFSR_Dataset} class variable with test data.
 #' @param output character vector with the paths where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
 #' @param nLabels Number of fuzzy labels defined in the datasets.
@@ -357,8 +357,8 @@ MESDIF <- function(paramFile = NULL,
     if(is.null(test))
       test <- training #To execute only one dataset
     
-    if(class(training) != "SDR_Dataset" | class(test) != "SDR_Dataset")
-      stop("'training' or 'test' parameters is not a SDR_Dataset class")
+    if(class(training) != "SDEFSR_Dataset" | class(test) != "SDEFSR_Dataset")
+      stop("'training' or 'test' parameters is not a SDEFSR_Dataset class")
     
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
@@ -570,7 +570,7 @@ MESDIF <- function(paramFile = NULL,
   )
   
   #---------------------------------------------------
-  class(rulesToReturn) <- "SDR_Rules"
+  class(rulesToReturn) <- "SDEFSR_Rules"
   rulesToReturn # Return
 }
 

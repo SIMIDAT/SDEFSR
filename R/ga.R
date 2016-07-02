@@ -7,12 +7,44 @@
 #                                                                            #
 ##############################################################################
 
-#
-# 
-# Genetic algorithm for SDIGA
-#
-#
-
+#' @title Genetic algorithm for SDIGA
+#' 
+#' @description This method execute the genetic algorithm for the SDIGA algorithm
+#' 
+#' @param type type of representation used. For DNF rules is "binary", for CAN rules, "Real-valued"
+#' @param fitness The fitness function that calculate the quality function of each individual of the population
+#' @param ... Additional parameters for the fitness function
+#' @param min A vector with the minimum value for each variable
+#' @param max A vector with the maximum value for each variable
+#' @param nBits For DNF Rules, a number that specify the length of a chromosome
+#' @param population The method that generate the initial population
+#' @param crossover The crossover function
+#' @param mutation The mutation operator
+#' @param popSize The size of the population
+#' @param pcrossover The probability of crossover, in [0,1]
+#' @param pmutation The probability of mutation of a gene, in [0,1]
+#' @param elitism A number that specifiy the number of elite individuals
+#' @param maxiter The number of evaluations to perform
+#' @param run The number of evaluations to perform
+#' @param maxfitness The maximum value of the fitness function, if reached, the GA stops.
+#' @param names Names of the parameters
+#' @param suggestions A vector that indicate possible initial individuals
+#' @param keepBest Logical, keep the best individual ? 
+#' @param parallel perform calculation of the fitness in parallel
+#' @param monitor Show intermediate results
+#' @param DNFRules Logical indicating if DNFRules are used
+#' @param seed The random number generator seed
+#' 
+#' 
+#' @details The genetic algorithm used in this method is a mono-objective genetic algorithm with a fitness function
+#'     equal to the weighted mean of the selected objectives. It uses a stationary model when only the best individuals are
+#'     chosen to cross. 
+#'     
+#'     The mutation operator used here is a special one where it selects randomly to types of work: Eliminate the variable
+#'     or change its value.
+#'  
+#' @noRd
+#' 
 .gaSDIGA <- function(type = c("binary", "real-valued", "permutation"), 
                fitness, ...,
                min, max, nBits,
@@ -251,13 +283,43 @@ return(object)
 
 
 
-
-#
-#
-# Genetic algorithm for MESDIF
-#
-#
-
+#' @title Genetic algorithm for MESDIF
+#' 
+#' @description This method execute the genetic algorithm for the MESDIF algorithm
+#' 
+#' @param type type of representation used. For DNF rules is "binary", for CAN rules, "Real-valued"
+#' @param fitness The fitness function that calculate the quality function of each individual of the population
+#' @param ... Additional parameters for the fitness function
+#' @param min A vector with the minimum value for each variable
+#' @param max A vector with the maximum value for each variable
+#' @param nBits For DNF Rules, a number that specify the length of a chromosome
+#' @param population The method that generate the initial population
+#' @param crossover The crossover function
+#' @param mutation The mutation operator
+#' @param popSize The size of the population
+#' @param pcrossover The probability of crossover, in [0,1]
+#' @param pmutation The probability of mutation of a gene, in [0,1]
+#' @param elitism A number that specifiy the number of elite individuals
+#' @param maxiter The number of evaluations to perform
+#' @param run The number of evaluations to perform
+#' @param maxfitness The maximum value of the fitness function, if reached, the GA stops.
+#' @param names Names of the parameters
+#' @param suggestions A vector that indicate possible initial individuals
+#' @param keepBest Logical, keep the best individual ? 
+#' @param parallel perform calculation of the fitness in parallel
+#' @param monitor Show intermediate results
+#' @param DNFRules Logical indicating if DNFRules are used
+#' @param seed The random number generator seed
+#' 
+#' 
+#' @details The genetic algorithm used in this method is a multi-objective genetic algorithm based on the 
+#'     SPEA2 approach where an elite population is used along the whole evolutive process. 
+#'     At the end of the process, the rules stored in the elite population where returned as result.  
+#'     The multi-objective approach is based on a niches schema based on the dominance in the Pareto front.
+#'     This schema allows to find non-dominated individuals to fill the elite population, that has a fixed size.
+#'  
+#' @noRd
+#' 
 .gaMESDIF <- function(type = c("binary", "real-valued", "permutation"), 
                fitness, ...,
                min, max, nBits,
@@ -617,12 +679,46 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 
 
 
-#
-#
-# Genetic algorithm for NMEEF-SD
-#
-#
-
+#' @title Genetic algorithm for NMEEF-SD
+#' 
+#' @description This method execute the genetic algorithm for the NMEEF-SD algorithm
+#' 
+#' @param type type of representation used. For DNF rules is "binary", for CAN rules, "Real-valued"
+#' @param fitness The fitness function that calculate the quality function of each individual of the population
+#' @param ... Additional parameters for the fitness function
+#' @param min A vector with the minimum value for each variable
+#' @param max A vector with the maximum value for each variable
+#' @param nBits For DNF Rules, a number that specify the length of a chromosome
+#' @param population The method that generate the initial population
+#' @param crossover The crossover function
+#' @param mutation The mutation operator
+#' @param popSize The size of the population
+#' @param pcrossover The probability of crossover, in [0,1]
+#' @param pmutation The probability of mutation of a gene, in [0,1]
+#' @param elitism A number that specifiy the number of elite individuals
+#' @param maxiter The number of evaluations to perform
+#' @param run The number of evaluations to perform
+#' @param maxfitness The maximum value of the fitness function, if reached, the GA stops.
+#' @param names Names of the parameters
+#' @param suggestions A vector that indicate possible initial individuals
+#' @param keepBest Logical, keep the best individual ? 
+#' @param parallel perform calculation of the fitness in parallel
+#' @param monitor Show intermediate results
+#' @param DNFRules Logical indicating if DNFRules are used
+#' @param seed The random number generator seed
+#' @param porcCob Percentage of examples that must be generated by initialization based on coverage
+#' @param StrictDominance Apply strict dominances? i.e. all values must be grater than the other ?
+#' @param reInitPop Use the reinitiazation operator? 
+#' @param minCnf Minimum confidence to filter rules
+#' 
+#' @details This genetic algorithm is a multi-objective genetic algorithm that uses the NSGA-II schema that uses a main
+#'     population and an offsrping population where the individuals generated by the genetic operators are stored
+#'     Then, both populations are joined and ordered by dominance by a fast sorting algorithm.
+#'     If the population does not evolve (i.e. the Pareto front does not change) the main population is reinitialized
+#'     by an operator based on coverage of examples of the dataset.
+#'     
+#' @noRd
+#' 
 .gaNMEEF <- function(type = c("binary", "real-valued", "permutation"), 
                      fitness, ...,
                      min, max, nBits,
@@ -1053,14 +1149,49 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 
 
 
-#
-#
-#  FuGePSD Genetic Algorithm
-#
-#
-
+#' @title Genetic algorithm for the FuGePSD algorithm 
+#' 
+#' @description It executes the genetic algorithm for the FuGePSD algorithm
+#' 
+#' @param type the type of execution (1 for OVA (One vs All) execution, != 1 for normal execution)
+#' @param dataset A SDEFSR_Dataset object 
+#' @param selection The selection function 
+#' @param crossober The crossover function
+#' @param mutation The mutation function
+#' @param popSize Size of the population 
+#' @param pcrossover Crossover probability
+#' @param pmutation Mutation probability
+#' @param pinsertion Insertion probability
+#' @param pmdropping Dropping probability
+#' @param selectionSize Size of the tournament for the tournament selection
+#' @param AllClass the ALL_CLASS attribute
+#' @param T_Norm the T-norm used, 1  minimum t-norm, != product t-norm
+#' @param ruleWeight The rule weight method to use.
+#' @param frm The fuzzy reasoning method to use.
+#' @param maxiter Maximum of generations to run this algorithm
+#' @param weightsGlobalFitness Weights used in the evaluation of the population 
+#' @param seed the seed used for the random number genarator.
+#' 
+#' @details The FuGePSD algorithm uses a programming genetic approach, where individuals are represented as trees
+#'     with variable length instead of vectors. Also, the consecuent of the rule is represented. 
+#'     This schema has the advantage of get rules for all possible values of a given target variable in one 
+#'     execution. Furthermore, FuGePSD has a variable population length, which can change over the evolutive 
+#'     process based on an competitive-cooperative approach, the Token Competition.
+#'     
+#'     The evolutionary process of FuGePSD works as follow:
+#'
+#' \begin{enumerate}
+#'  \item Create a random population of a fixed length.
+#'  \item Create a new population called Offspring Propulation, which is generated via genetic operators.
+#'  \item Join original population and offspring and execute the token competition procedure
+#'  \item Get global fitnees and replace best population if necessary.
+#'  \item return to 2 until number of generations is reached.
+#'  \item Apply to the best population a Screening function and return the resulting rules.
+#' \end{enumerate}
+#' 
+#' @noRd
 .gaFuGePSD <- function(type,           # Type of execution (1 for One vs All, != 1 for normal execution)
-                       dataset,        # SDR_Dataset object asociated to this genetic Algorithm (training file)
+                       dataset,        # SDEFSR_Dataset object asociated to this genetic Algorithm (training file)
                        selection ,     # Selection function !
                        crossover ,     # Crossover function !
                        mutation ,      # mutation function
@@ -1080,8 +1211,8 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
                       )
 {
   #First of all, we must check types of all attributes
-  if(class(dataset) != "SDR_Dataset")
-    stop("'dataset' must be a SDR_Dataset dataset object.")
+  if(class(dataset) != "SDEFSR_Dataset")
+    stop("'dataset' must be a SDEFSR_Dataset dataset object.")
   if(! is.function(selection))
     stop("'selection' must be function.")
   if(! is.function(crossover))
@@ -1138,9 +1269,30 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
 }
 
 
-
+#' @title Exectution of the FuGePSD genetic algorithm 
+#' @param clas number of the class to generate rules
+#' @param dataset A SDEFSR_Dataset object 
+#' @param selection The selection function 
+#' @param crossober The crossover function
+#' @param mutation The mutation function
+#' @param popSize Size of the population 
+#' @param pcrossover Crossover probability
+#' @param pmutation Mutation probability
+#' @param pinsertion Insertion probability
+#' @param pmdropping Dropping probability
+#' @param selectionSize Size of the tournament for the tournament selection
+#' @param AllClass the ALL_CLASS attribute
+#' @param T_Norm the T-norm used, 1  minimum t-norm, != product t-norm
+#' @param ruleWeight The rule weight method to use.
+#' @param frm The fuzzy reasoning method to use.
+#' @param maxiter Maximum of generations to run this algorithm
+#' @param weightsGlobalFitness Weights used in the evaluation of the population 
+#' @param seed the seed used for the random number genarator. 
+#' 
+#' @noRd
+#' 
 executionPSD <- function(clas = NULL,   # number of the class to generate rules.
-                       dataset,        # SDR_Dataset object asociated to this genetic Algorithm (training file)
+                       dataset,        # SDEFSR_Dataset object asociated to this genetic Algorithm (training file)
                        selection ,     # Selection function !
                        crossover ,     # Crossover function !
                        mutation ,      # mutation function
@@ -1285,9 +1437,6 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
 # ---  THis part is part of the definition of the "ga" class done in the GA Package
 #--------------------------------------------------------------------------------
 
-
-
-
 methods::setClassUnion(".numericOrNA", members = c("numeric", "logical", "matrix"))
 
 methods::setClassUnion(".matrixOrList", members = c("matrix", "list"))
@@ -1319,7 +1468,7 @@ methods::setClass(Class = ".ga",
                         maxValuesRule = ".numericOrNA",
                         DNFRules = "logical"
          ),
-         package = "SDR" 
+         package = "SDEFSR" 
 ) 
 
 
@@ -1328,18 +1477,25 @@ methods::setClass(Class = ".ga",
 
 
 #---------------------------------------------------------------------------------------------
+#
+#  GENETIC OPERATORS
+#  
+#  -------------------------------------------------------------------------------------------
 
 
 
 
 
 
-
-## 
-## Modification of Permutation ga operators.
-##  This modification generate an integer random population in the range[min, max]
-##
-
+#'
+#' @title generates an initial population for the SDIGA algorithm 
+#' 
+#' @param object A "ga" class object
+#' @param ... Addition parameters
+#' 
+#' @return a matrix with the generated initial population 
+#' @noRd
+#' 
 .generatePopulation <- function(object, ...)
 {
   # Generate a random permutation of size popSize in the range [min, max]  
@@ -2098,10 +2254,10 @@ if(DNFRules) {
 #' Obtains the belonging degree of every example of a dataset to a given rule
 #' 
 #' @param rule The rule to compare example. This rule must be in canonica vector representation. (See Rule.toRuleCANRepresentation function)
-#' @param dataset The complete SDR_Dataset dataset object to get the examples
+#' @param dataset The complete SDEFSR_Dataset dataset object to get the examples
 #' @param noClass a matrix with all examples without the class attribute. One examples PER COLUMN
 #' @param nLabels number of fuzzy Labels that have numerical attributes
-#' @param maxRule maximum value of all attributes ($sets of the SDR_Dataset dataset)
+#' @param maxRule maximum value of all attributes ($sets of the SDEFSR_Dataset dataset)
 #' @param cate logical vector indicating which attributes are categorical
 #' @param num logical vector indicating which attributes are numerical
 #' @param The T-norm to use. 0 to Minimum T-norm, 1 to Product T-norm.

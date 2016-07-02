@@ -63,9 +63,9 @@
 #' @title Subgroup Discovery Iterative Genetic Algorithm (SDIGA)
 #' @description Perfoms a subgroup discovery task executing the algorithm SDIGA
 #' 
-#' @param parameters_file The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables
-#' @param training A \code{SDR_Dataset} class variable with training data.
-#' @param test A \code{SDR_Dataset} class variable with training data.
+#' @param parameters_file The path of the parameters file. \code{NULL} If you want to use training and test \code{SDEFSR_Dataset} variables
+#' @param training A \code{SDEFSR_Dataset} class variable with training data.
+#' @param test A \code{SDEFSR_Dataset} class variable with training data.
 #' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
 #' @param nLabels Number of fuzzy labels defined in the datasets.
@@ -256,8 +256,8 @@ SDIGA <- function(parameters_file = NULL,
       stop("Not provided a 'test' or 'training' file and neither a parameter file. Aborting...")
     if(is.null(test))
       test <- training #To execute only one dataset
-    if(class(training) != "SDR_Dataset" | class(test) != "SDR_Dataset")
-      stop("'training' or 'test' parameters is not a SDR_Dataset class")
+    if(class(training) != "SDEFSR_Dataset" | class(test) != "SDEFSR_Dataset")
+      stop("'training' or 'test' parameters is not a SDEFSR_Dataset class")
     if(training[[1]] != test[[1]] )
       stop("datasets ('training' and 'test') does not have the same relation name.")
     if(length(output) != 3 )
@@ -557,7 +557,7 @@ SDIGA <- function(parameters_file = NULL,
   
   
   #---------------------------------------------------
-  class(rulesToReturn) <- "SDR_Rules"
+  class(rulesToReturn) <- "SDEFSR_Rules"
   rulesToReturn  # Return
   
 }
@@ -567,7 +567,7 @@ SDIGA <- function(parameters_file = NULL,
 #Evaluate a given rule on a test set.
 #
 .proveRule <- function(rule, testSet, targetClass, numRule, parameters, Objectives, Weights, cate, num, DNF = FALSE){
-  stopifnot(class(testSet) == "SDR_Dataset")
+  stopifnot(class(testSet) == "SDEFSR_Dataset")
    
   #Get the maximium value or the non-participation value for each variable
   maxRule <- .giveMeSets(data_types = testSet[[3]], max = testSet[[5]], n_labels = parameters$nLabels)

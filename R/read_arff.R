@@ -1,14 +1,13 @@
 
+#  This functions below are functions that belongs to the package 'mldr' 
+#  developed by F. Charte and D. Charte. 
 #
-#
-#  READ_ARFF.R FROM PACKAGE mldr BY FRANCISCO CHARTE
+#  More information about 'mldr' package is found in this article:
+#  
+#  F. Charte, D. Charte. Working with Multilabel Datasets in R: The mldr Package. The R Journal, 2015
 #
 
-#
-# Contains necessary functions to read ARFF files in
-# different formats (MULAN/MEKA, sparse, nonsparse...)
-#
-#
+
 # Extracts all useful data from an ARFF file in
 # R objects
 #
@@ -23,14 +22,14 @@ read_arff <- function(arff_file) {
     open(file_con, "rb")
   
   # Read whole file
-  file_data <- strsplit(tolower(readChar(file_con, nchars = file.info(arff_file)$size, useBytes = TRUE)),
+  file_data <- strsplit(readChar(file_con, nchars = file.info(arff_file)$size, useBytes = TRUE),
                         "\\\r\n|\\\r|\\\n", fixed = FALSE, useBytes = TRUE)[[1]]
   
   close(file_con)
   
   # Split into relation, attributes and data
-  relation_at <- pmatch("@relation", file_data)
-  data_start <- pmatch("@data", file_data)
+  relation_at <- grep("@relation", file_data, ignore.case = TRUE)
+  data_start <- grep("@data", file_data, ignore.case = TRUE)
   
   if (is.na(relation_at)) stop("Missing @relation or not unique.")
   if (is.na(data_start)) stop("Missing @data mark or not unique.")
@@ -72,22 +71,28 @@ read_arff <- function(arff_file) {
 parse_attributes <- function(arff_attrs) {
   # Extract attribute definitions
   
-  # Regex matches strings separated by spaces not containing '
-  # or {, }; strings within single quotes or strings within
-  # curly braces
-  rgx <- "([^\\s'\\{\\}]+|'([^']|\\')*'|\\{([^}])*\\})"
-  att_list <- regmatches(arff_attrs, gregexpr(rgx, arff_attrs, perl = T))
+  #-----------------------------------------------------------------------------------------------------
+  # Finding adequate spaces to split the attribute definition into 3 parts:
+  #    @attribute attr_name {0, 1}   -> c("@attribute", "attr_name", "{0, 1}")
+  #    @attribute 'Attr. name' {0,1} -> c("@attribute", "'Attr. name'", "{0,1}")
+  #    @attribute 'David\'s attribute' {0,1} -> c("@attribute", "'David\'s attribute'", "{0,1}")
+  #-----------------------------------------------------------------------------------------------------
+  # Using the technique described under "Perl/PCRE Variation" in this StackOverflow answer:
+  #    (Regex Pattern to Match, Excluding when...) http://stackoverflow.com/a/23589204/5306389
+  # We capture any spacing character ignoring those within braces or single quotes,
+  # allowing the appearance of escaped single quotes (\').
+  #-----------------------------------------------------------------------------------------------------
+  rgx <- "(?:{[^}\\s]*?(\\s+[^}\\s]*?)+}|(?<!\\\\)'[^'\\\\]*(?:\\\\.[^'\\\\]*)*(?<!\\\\)')(*SKIP)(*F)|\\s+"
+  att_list <- strsplit(arff_attrs, rgx, perl = TRUE)
   
   # Structure by rows
   att_mat <- matrix(unlist(att_list[sapply(att_list, function(row){length(row) == 3})]),
                     ncol = 3, byrow = T)
   rm(att_list)
-  
   # Filter any data that is not an attribute
-  att_mat <- att_mat[grepl("\\s*@attribute", att_mat[, 1]), 2:3]
+  att_mat <- att_mat[grepl("\\s*@attribute", att_mat[, 1], ignore.case = TRUE), 2:3]
   att_mat <- gsub("\\'", "'", att_mat, fixed = T)
   att_mat <- gsub("^'(.*?)'$", "\\1", att_mat, perl = T)
-  
   
   # Create the named vector
   att_v <- att_mat[, 2]
@@ -96,6 +101,7 @@ parse_attributes <- function(arff_attrs) {
   rm(att_mat)
   return(att_v)
 }
+
 
 
 # Reads the name and Meka parameters in the header of an
@@ -155,7 +161,7 @@ parse_sparse_data <- function(arff_data, num_attrs) {
   
   # Build complete matrix with data
   dataset <- sapply(arff_data, function(row) {
-    complete <- NA[1:num_attrs]
+    complete <- rep(0, num_attrs)
     complete[as.integer(row[c(T, F)]) + 1] <- row[c(F, T)]
     complete
   })

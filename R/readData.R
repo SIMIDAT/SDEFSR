@@ -3,7 +3,7 @@
 #' Reads a KEEL data format file or an ARFF data format file.
 #'
 #' This function reads a KEEL (.dat), ARFF (.arff) or CSV dataset file and store the information
-#'   in a \code{SDR_Dataset} class. 
+#'   in a \code{SDEFSR_Dataset} class. 
 #'
 #' @param file The path of the file in KEEL ".dat" or ARFF format
 #'
@@ -111,7 +111,7 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
       )
     
     
-    #Prepare the rest of attributes of the SDR_Dataset object
+    #Prepare the rest of attributes of the SDEFSR_Dataset object
     
     covered <- NA     #Examples covered
     fuzzySets <- NA   # Fuzzy sets definitons
@@ -129,7 +129,7 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
     
     lostData <- FALSE 
     
-    # Creation of the SDR_Dataset object as a list
+    # Creation of the SDEFSR_Dataset object as a list
     lista <- list(
       relation = relation,                    # Relation name
       attributeNames = atribs_names,          # Names of the attributes
@@ -150,14 +150,14 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
     )
     
     
-    class(lista) <- "SDR_Dataset"  
+    class(lista) <- "SDEFSR_Dataset"  
     lista
   } else if(ext == ".arff"){
     #Reads an ARFF from WEKA.
-    SDR_DatasetFromARFF(file)
+    SDEFSR_DatasetFromARFF(file)
   } else if(ext == ".csv"){
     #Reads a CSV file
-    SDR_DatasetFromCSV(file, relation_name = basename(file), sep = sep, quote = quote, dec = dec, na.strings = na.strings)
+    SDEFSR_DatasetFromCSV(file, relation_name = basename(file), sep = sep, quote = quote, dec = dec, na.strings = na.strings)
   } else{
     stop("Invalid format. Valid formats are: '.arff', '.dat' or '.csv'")
   }
@@ -891,14 +891,14 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
 }
 
 
-#' Saves a \code{SDR_Dataset} dataset into a KEEL dataset format file.
+#' Saves a \code{SDEFSR_Dataset} dataset into a KEEL dataset format file.
 #'
-#' This function exports a SDR_Dataset dataset stored in the R environment into a KEEL format file on the hard disk.
+#' This function exports a SDEFSR_Dataset dataset stored in the R environment into a KEEL format file on the hard disk.
 #' This function can not save information about the fuzzy
-#' definition created by the function \link{read.dataset} because the SDR_Dataset format does not
+#' definition created by the function \link{read.dataset} because the SDEFSR_Dataset format does not
 #' define that kind of information.
 #'
-#' @param dataset The \code{SDR_Dataset} object stored in R environment.
+#' @param dataset The \code{SDEFSR_Dataset} object stored in R environment.
 #' @param file The file name (or path) to save the KEEL dataset.
 #'
 #' @details  A KEEL data file must have the following structure:
@@ -917,7 +917,7 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #' 
 #' 
-save.SDR_Dataset <- function(dataset, file) {
+save.SDEFSR_Dataset <- function(dataset, file) {
   #First, we need to ask the user if he want to save the file
   
   if (is.null(file) | is.na(file) | missing(file)) {
@@ -928,8 +928,8 @@ save.SDR_Dataset <- function(dataset, file) {
     stop("'file' must be of length 1.")
   }
   
-  if (class(dataset) != "SDR_Dataset") {
-    stop("'dataset' must be of class 'SDR_Dataset'.")
+  if (class(dataset) != "SDEFSR_Dataset") {
+    stop("'dataset' must be of class 'SDEFSR_Dataset'.")
   }
   
   answer <-
@@ -983,7 +983,7 @@ save.SDR_Dataset <- function(dataset, file) {
             result <-
               lapply(
                 X = seq_len(length(pos)), FUN = function(y, pos, data) {
-                  data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]   # Catch the categorical value of a categorical variable, in a SDR_Dataset object, this values are coded into a number that specify the position of the value in the 'categoricalValues' variable
+                  data[pos[y]] <- catValues[[pos[y]]][data[pos[y]] + 1]   # Catch the categorical value of a categorical variable, in a SDEFSR_Dataset object, this values are coded into a number that specify the position of the value in the 'categoricalValues' variable
                   data[pos[y]]
                 }, categ, x
               )
@@ -1027,12 +1027,12 @@ save.SDR_Dataset <- function(dataset, file) {
 
 
 #'
-#' Add one or a set of instances to a SDR_Dataset dataset.
+#' Add one or a set of instances to a SDEFSR_Dataset dataset.
 #'
-#' Take a data vector or a list of data vectors and inserts at the end of a \code{SDR_Dataset} data set.
+#' Take a data vector or a list of data vectors and inserts at the end of a \code{SDEFSR_Dataset} data set.
 #' 
 #' @param items Vector or list of instance/s
-#' @param dataset The \code{SDR_Dataset} dataset to insert the data.
+#' @param dataset The \code{SDEFSR_Dataset} dataset to insert the data.
 #' 
 #' @details You can add the data in four ways:
 #' \itemize{
@@ -1057,7 +1057,7 @@ save.SDR_Dataset <- function(dataset, file) {
 #' 
 #' @return Returns the new dataset with data introduced. This dataset is a list with a vectors of every instace.  
 #' This dataset should be stored into the \code{$data}
-#' field of a \code{SDR_Dataset} class variable.
+#' field of a \code{SDEFSR_Dataset} class variable.
 #' 
 #' @author Angel M. Garcia <amgv0009@@red.ujaen.es>
 #'
@@ -1065,9 +1065,9 @@ save.SDR_Dataset <- function(dataset, file) {
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #'
 #' 
-addSDR_DatasetRegister <- function(items, dataset) {
-  if (class(dataset) != "SDR_Dataset") {
-    stop("Provided dataset is not of class 'SDR_Dataset'.")
+addSDEFSR_DatasetRegister <- function(items, dataset) {
+  if (class(dataset) != "SDEFSR_Dataset") {
+    stop("Provided dataset is not of class 'SDEFSR_Dataset'.")
   }
   
   
@@ -1183,15 +1183,15 @@ addSDR_DatasetRegister <- function(items, dataset) {
 #' 
 #' Reads an ARFF file
 #' 
-#' This function reads an ARFF file and get the subyacent \code{SDR_Dataset} object
+#' This function reads an ARFF file and get the subyacent \code{SDEFSR_Dataset} object
 #'
 #' @param file The ARFF file to read.
 #' 
 #' 
 #' 
-#' @return a 'SDR_Dataset' object ready to use with the algorithms that are in the package
+#' @return a 'SDEFSR_Dataset' object ready to use with the algorithms that are in the package
 #' 
-SDR_DatasetFromARFF <- function(file){
+SDEFSR_DatasetFromARFF <- function(file){
   warnPrevio <- getOption("warn")
   options(warn = -1)
   set <- read_arff(file)
@@ -1215,7 +1215,7 @@ SDR_DatasetFromARFF <- function(file){
   
   #Get min, max 
   #
-  categoricalLength <- regmatches(x = set[[2]], gregexpr(pattern = "[[:alnum:]]*[^(,/$| */$)]", text = set[[2]]))
+  categoricalLength <- regmatches(x = set[[2]], gregexpr(pattern = "[[:graph:]]*[^(,/$| */$)]", text = set[[2]]))
   len <- unlist(lapply(categoricalLength, length))
   values <- matrix(data = unlist(lapply(set[[3]][,which(!categoricalVariables)], 
                                         function(x){
@@ -1287,7 +1287,7 @@ SDR_DatasetFromARFF <- function(file){
     categoricalValues = categoricalLength,
     Ns = Ns
   )
-  class(lista) <- "SDR_Dataset"
+  class(lista) <- "SDEFSR_Dataset"
   
   #Restore option warn of the user.
   options(warn = warnPrevio)
@@ -1298,7 +1298,7 @@ SDR_DatasetFromARFF <- function(file){
 
 
 #'
-#' Reads a CSV file and return a SDR_Dataset object to be executed by an algorithm of the SDR package
+#' Reads a CSV file and return a SDEFSR_Dataset object to be executed by an algorithm of the SDEFSR package
 #' 
 #' @param file The path to the csv file.
 #' @param relation_name The name of the relation to use
@@ -1307,11 +1307,11 @@ SDR_DatasetFromARFF <- function(file){
 #' @param dec The character used to identify decimal values. By default it is "."
 #' @param na.strings The character used to identify lost data. By default it is "?"
 #' 
-#' @return An \code{SDR_Dataset} object that contains all neccesary information to execute the algorithms
+#' @return An \code{SDEFSR_Dataset} object that contains all neccesary information to execute the algorithms
 #' 
 #' @author Angel M. Garcia <agvico@ujaen.es>
 #' 
-SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec = ".", na.strings = "?"){
+SDEFSR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec = ".", na.strings = "?"){
   #read the csv
   data <- read.csv(file = file, sep = sep, quote = quote, dec = dec, na.strings = na.strings)
   
@@ -1369,7 +1369,7 @@ SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec
     data <- parallel::mclapply(as.data.frame(t(data), stringsAsFactors = F), .processData, categoricalValues = catValues, types = types, fromDataFrame = TRUE, mc.cores = 1)
   }
   
-  #Generate the SDR_Dataset Object
+  #Generate the SDEFSR_Dataset Object
   dataset <- list(relation = relation_name,
                   attributeNames = attNames,
                   attributeTypes = types,
@@ -1387,7 +1387,7 @@ SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec
                   categoricalValues = catValues,
                   Ns = numExamples)
   
-  class(dataset) <- "SDR_Dataset"
+  class(dataset) <- "SDEFSR_Dataset"
   
   #Return the object
   dataset
@@ -1395,9 +1395,9 @@ SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec
 
 
 #'
-#' Creates a \code{SDR_Dataset} object from a \code{data.frame}
+#' Creates a \code{SDEFSR_Dataset} object from a \code{data.frame}
 #' 
-#' Creates a \code{SDR_Dataset} object from a \code{data.frame} and create fuzzy labels for numerical variables too.
+#' Creates a \code{SDEFSR_Dataset} object from a \code{data.frame} and create fuzzy labels for numerical variables too.
 #' 
 #' @param data A data.frame object with all neccesary information. See details.
 #' @param relation A string that indicate the name of the relation.
@@ -1417,14 +1417,14 @@ SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec
 #' 
 #' For \code{'classNames'} if it is NA, the function returns unique values of the last attribute of the data.frame that is considered the class attribute.
 #' 
-#' @return A \code{SDR_Dataset} object with all the information of the dataset.
+#' @return A \code{SDEFSR_Dataset} object with all the information of the dataset.
 #' 
 #' @examples 
-#' library(SDR)
+#' library(SDEFSR)
 #' df <- data.frame(matrix(runif(1000), ncol = 10))
 #' #Add class attribute
 #' df[,11] <- c("0", "1")
-#' SDR_DatasetObject <- SDR_DatasetFromDataFrame(df, "random")
+#' SDEFSR_DatasetObject <- SDEFSR_DatasetFromDataFrame(df, "random")
 #' invisible()
 #' 
 #' @seealso \code{\link{read.dataset}}
@@ -1432,7 +1432,7 @@ SDR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec
 #' @author Angel M Garcia <amgv0009@@red.ujaen.es>
 #' 
 #' @export
-SDR_DatasetFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
+SDEFSR_DatasetFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
   #check data.frame
   if(! is.data.frame(data))
     stop(paste(substitute(data), "must be a data.frame"))
@@ -1547,7 +1547,7 @@ SDR_DatasetFromDataFrame <- function(data, relation, nLabels = 3, names = NA, ty
     categoricalValues = categoricalValues,
     Ns = Ns
   )
-  class(lista) <- "SDR_Dataset"
+  class(lista) <- "SDEFSR_Dataset"
   lista
   
   

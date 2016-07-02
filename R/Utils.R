@@ -365,13 +365,13 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 
 #' Modifiy the number of Fuzzy Labels of the dataset.
 #' 
-#' This function change the number of fuzzy labels defined in the current SDR_Dataset dataset.
+#' This function change the number of fuzzy labels defined in the current SDEFSR_Dataset dataset.
 #' 
-#' @details The fuzzy definitions used in the \code{SDR_Dataset} class are triangular.
+#' @details The fuzzy definitions used in the \code{SDEFSR_Dataset} class are triangular.
 #'     Because you can only specify the number of fuzzy definitions, all those definitions
 #'     has the same width. With this function you can re-calculate this triangular fuzzy sets.
 #' 
-#' @param dataset The dataset to modify their fuzzy labels definitions. Must be a \code{SDR_Dataset} class.
+#' @param dataset The dataset to modify their fuzzy labels definitions. Must be a \code{SDEFSR_Dataset} class.
 #' @param nLabels The new number of fuzzy labels. An integer greater than zero.
 #' 
 #' @return  This function returns the same dataset with their fuzzy definitions modified.
@@ -401,11 +401,11 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 
 
 #'
-#' Change the target Variable of a \code{'SDR_Dataset'} Dataset
+#' Change the target Variable of a \code{'SDEFSR_Dataset'} Dataset
 #' 
 #' Change the actual target variable for another one if it is categorical.
 #' 
-#' @param dataset The SDR_Dataset dataset class
+#' @param dataset The SDEFSR_Dataset dataset class
 #' @param variable The position (or the name) of the variable to set as target Variable.
 #' @return The dataset with the variables changed
 #' 
@@ -421,7 +421,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' 
 #' 
 changeTargetVariable <- function(dataset, variable){
-  if(class(dataset) != "SDR_Dataset") stop( paste("'",substitute(dataset),"' is not a SDR_Dataset class", sep = ""))
+  if(class(dataset) != "SDEFSR_Dataset") stop( paste("'",substitute(dataset),"' is not a SDEFSR_Dataset class", sep = ""))
   #if(variable >= dataset$nVars + 1) stop("variable is the same of the actual variable or is out of range")
   
   if(is.character(variable)){
@@ -638,7 +638,7 @@ changeTargetVariable <- function(dataset, variable){
 #' Launch a web interface for use the algorithms easily.
 #' @description Launches a Shiny-based interface for the package in your browser.
 #'     
-#' @details The package \code{SDR} provide simple, shiny-based web interface for performs the taks 
+#' @details The package \code{SDEFSR} provide simple, shiny-based web interface for performs the taks 
 #'     easily. The interface only work with new datasets loaded directly in the platform.
 #'   
 #'     The web application is structured as follows:
@@ -654,34 +654,35 @@ changeTargetVariable <- function(dataset, variable){
 #'     
 #' @examples
 #'\dontrun{
-#' library(SDR)
-#' SDR_GUI()
+#' library(SDEFSR)
+#' SDEFSR_GUI()
 #'}
 #'     
 #' @export
- SDR_GUI <- function(){
+ SDEFSR_GUI <- function(){
    packages <- installed.packages()[,1]
    
    if(! "ggplot2" %in% packages){
-     if(tolower(.yesno("Package 'ggplot2' is not installed and must be installed to run this GUI. Do you want to install it? (Y/n): ")) == "y")
+     if(tolower(.yesno("Package 'ggplot2' is not installed and must be installed to run this GUI. Do you want to install it? (Y/n): ")) == "y"){
        install.packages("ggplot2")
-     } else {
+       } else {
        stop("Package 'ggplot2' not available")
+       }
      }
-   } 
-   
+    
+  
    if(! "shiny" %in% packages){
      if(tolower(.yesno("Package 'shiny' is not installed and must be installed to run this GUI. Do you want to install it? (Y/n): ")) == "y"){
        install.packages("shiny")
        cat("Launching interface...")
-       shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
+       shiny::runApp(appDir = system.file("shiny", package="SDEFSR"), launch.browser = TRUE)
        
        invisible()
      } else {
        cat("Package not installed. Execution aborted.")
      }
    } else {
-     shiny::runApp(appDir = system.file("shiny", package="SDR"), launch.browser = TRUE)
+     shiny::runApp(appDir = system.file("shiny", package="SDEFSR"), launch.browser = TRUE)
      
      invisible()
    }
@@ -848,7 +849,7 @@ improvedTable <- function(dataset, classNames){
 
 
 #' 
-#' Creates a human-readable representation of a rule for insert into a 'SDR_Rules' object
+#' Creates a human-readable representation of a rule for insert into a 'SDEFSR_Rules' object
 #' 
 #' This function creates an string representation of a given rule
 #' @param rule The rule we want to get the representation
@@ -931,14 +932,14 @@ string
 
 
 
-#' S3 function to summary a SDR_Dataset object
+#' S3 function to summary a SDEFSR_Dataset object
 #' 
-#' Summary relevant data of a \code{SDR_Dataset} dataset.
+#' Summary relevant data of a \code{SDEFSR_Dataset} dataset.
 #' 
-#' @param object A \code{SDR_Dataset} class.
+#' @param object A \code{SDEFSR_Dataset} class.
 #' @param ... Additional arguments to the summary function.
 #' 
-#' @details This function show important information about the \code{SDR_Dataset} dataset for the user. Note that it does not 
+#' @details This function show important information about the \code{SDEFSR_Dataset} dataset for the user. Note that it does not 
 #' show all the information available. The rest is only for the algorithms. The values that appear are accesible by the
 #' \code{$} operator, e.g. dataset$relation or dataset$examplesPerClass.
 #' 
@@ -947,8 +948,8 @@ string
 #' summary(carTra) 
 #' 
 #' @export
-summary.SDR_Dataset <- function(object, ...){
-  cat(paste("Summary of the SDR_Dataset object: '", substitute(object),"'", sep = ""),
+summary.SDEFSR_Dataset <- function(object, ...){
+  cat(paste("Summary of the SDEFSR_Dataset object: '", substitute(object),"'", sep = ""),
       paste("\t- relation:", object$relation),
       paste("\t- nVars:", object$nVars),
       paste("\t- Ns:", object$Ns),
@@ -968,16 +969,16 @@ summary.SDR_Dataset <- function(object, ...){
 #'  
 #'  This function shows the matrix of data uncoded.
 #'  
-#' @param x The \code{SDR_Dataset} object to view
+#' @param x The \code{SDEFSR_Dataset} object to view
 #' @param ... Additional arguments passed to the print function
 #'  
-#' @details This function show the matix of data. Internally, a \code{SDR_Dataset} object has a list of of examples
+#' @details This function show the matix of data. Internally, a \code{SDEFSR_Dataset} object has a list of of examples
 #'  and this examples are coded numerically. This function decode these examples and convert the list into a matrix.
 #'  
 #' @return a matrix with the dataset uncoded.
 #'  
 #' @export
-print.SDR_Dataset <- function(x, ...){
+print.SDEFSR_Dataset <- function(x, ...){
   data <- lapply(x$data,
                  function(x, categoricos)
                    vapply(seq_len(length(x)), function(i, example, cateValues){
@@ -1002,11 +1003,11 @@ print.SDR_Dataset <- function(x, ...){
 
 
 #' 
-#' Plot a rule set generated by a SDR algorithm
+#' Plot a rule set generated by a SDEFSR algorithm
 #' 
 #' This function plots the rule set by means of a bar graph that shows TPR vs FPR quality measure of each rule
 #' 
-#' @param ruleSet an \code{SDR_Rules} object generated by a subgroup discovery algorithm of the SDR package
+#' @param ruleSet an \code{SDEFSR_Rules} object generated by a subgroup discovery algorithm of the SDEFSR package
 #' 
 #' @details This function works depending on the package ggplot2 that allow to generate such graph. If the package ggplot2 is not 
 #' installed, the this function ask the user to install it. After install, load the package and show the graph.
@@ -1065,10 +1066,10 @@ plotRules <- function(ruleSet){
 #'  
 #'  This function orders a rule set in descendant order by a given quality measure that are available on the object
 #'  
-#' @param ruleSet The rule set passed as a \code{SDR_Rules} object 
+#' @param ruleSet The rule set passed as a \code{SDEFSR_Rules} object 
 #' @param by a String with the name of the quality measure to order by. Valid values are: \code{Coverage, Unusualness, Significance, FuzzySupport, FuzzyConfidence, CrispConfidence, Tpr, Fpr}.
 #'  
-#' @return another \code{SDR_Rules} object with the rules ordered
+#' @return another \code{SDEFSR_Rules} object with the rules ordered
 #'  
 #' @examples 
 #'  orderRules(habermanRules)
@@ -1077,8 +1078,8 @@ plotRules <- function(ruleSet){
 
 orderRules <- function(ruleSet, by = "FuzzyConfidence"){
   
-  if(class(ruleSet) != "SDR_Rules"){
-    stop(paste(substitute(ruleSet), "is not a 'SDR_Rules' object"))
+  if(class(ruleSet) != "SDEFSR_Rules"){
+    stop(paste(substitute(ruleSet), "is not a 'SDEFSR_Rules' object"))
   }
   
   if(length(ruleSet) < 1){
@@ -1096,8 +1097,8 @@ orderRules <- function(ruleSet, by = "FuzzyConfidence"){
   #Return the rule set ordered
   result <- ruleSet[orden]
   
-  #Assing the SDR_Rules class
-  class(result) <- "SDR_Rules"
+  #Assing the SDEFSR_Rules class
+  class(result) <- "SDEFSR_Rules"
   #Return
   result
 }

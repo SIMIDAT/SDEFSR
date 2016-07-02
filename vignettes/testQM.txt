@@ -7,7 +7,9 @@ Rule 1 :
 	 - CSupport: 0
 	 - FSupport: 0.002481
 	 - CConfidence: 0
-	 - FConfidence: 0.070144 
+	 - FConfidence: 0.070144
+	 - True Positive Rate: 0
+	 - False Positive Rate: 0 
 
 Rule 2 :
 	 - N_vars: 2
@@ -18,7 +20,9 @@ Rule 2 :
 	 - CSupport: 0.209677
 	 - FSupport: 0.186104
 	 - CConfidence: 0.232143
-	 - FConfidence: 0.218818 
+	 - FConfidence: 0.218818
+	 - True Positive Rate: 0.764706
+	 - False Positive Rate: 0.955556 
 
 Rule 3 :
 	 - N_vars: 3
@@ -29,7 +33,9 @@ Rule 3 :
 	 - CSupport: 0
 	 - FSupport: 0.004399
 	 - CConfidence: 0
-	 - FConfidence: 0.639344 
+	 - FConfidence: 0.639344
+	 - True Positive Rate: 0
+	 - False Positive Rate: 0 
 
 Global:
 	 - N_rules: 3
@@ -42,3 +48,5 @@ Global:
 	 - FSupport: 0.064328
 	 - FConfidence: 0.309435
 	 - CConfidence: 0.077381
+	 - True Positive Rate: 0.254902
+	 - False Positive Rate: 0.318519

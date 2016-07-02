@@ -1,6 +1,6 @@
 ---
-title: "Using Subgroup Discovery algorithms in R: The **SDR** package"
-author: "Angel M. Garcia"
+title: "Subgroup Discovery with Evolutionary Fuzzy Systems in R: the **SDEFSR** Package"
+author: "Angel M. Garcia, Francisco Charte, Cristóbal J. Carmona, Pedro Gonzalez, Maria J. del Jesus"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
@@ -10,13 +10,13 @@ header-includes:
    - \usepackage[utf8]{inputenc}
 vignette: >
   %\VignetteEncoding{UTF-8}
-  %\VignetteIndexEntry{Using Subgroup Discovery algorithms in R: The **SDR** package}
+  %\VignetteIndexEntry{Using Subgroup Discovery algorithms in R: The **SDEFSR** package}
   %\VignetteEngine{knitr::rmarkdown}
 ---
 
 
 \abstract{
-Subgroup Discovery is a data mining task between classification and description, this task is nowadays a relevant task for researchers due to it success in many fields, especially the medical field. The SDR package provide the posibility of use some of the algorithms that exists in the specialized bibliography by means of using datasets provided in the format specified by data mining tool KEEL without dependencies to other tools/packages in the R console. Also, the package provide a graphical interface to use the algorithms easily and to do basic exploratory analysis with datasets in KEEL format.
+Subgroup Discovery is a data mining task between classification and description, this task is nowadays a relevant task for researchers due to it success in many fields, especially the medical field. The SDEFSR package provide the posibility of use some of the algorithms that exists in the specialized bibliography by means of using datasets provided in the format specified by data mining tool KEEL without dependencies to other tools/packages in the R console. Also, the package provide a graphical interface to use the algorithms easily and to do basic exploratory analysis with datasets in KEEL format.
 }
 
 
@@ -33,7 +33,7 @@ In order to achieve this purpose, traditional techniques of knowledge extraction
 This classification does not cover all the algorithms that exists in data mining, and subgroup discovery is one of those fields not covered by this classification because it has caracteristics of both fields.
 Now, R has in CRAN repository a package called *rsubgroup* \cite{rsubgroup}, this package is only an interface to use the subgroup discovery algorithms provided in VIKAMINE \cite{vikamine} data mining tool, and has a strong dependency with this tool and use the package *rJava* \cite{rjava} that also provided an interface to use Java files in R. So, this packages has a lot of external dependencies.
 
-Our **SDR** package implements by now other subgroup discovery algorithms that is not available on VIKAMINE and those algorithms are implemented directly in R, so no dependencies with other tools/packages are necessary to perform a subgroup discovery task and the posibilities of growing the package by means of the adition of new algorithms is easier for every user of R (we have a public GitHub repository where everyone can contribute). 
+Our **SDEFSR** package implements by now other subgroup discovery algorithms that is not available on VIKAMINE and those algorithms are implemented directly in R, so no dependencies with other tools/packages are necessary to perform a subgroup discovery task and the posibilities of growing the package by means of the adition of new algorithms is easier for every user of R (we have a public GitHub repository where everyone can contribute). 
 Also our package provide a web interface available at http://sdrinterface.shinyapps.io and locally by calling the `SDR_GUI()` function. Such interface could, in one hand make a subgroup discovery task via web without having R installed in the system or in the other hand, make an easier task by using the visual controls of the web interface.  
 Further, our package provide a function to read KEEL \cite{keel} datasets files, a dataset format that is not supported now in R.
 
@@ -282,20 +282,20 @@ So, the token competition works as follows:
 At the end of the evolutive process, the screening function is launched to get the users quality rules only. This rules must reach a minimum level of confidence and sensitivity. The function has an external parameter (ALL_CLASS) which if true, the algorithm will return, at least, one rule per value of the target variable, or at least the best rule of the population if false.
 
 
-# Use of SDR package \label{uso}
+# Use of SDEFSR package \label{uso}
 
 In this section we are going to explain how to use this package. This package tries to use in a really simple way subgroup discovery algorithms and also without any dependencies.
 
 ## Installing and load the package.
-The package SDR is now available at CRAN servers, so it can be installed as any other package by simply typing: 
+The package SDEFSR is now available at CRAN servers, so it can be installed as any other package by simply typing: 
 ```{r,eval=FALSE}
-install.packages("SDR")
+install.packages("SDEFSR")
 ```
-Also, the develop version is available into GitHub at http://github.com/aklxao2/SDR, feel free to clone and contribute if you wish. If you wish to use the development version you need to install the package `devtools` using the commando `install_github`:
+Also, the develop version is available into GitHub at http://github.com/aklxao2/SDEFSR, feel free to clone and contribute if you wish. If you wish to use the development version you need to install the package `devtools` using the commando `install_github`:
 ```{r,eval=FALSE}
-devtools::install_github('aklxao2/SDR')
+devtools::install_github('aklxao2/SDEFSR')
 ```
-**SDR** depends only on the package **shiny** \cite{shiny}. This package is neccesary to use the user interface in a local way and if the package is not installed, it asked to the user to be install when running the function `SDR_GUI()`. 
+**SDEFSR** depends only on the package **shiny** \cite{shiny}. This package is neccesary to use the user interface in a local way and if the package is not installed, it asked to the user to be install when running the function `SDR_GUI()`. 
 Once installed the package has to be loaded before use it. The package can be loaded through `library()` or `require()`. After loading the package there are six datasets available: `carTra`, `carTst`, `germanTra`, `germanTst`, `habermanTra` and `habermanTst` that corresponds to `car`, `german` and `haberman` training and test datasets.  
 This package use an internal representation assigned to the `"keel"` class . All the information about the datasets are available in this class.
 
@@ -315,7 +315,7 @@ If you want to get more KEEL datasets format, please visit: http://sci2s.ugr.es/
 This function can read also ARFF the same way a KEEL file.
 
 ## Creating a KEEL object from a data.frame
-The other way to load a dataset on SDR is by a data.frame. This is possible by using the function `keelFromDataFrame()`:
+The other way to load a dataset on SDEFSR is by a data.frame. This is possible by using the function `keelFromDataFrame()`:
 ```{r,eval=FALSE}
 irisTraining <- keelFromDataFrame(data = iris, relation = "iris",)
 ```
@@ -341,7 +341,7 @@ As the results line could be extremly large, the algorithms also save this resul
 MESDIF(paramFile = "MESDIFparameters.txt")
 ```
 ```{r,highlight=TRUE}
-library("SDR")
+library(SDEFSR)
 MESDIF( paramFile = NULL,
         training = habermanTra,
         test = habermanTst,
@@ -364,11 +364,12 @@ MESDIF( paramFile = NULL,
 
 
 # The user interface
-As we mentioned at the begin of this paper, the **SDR** package provide to the user an interface to use the subgroup discovery task in a more easy way and also do some basic exploratory analysis tasks.  
+As we mentioned at the begin of this paper, the **SDEFSR** package provide to the user an interface to use the subgroup discovery task in a more easy way and also do some basic exploratory analysis tasks.  
 We can use the user interface by two ways: one of them is using the interface via web at: http://sdrinterface.shinyapps.io/shiny . This has the advantage of use the algorithm without having R installed in our system and also avoid expending process time in our machine. The other way is to use the interface is in a local way, having our local server. This could be possible simply using:
 ```{r,eval=FALSE}
 SDR_GUI()
 ```
+
 This function launch the user interface in our predetermined web browser. As we can see in Figure \ref{pantallaInicial}. The page are organized into an options panel at the left and a tabbed panel at the right. Here is where our results are shown when we execute the algorithms.  
 The first we have to do is to load a KEEL dataset. If we want to execute a subgroup discovery algorithm we must load a training and a test file **having the same** `'@relation'` **field in the KEEL dataset file.**  
 Once we select the dataset, automatically it shows a graph with information about the last variable defined in the dataset. The graph shows the distribution of examples having some values of the variable. At the rigth of this graphic we can see a table with some basic information, more extended if this variable is numerical.  
@@ -376,7 +377,7 @@ Once we select the dataset, automatically it shows a graph with information abou
 \begin{figure}[hbtp]
   \centering
   \includegraphics[width=\linewidth]{Interfaz1.PNG}
-  \caption{Initial screen of the SDR user interface.}
+  \caption{Initial screen of the SDEFSR user interface.}
   \label{pantallaInicial}
 \end{figure}
 \pagebreak
@@ -406,7 +407,7 @@ The tab `'Test Quality Measures'` shows a table with quality measures of every r
 
 # Summary
 
-In this paper the **SDR** package has been introduced. This package can use four subgroup discovery algorithms without any other dependencies to others tools/packages. Also, the posibility of read and load datasets in the KEEL dataset format is provided, but it can read dataset from ARFF format or load a data.frame object. Finally, a web-based interface is developed for make the work easier, even if we do not have R installed in our system.  
+In this paper the **SDEFSR** package has been introduced. This package can use four subgroup discovery algorithms without any other dependencies to others tools/packages. Also, the posibility of read and load datasets in the KEEL dataset format is provided, but it can read dataset from ARFF format or load a data.frame object. Finally, a web-based interface is developed for make the work easier, even if we do not have R installed in our system.  
 The devolpment of the package will continue in the future, including more functionality to work with KEEL datasets, adding new subgroup discovery algorithms and also improve the web interface. As we can see we have a great job ahead, so we encourage other developers to participe adding tools or algorithms into the package, as we will do in futures releases.
 
 

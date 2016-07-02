@@ -365,7 +365,7 @@ shinyServer(function(input, output, session) {
       file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
       file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
       rutaTra <<- paste(input$traFile[,1],input$traFile[,4])
-      dataTra <<- SDR::read.dataset(file$datapath)
+      dataTra <<- SDEFSR::read.dataset(file$datapath)
       updateSelectInput(session = session, 
                         inputId = "targetClassSelect", 
                         label = "Select the target variable", 
@@ -412,7 +412,7 @@ shinyServer(function(input, output, session) {
         file.rename(file$datapath, paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = ""))
         file$datapath <- paste(file$datapath, regmatches(x = file, m = gregexpr(pattern = "\\.[[:alnum:]]+$", text = file))[[1]], sep = "")
         rutaTst <<- paste(input$tstFile[,1], input$tstFile[,4])
-        dataTst <<- SDR::read.dataset(file$datapath)
+        dataTst <<- SDEFSR::read.dataset(file$datapath)
         updateSelectInput(session = session, 
                           inputId = "targetClassSelect", 
                           label = "Select the target variable", 
@@ -566,8 +566,8 @@ shinyServer(function(input, output, session) {
     
     #Set target Variable.
 
-      #dataTst <<- SDR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
-      #dataTra <<- SDR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
+      #dataTst <<- SDEFSR::changeTargetVariable(dataTst, which(input$targetClassSelect == dataTst[[2]]))
+      #dataTra <<- SDEFSR::changeTargetVariable(dataTra, which(input$targetClassSelect == dataTra[[2]]))
     
       
     targetClass <- isolate(input$targetClassSelect)
@@ -598,7 +598,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             ruleSet <<- SDR::SDIGA(training = dataTra, 
+             ruleSet <<- SDEFSR::SDIGA(training = dataTra, 
                    test = dataTst, 
                    seed = seed, 
                    nLabels = nLabels, 
@@ -633,7 +633,7 @@ shinyServer(function(input, output, session) {
             
              # Execute the algorithm
              #sink("tempFile.txt")
-             ruleSet <<- SDR::MESDIF(training = dataTra,
+             ruleSet <<- SDEFSR::MESDIF(training = dataTra,
                     test = dataTst,
                     seed = seed,
                     nLabels = nLabels,
@@ -662,7 +662,7 @@ shinyServer(function(input, output, session) {
              porcCob <- isolate(input$porcCob)
              
              #Execute the algorithm
-             ruleSet <<- SDR::NMEEF_SD(training = dataTra,
+             ruleSet <<- SDEFSR::NMEEF_SD(training = dataTra,
                       test = dataTst,
                       seed = seed,
                       nLabels = nLabels,
@@ -690,7 +690,7 @@ shinyServer(function(input, output, session) {
              gfw <- c(isolate(input$gfw1), isolate(input$gfw2), isolate(input$gfw3), isolate(input$gfw4) )
              allClass <- isolate(input$allClass)
              
-             ruleSet <<- SDR::FUGEPSD(paramFile = NULL,
+             ruleSet <<- SDEFSR::FUGEPSD(paramFile = NULL,
                           training = dataTra,
                           test = dataTst,
                           seed = seed,
@@ -810,7 +810,7 @@ shinyServer(function(input, output, session) {
   
 #PLOT OF THE QUALITY MEASURES
   output$rulesPlot <- renderPlot({
-    print(SDR::plotRules(ruleSet))
+    print(SDEFSR::plotRules(ruleSet))
   })
   
   
