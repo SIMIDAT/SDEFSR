@@ -1,32 +1,30 @@
-#[SDR] (https://github.com/aklxao2/SDR/) 
+#[SDEFSR] (https://github.com/aklxao2/SDEFSR/) 
 
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/SDR)](https://cran.r-project.org/web/packages/SDR/index.html)
-[![Downloads] (http://cranlogs.r-pkg.org/badges/SDR)](https://cran.rstudio.com/web/packages/SDR/index.html)
-[![totalDownloads] (http://cranlogs.r-pkg.org/badges/grand-total/SDR)](https://cran.rstudio.com/web/packages/SDR/index.html)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/SDEFSR)](https://cran.r-project.org/web/packages/SDEFSR/index.html)
+[![Downloads] (http://cranlogs.r-pkg.org/badges/SDEFSR)](https://cran.rstudio.com/web/packages/SDEFSR/index.html)
+[![totalDownloads] (http://cranlogs.r-pkg.org/badges/grand-total/SDEFSR)](https://cran.rstudio.com/web/packages/SDEFSR/index.html)
 
-Implementation of algorithms of the data mining task called "subgroup discovery" implemented directly in R without any other dependecies.
-Those algorithms works with data sets provided in the format of _KEEL data mining tool_, _ARFF_ or data.frame objects . Also, the package provide a Shiny App to ease the work.
-The interface is also available at http://sdrinterface.shinyapps.io/shiny to make the interface without R installed in our systems.
+R package with Subgroup Discovery algorithms based on Evolutionary Fuzzy Systems.
+These algorithms works with data sets with _KEEL_ , _ARFF_, or _CSV_ formats or data.frame objects . Also, the package provide a Shiny App to ease the work.
 
 ## Installation
 
 The package is available on CRAN, so it could be installed as another package available on CRAN, simple typing:
 ```R
-install.packages("SDR")
+install.packages("SDEFSR")
 ```
 
 You can install the package using the function `install_github()` provided by the `devtools` package:  
 
 ```R
-devtools::install_github("aklxao2/SDR")
+devtools::install_github("aklxao2/SDEFSR")
 ```
 
 ## Usage and examples
 
-The package provide a web interface to ease the work, this intarface could be accesed by:
-* visiting http://sdrinterface.shinyapps.io/shiny
-* calling the function to launch the interface in a local server.  
-To create the local server you can simply call the function `SDR_GUI()` of our package:  
+The package provide a web interface to ease the work, this intarface could be accesed by calling the function: 
+`SDR_GUI()`:
+
 ```R
 library("SDR")
 SDR_GUI()
@@ -34,13 +32,15 @@ SDR_GUI()
 
 This will launch the interface in our predetermined browser. 
 
-Also the package can handle with _KEEL_, _ARFF_ datasets to use within the subgroups discovery algorithms in order to use it in a R script for example. For example, having the file `iris.dat` in our working directory:
+Assuming the files `iris.dat`, `iris.arff` and `iris.csv` corresponding to the
+classical iris dataset in KEEL, ARFF and CSV formats respectively in the working directory, the loading of these files will be as follows:
 ```R
-irisKEEL <- read.keel("iris.dat")
-irisARFF <- read.keel("iris.arff")
-#With classic iris datasets loaded in a data.frame called 'iris':
-irisDataFrame <- keelFromDataFrame(iris) #Use variable at position 3 as target variable.
+> irisFromKEEL <- read.dataset("iris.dat") 
+> irisFromARFF <- read.dataset("iris.arff")
+> irisFromCSV <- read.dataset("iris.csv")
 ```
+Note that the function detects the type of data by the extension. To read csv files, the function has optional parameters that defines the separator used between fields, the decimal separator, the quote indicator and the \code{NA} identifier as parameters. By default, this options and values are `sep = ",", quote = "\"", dec = "."` and `na.strings = "?"` respectively. 
+
 
 The are four subgroup discovery implemented: __SDIGA__, __MESDIF__, __NMEEF-SD__ and __FuGePSD__. You can use this algorithms by:
 * specifying the path of a parameter file 
