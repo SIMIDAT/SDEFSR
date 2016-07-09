@@ -14,17 +14,17 @@ FUGEPSD(paramFile = NULL, training = NULL, test = NULL,
   ALL_CLASS = TRUE, targetVariable = NA)
 }
 \arguments{
-\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables}
+\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{SDEFSR_Dataset} variables}
 
-\item{training}{A \code{SDR_Dataset} class variable with training data.}
+\item{training}{A \code{SDEFSR_Dataset} class variable with training data.}
 
-\item{test}{A \code{SDR_Dataset} class variable with test data.}
+\item{test}{A \code{SDEFSR_Dataset} class variable with test data.}
 
 \item{output}{Character vector with the paths where store information file, rules file and test quality measures file, respectively. For rules and quality measures files, the algorithm generate 4 files, each one with the results of a given filter of fuzzy confidence.}
 
 \item{seed}{An integer to set the seed used for generate random numbers.}
 
-\item{nLabels}{The number of fuzzy labels to use with numeric variables. By default 3. We recommend an odd number between 3 and 9.}
+\item{nLabels}{Number of linguistic labels for numerical variables. By default 3. We recommend an odd number between 3 and 9.}
 
 \item{t_norm}{A string with the t-norm to use when computing the compatibilty degree of the rules. Use \code{'Minimum/Maximum'} to specify the minimum t-norm, if not, we use product t-norm that is the default method.}
 

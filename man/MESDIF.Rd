@@ -12,17 +12,17 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
   targetClass = "null")
 }
 \arguments{
-\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{SDR_Dataset} variables}
+\item{paramFile}{The path of the parameters file. \code{NULL} If you want to use training and test \code{SDEFSR_Dataset} variables}
 
-\item{training}{A \code{SDR_Dataset} class variable with training data.}
+\item{training}{A \code{SDEFSR_Dataset} class variable with training data.}
 
-\item{test}{A \code{SDR_Dataset} class variable with test data.}
+\item{test}{A \code{SDEFSR_Dataset} class variable with test data.}
 
 \item{output}{character vector with the paths where store information file, rules file and test quality measures file, respectively.}
 
 \item{seed}{An integer to set the seed used for generate random numbers.}
 
-\item{nLabels}{Number of fuzzy labels defined in the datasets.}
+\item{nLabels}{Number of linguistic labels for numerical variables.}
 
 \item{nEval}{An integer for set the maximum number of evaluations in the evolutive process.}
 

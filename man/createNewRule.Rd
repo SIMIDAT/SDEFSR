@@ -7,7 +7,7 @@
 createNewRule(dataset, tnorm, tconorm, rule_weight, class = NULL)
 }
 \arguments{
-\item{dataset}{The SDR_Dataset dataset where getting the data}
+\item{dataset}{The SDEFSR_Dataset dataset where getting the data}
 
 \item{tnorm}{The T-norm to use: 0 -> minimum T-norm, 1 -> product T-norm}
 

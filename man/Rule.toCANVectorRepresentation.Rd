@@ -9,7 +9,7 @@ Rule.toCANVectorRepresentation(rule, dataset)
 \arguments{
 \item{rule}{The rule that we want to evaluate.}
 
-\item{dataset}{The SDR_Dataset dataset which rule refers to.}
+\item{dataset}{The SDEFSR_Dataset dataset which rule refers to.}
 }
 \value{
 a matrix with one column to use easily with fitness functions of this package
@@ -17,6 +17,6 @@ a matrix with one column to use easily with fitness functions of this package
 \description{
 The function converts a rule into a CANONICA vector representation for ease the evaluation.
 The evaluation of a rule with a vector representation can be evaluated througth functions
-of evaluation of rule (.fit13 or .fitnessMESDIF) that are available inside the package SDR
+of evaluation of rule (.fit13 or .fitnessMESDIF) that are available inside the package SDEFSR
 }
 

@@ -1,56 +1,56 @@
 
 Rule 1:
 	 - N_vars: 2
-	 - Coverage: 0.241935
-	 - Significance: 18.489013
-	 - Unusualness: -0.034079
-	 - Sensitivity: 0.117647
-	 - Support: 0.032258
-	 - FConfidence: 0.088117
-	 - CConfidence: 0.133333
+	 - Coverage: 0.168033
+	 - Significance: 63.51769
+	 - Unusualness: 0.0215
+	 - Sensitivity: 0.25
+	 - Support: 0.065574
+	 - FConfidence: 0.482879
+	 - CConfidence: 0.390244
 Rule 2:
 	 - N_vars: 2
-	 - Coverage: 0.564516
-	 - Significance: 17.382655
-	 - Unusualness: -0.038762
-	 - Sensitivity: 0.511111
-	 - Support: 0.370968
-	 - FConfidence: 0.81001
-	 - CConfidence: 0.657143
+	 - Coverage: 0.651639
+	 - Significance: 59.145679
+	 - Unusualness: 0.006987
+	 - Sensitivity: 0.661111
+	 - Support: 0.487705
+	 - FConfidence: 0.802242
+	 - CConfidence: 0.748428
 Rule 3:
 	 - N_vars: 2
-	 - Coverage: 0.83871
-	 - Significance: 7.944388
-	 - Unusualness: -0.011967
-	 - Sensitivity: 0.822222
-	 - Support: 0.596774
-	 - FConfidence: 0.761468
-	 - CConfidence: 0.711538
+	 - Coverage: 0.881148
+	 - Significance: 23.629088
+	 - Unusualness: 0.013908
+	 - Sensitivity: 0.9
+	 - Support: 0.663934
+	 - FConfidence: 0.78366
+	 - CConfidence: 0.753488
 Rule 4:
 	 - N_vars: 1
-	 - Coverage: 0.951613
-	 - Significance: 2.541682
-	 - Unusualness: 0.002862
-	 - Sensitivity: 0.955556
-	 - Support: 0.693548
-	 - FConfidence: 0.781182
-	 - CConfidence: 0.728814
+	 - Coverage: 0.991803
+	 - Significance: 1.730039
+	 - Unusualness: 0.001948
+	 - Sensitivity: 0.994444
+	 - Support: 0.733607
+	 - FConfidence: 0.771518
+	 - CConfidence: 0.739669
 Rule 5:
 	 - N_vars: 1
-	 - Coverage: 0.870968
-	 - Significance: 6.479776
-	 - Unusualness: -0.019251
-	 - Sensitivity: 0.844444
-	 - Support: 0.612903
-	 - FConfidence: 0.695122
-	 - CConfidence: 0.703704
+	 - Coverage: 0.885246
+	 - Significance: 22.868384
+	 - Unusualness: 0.014983
+	 - Sensitivity: 0.905556
+	 - Support: 0.668033
+	 - FConfidence: 0.74732
+	 - CConfidence: 0.75463
 Global:
 	 - N_rules: 5
 	 - N_vars: 1.6
-	 - Coverage: 0.693548
-	 - Significance: 10.567503
-	 - Unusualness: -0.020239
-	 - Sensitivity: 0.650196
-	 - Support: 0.741935
-	 - FConfidence: 0.62718
-	 - CConfidence: 0.586906
+	 - Coverage: 0.715574
+	 - Significance: 34.178176
+	 - Unusualness: 0.011865
+	 - Sensitivity: 0.742222
+	 - Support: 0.803279
+	 - FConfidence: 0.717524
+	 - CConfidence: 0.677292

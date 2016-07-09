@@ -1089,7 +1089,7 @@ Fitness[orden[popSize:(popSize - (suma - 2))], ] <- NA
             }
           }
         
-        #Check if new population evolve
+        #Check if new population evolves
         coveredNow <- apply(X = coveredByIndividual[, inTheFront, drop = F], MARGIN = 1, FUN = any)
         evolve <- any(! coveredBefore[which(coveredNow)])
         coveredBefore <- coveredNow
@@ -1433,6 +1433,7 @@ executionPSD <- function(clas = NULL,   # number of the class to generate rules.
 }
 
 
+
 #-------------------------------------------------------------------------------
 # ---  THis part is part of the definition of the "ga" class done in the GA Package
 #--------------------------------------------------------------------------------
@@ -1524,11 +1525,17 @@ methods::setClass(Class = ".ga",
 
 
 
-
-#  
-# Generates inital population for MESDIF
-# In the '...' argument it must go first the percentage of population generated completely random
-# The second argument is the maximum number of variables that participate in the rule.
+#'
+#' @title generates an initial population for the SDIGA algorithm 
+#' 
+#' @param object A "ga" class object
+#' @param ... Addition parameters
+#' 
+#' @details In the '...' argument it must go first the percentage of population generated completely random
+#'         The second argument is the maximum number of variables that participate in the rule.
+#' @return a matrix with the generated initial population 
+#' @noRd
+#' 
 .generateMESDIFPopulation <- function(object, ...)
 {
   # Generate a random permutation of size popSize in the range [min, max]  
@@ -1595,10 +1602,17 @@ methods::setClass(Class = ".ga",
 
 
 
-#
-# Generates the initial population of NMEEF-SD
-#
-
+#'
+#' @title generates an initial population for the SDIGA algorithm 
+#' 
+#' @param object A "ga" class object
+#' @param ... Addition parameters
+#' 
+#' @details In the '...' argument it must go first the percentage of population generated completely random
+#'         The second argument is the maximum number of variables that participate in the rule.
+#' @return a matrix with the generated initial population 
+#' @noRd
+#' 
 .generarPoblacionNMEEF <- function(object, ...)
 {
   # Generate a random permutation of size popSize in the range [min, max]  

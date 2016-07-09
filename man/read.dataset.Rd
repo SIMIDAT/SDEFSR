@@ -12,7 +12,7 @@ read.dataset(file, sep = ",", quote = "\\"", dec = ".",
 }
 \description{
 This function reads a KEEL (.dat), ARFF (.arff) or CSV dataset file and store the information
-  in a \code{SDR_Dataset} class.
+  in a \code{SDEFSR_Dataset} class.
 }
 \details{
 A KEEL data file must have the following structure:

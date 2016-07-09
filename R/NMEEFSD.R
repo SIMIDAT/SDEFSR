@@ -382,7 +382,7 @@
 #' @param test A \code{SDEFSR_Dataset} class variable with training data.
 #' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
-#' @param nLabels Number of fuzzy labels defined in the datasets.
+#' @param nLabels Number of linguistic labels for numerical variables.
 #' @param nEval An integer for set the maximum number of evaluations in the evolutive process.
 #' @param popLength An integer to set the number of individuals in the population.
 #' @param crossProb Sets the crossover probability. A number in [0,1].
@@ -748,18 +748,20 @@ NMEEF_SD <- function(paramFile = NULL,
     sumAccu <- sumAccu + val[["accuracy"]]
     sumTpr <- sumTpr + val[["tpr"]]
     sumFpr <- sumFpr + val[["fpr"]]
-    
+    #Remove the name of the vector for significance
+    names(val[["significance"]]) <- NULL
     #Add values to the rulesToReturn Object
     rulesToReturn[[i]] <- list(rule = createHumanReadableRule(rules[i,], training, DNF),
-                                nVars = val[["nVars"]],
-                                qualityMeasures = list(Coverage = val[["coverage"]],
+                               qualityMeasures = list(nVars = val[["nVars"]],
+                                                       Coverage = val[["coverage"]],
                                                        Unusualness = val[["unusualness"]],
                                                        Significance = val[["significance"]],
                                                        FuzzySupport = val[["fsupport"]],
+                                                       Support = val[["csupport"]],
                                                        FuzzyConfidence = val[["fconfidence"]],
-                                                       CrispConfidence = val[["cconfidence"]],
-                                                       Tpr = val[["tpr"]],
-                                                       Fpr = val[["fpr"]]))
+                                                       Confidence = val[["cconfidence"]],
+                                                       TPr = val[["tpr"]],
+                                                       FPr = val[["fpr"]]))
   }
   
   
@@ -772,7 +774,7 @@ NMEEF_SD <- function(paramFile = NULL,
       paste("\t - Significance:", round(sumSign / n_rules, 6), sep = " "),
       paste("\t - Unusualness:", round(sumUnus / n_rules, 6), sep = " "),
       paste("\t - Accuracy:", round(sumAccu / n_rules, 6), sep = " "),
-      paste("\t - CSupport:", round(sum(test[["covered"]] / test[["Ns"]]), 6), sep = " "),
+      paste("\t - CSupport:", round(sum(test[["covered"]]) / test[["Ns"]], 6), sep = " "),
       paste("\t - FSupport:", round(sumFsup / n_rules, 6), sep = " "),
       paste("\t - FConfidence:", round(sumFconf / n_rules, 6), sep = " "),
       paste("\t - CConfidence:", round(sumCconf / n_rules, 6), sep = " "),

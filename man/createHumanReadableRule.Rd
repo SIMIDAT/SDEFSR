@@ -2,7 +2,7 @@
 % Please edit documentation in R/Utils.R
 \name{createHumanReadableRule}
 \alias{createHumanReadableRule}
-\title{Creates a human-readable representation of a rule for insert into a 'SDR_Rules' object}
+\title{Creates a human-readable representation of a rule for insert into a 'SDEFSR_Rules' object}
 \usage{
 createHumanReadableRule(rule, dataset, DNF = FALSE)
 }

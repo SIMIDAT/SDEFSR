@@ -1214,7 +1214,7 @@ SDEFSR_DatasetFromARFF <- function(file){
     stop("Last value of the dataset is not categorical. We cannot create a dataset which class is not categorical.")
   
   #Get min, max 
-  #
+  # It fails when reading values with '' and has spaces, e.g. 'non skilled'
   categoricalLength <- regmatches(x = set[[2]], gregexpr(pattern = "[[:graph:]]*[^(,/$| */$)]", text = set[[2]]))
   len <- unlist(lapply(categoricalLength, length))
   values <- matrix(data = unlist(lapply(set[[3]][,which(!categoricalVariables)], 
@@ -1401,7 +1401,6 @@ SDEFSR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", 
 #' 
 #' @param data A data.frame object with all neccesary information. See details.
 #' @param relation A string that indicate the name of the relation.
-#' @param nLabels The number of fuzzy labels to use. By default 3.
 #' @param names An optional character vector indicating the name of the attributes.
 #' @param types An optional character vector indicating 'c' if variable is categorical, 'r' if is real and 'e' if it is an integer
 #' @param classNames An optional character vector indicating the values of the target class.
@@ -1432,7 +1431,7 @@ SDEFSR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", 
 #' @author Angel M Garcia <amgv0009@@red.ujaen.es>
 #' 
 #' @export
-SDEFSR_DatasetFromDataFrame <- function(data, relation, nLabels = 3, names = NA, types = NA, classNames = NA){
+SDEFSR_DatasetFromDataFrame <- function(data, relation, names = NA, types = NA, classNames = NA){
   #check data.frame
   if(! is.data.frame(data))
     stop(paste(substitute(data), "must be a data.frame"))

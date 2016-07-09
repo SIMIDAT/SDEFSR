@@ -197,7 +197,7 @@ plotRules <- function(ruleSet){
 #'  This function orders a rule set in descendant order by a given quality measure that are available on the object
 #'  
 #' @param ruleSet The rule set passed as a \code{SDEFSR_Rules} object 
-#' @param by a String with the name of the quality measure to order by. Valid values are: \code{Coverage, Unusualness, Significance, FuzzySupport, FuzzyConfidence, CrispConfidence, Tpr, Fpr}.
+#' @param by a String with the name of the quality measure to order by. Valid values are: \code{nVars, Coverage, Unusualness, Significance, FuzzySupport, Support, FuzzyConfidence, Confidence, Tpr, Fpr}.
 #'  
 #' @return another \code{SDEFSR_Rules} object with the rules ordered
 #'  
@@ -206,7 +206,7 @@ plotRules <- function(ruleSet){
 #'  
 #' @export
 
-orderRules <- function(ruleSet, by = "FuzzyConfidence"){
+orderRules <- function(ruleSet, by = "Confidence"){
   
   if(class(ruleSet) != "SDEFSR_Rules"){
     stop(paste(substitute(ruleSet), "is not a 'SDEFSR_Rules' object"))
@@ -256,14 +256,42 @@ orderRules <- function(ruleSet, by = "FuzzyConfidence"){
 #' @export
 "[.SDEFSR_Rules" <- function(SDEFSR_RulesObject, condition = T){
   filter <- substitute(condition)
-  #Eval the filter supplied on each rule:
-  rulesToKeep <- sapply(1:length(SDEFSR_RulesObject), function(x){
-    eval(filter, SDEFSR_RulesObject[[x]]$qualityMeasures, parent.frame())
-  })
-  #Change the class to a list to easily apply the new filter:
-  class(SDEFSR_RulesObject) <- "list"
-  #Apply the filter and return
-  newRuleSet <- SDEFSR_RulesObject[rulesToKeep]
-  class(newRuleSet) <- "SDEFSR_Rules" #Return as a SDEFSR_Rules object
-  newRuleSet
+  #Check if condition is a function call like 'Unusualness > 0.2' or 'c(1:n)' 
+  if(is.call(filter)){
+    
+    #If condition is something like 'c(1:n)' or other function that can be evaluated in the local 
+    #environment of this function, it is evaluated. 
+    tryCatch(
+      a <- eval(filter), #Evaluates the expression.
+      #If it fails, assing the value 'NULL' to tha variable 'a' in the local function environment
+      error = function(e) assign("a", NULL, envir = parent.frame())
+      )
+    
+    #If the 'a' is NULL means that local evaluation failed. Thus, we must evaluate the condition in the environment
+    #of the each $qualityMeasures field for each rule to return a result.
+    if(is.null(a)){
+    #Eval the filter supplied on each rule:
+    rulesToKeep <- sapply(1:length(SDEFSR_RulesObject), function(x){
+      eval(filter, SDEFSR_RulesObject[[x]]$qualityMeasures, parent.frame())
+    })
+    } else {
+      rulesToKeep <- a
+    }
+      
+    #Change the class to a list to easily apply the new filter:
+    class(SDEFSR_RulesObject) <- "list"
+    #Apply the filter and return
+    newRuleSet <- SDEFSR_RulesObject[rulesToKeep]
+    class(newRuleSet) <- "SDEFSR_Rules" #Return as a SDEFSR_Rules object
+    newRuleSet
+  
+  } else {
+    #If not, the condition could be a logical or a numeric. Therefore, return those rules indicated by
+    #numbers of logical values
+    #Change to a list to easily return the object filtered:
+    class(SDEFSR_RulesObject) <- "list"
+    newRuleSet <- SDEFSR_RulesObject[condition]
+    class(newRuleSet) <- "SDEFSR_Rules" #Return as a SDEFSR_Rules object
+    newRuleSet
+  }
 }

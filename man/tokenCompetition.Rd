@@ -9,7 +9,7 @@ tokenCompetition(pop, dataset)
 \arguments{
 \item{pop}{A list of 'Rule' objects.}
 
-\item{dataset}{A 'SDR_Dataset' object with all the information about the dataset we are working.}
+\item{dataset}{A 'SDEFSR_Dataset' object with all the information about the dataset we are working.}
 }
 \value{
 A list of 'Rule' objects with that rules that pass this token competition procedure.

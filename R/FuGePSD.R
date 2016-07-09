@@ -607,7 +607,7 @@ Rule.addVariable <- function(rule, dataset){
   #' @param test A \code{SDEFSR_Dataset} class variable with test data.
   #' @param output Character vector with the paths where store information file, rules file and test quality measures file, respectively. For rules and quality measures files, the algorithm generate 4 files, each one with the results of a given filter of fuzzy confidence.
   #' @param seed An integer to set the seed used for generate random numbers.
-  #' @param nLabels The number of fuzzy labels to use with numeric variables. By default 3. We recommend an odd number between 3 and 9.
+  #' @param nLabels Number of linguistic labels for numerical variables. By default 3. We recommend an odd number between 3 and 9.
   #' @param t_norm A string with the t-norm to use when computing the compatibilty degree of the rules. Use \code{'Minimum/Maximum'} to specify the minimum t-norm, if not, we use product t-norm that is the default method. 
   #' @param ruleWeight String with the method to calculate the rule weight. Possible values are: 
   #' \itemize{
@@ -989,15 +989,16 @@ Rule.addVariable <- function(rule, dataset){
       #Create the CAN vector representation of the rule with the string of the class to add it to the rule object
       ruleAsCAN <- c(as.vector(Rule.toCANVectorRepresentation(rule = new_pop[[count]], dataset = training)), training$class_names[new_pop[[count]]$clas + 1])
       rulesToReturn[[count]] <- list(rule = createHumanReadableRule(ruleAsCAN, training, FALSE), #FuGePSD does not have DNF representation !
-                                nVars = length(i$antecedent),
-                                qualityMeasures = list(Coverage = i$qm_Cov,
+                                qualityMeasures = list(nVars = length(i$antecedent),
+                                                       Coverage = i$qm_Cov,
                                                        Unusualness = i$qm_Unus,
                                                        Significance = i$qm_Sig,
                                                        FuzzySupport = i$qm_Sup,
+                                                       Support = sum(i$tokens) / length(i$tokens),
                                                        FuzzyConfidence = i$qm_Cnf_f,
-                                                       CrispConfidence = i$qm_Cnf_n,
-                                                       Tpr = i$qm_tpr,
-                                                       Fpr = i$qm_fpr))
+                                                       Confidence = i$qm_Cnf_n,
+                                                       TPr = i$qm_tpr,
+                                                       FPr = i$qm_fpr))
       count <- count + 1
       }
    

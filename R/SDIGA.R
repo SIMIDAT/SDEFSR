@@ -68,7 +68,7 @@
 #' @param test A \code{SDEFSR_Dataset} class variable with training data.
 #' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
-#' @param nLabels Number of fuzzy labels defined in the datasets.
+#' @param nLabels Number of linguistic labels for numerical variables.
 #' @param nEval An integer for set the maximum number of evaluations in the evolutive process.
 #' @param popLength An integer to set the number of individuals in the population.
 #' @param mutProb Sets the mutation probability. A number in [0,1].
@@ -503,18 +503,20 @@ SDIGA <- function(parameters_file = NULL,
     sumAccu <- sumAccu + val[["accuracy"]]
     sumTpr <- sumTpr + val[["tpr"]]
     sumFpr <- sumFpr + val[["fpr"]]
-    
+    #Remove the name of the vector for significance
+    names(val[["significance"]]) <- NULL
     #Add values to the rulesToReturn Object
-    rulesToReturn[[i]] <- list(rule = createHumanReadableRule(rules[[i]], training, DNF),
-                                nVars = val[["nVars"]],
-                                qualityMeasures = list(Coverage = val[["coverage"]],
+    rulesToReturn[[i]] <- list( rule = createHumanReadableRule(rules[i,], training, DNF),
+                                qualityMeasures = list(nVars = val[["nVars"]],
+                                                       Coverage = val[["coverage"]],
                                                        Unusualness = val[["unusualness"]],
                                                        Significance = val[["significance"]],
                                                        FuzzySupport = val[["fsupport"]],
+                                                       Support = val[["csupport"]],
                                                        FuzzyConfidence = val[["fconfidence"]],
-                                                       CrispConfidence = val[["cconfidence"]],
-                                                       Tpr = val[["tpr"]],
-                                                       Fpr = val[["fpr"]]))
+                                                       Confidence = val[["cconfidence"]],
+                                                       TPr = val[["tpr"]],
+                                                       FPr = val[["fpr"]]))
   }
   
   

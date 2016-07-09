@@ -7,7 +7,7 @@
 modifyFuzzyCrispIntervals(dataset, nLabels)
 }
 \arguments{
-\item{dataset}{The dataset to modify their fuzzy labels definitions. Must be a \code{SDR_Dataset} class.}
+\item{dataset}{The dataset to modify their fuzzy labels definitions. Must be a \code{SDEFSR_Dataset} class.}
 
 \item{nLabels}{The new number of fuzzy labels. An integer greater than zero.}
 }
@@ -15,10 +15,10 @@ modifyFuzzyCrispIntervals(dataset, nLabels)
 This function returns the same dataset with their fuzzy definitions modified.
 }
 \description{
-This function change the number of fuzzy labels defined in the current SDR_Dataset dataset.
+This function change the number of fuzzy labels defined in the current SDEFSR_Dataset dataset.
 }
 \details{
-The fuzzy definitions used in the \code{SDR_Dataset} class are triangular.
+The fuzzy definitions used in the \code{SDEFSR_Dataset} class are triangular.
     Because you can only specify the number of fuzzy definitions, all those definitions
     has the same width. With this function you can re-calculate this triangular fuzzy sets.
 }

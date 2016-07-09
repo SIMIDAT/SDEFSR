@@ -9,7 +9,7 @@ writeRuleFile(pop, dataset, fileName)
 \arguments{
 \item{pop}{A list of 'Rule' objects with the population we want to save.}
 
-\item{dataset}{A 'SDR_Dataset' object with all the information about the dataset the rules are pointing.}
+\item{dataset}{A 'SDEFSR_Dataset' object with all the information about the dataset the rules are pointing.}
 
 \item{fileName}{String with the path to store the rules.}
 }

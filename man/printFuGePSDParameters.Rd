@@ -10,7 +10,7 @@ printFuGePSDParameters(parameters, dataset, inputFromFiles = TRUE)
 \arguments{
 \item{parameters}{A list with all neccesary parameters.}
 
-\item{dataset}{A \code{SDR_Dataset} object with all the information about the dataset.}
+\item{dataset}{A \code{SDEFSR_Dataset} object with all the information about the dataset.}
 
 \item{inputFromFiles}{A logical indicating if the input datasets are given from a file or from an object in the R environment.}
 }
