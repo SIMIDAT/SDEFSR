@@ -1,11 +1,11 @@
 #'
 #'
-#' Reads a KEEL data format file or an ARFF data format file.
+#' Reads a KEEL, ARFF or CSV data format file.
 #'
 #' This function reads a KEEL (.dat), ARFF (.arff) or CSV dataset file and store the information
 #'   in a \code{SDEFSR_Dataset} class. 
 #'
-#' @param file The path of the file in KEEL ".dat" or ARFF format
+#' @param file The path of the file to read.
 #'
 #' @details  A KEEL data file must have the following structure:
 #'  \itemize{
@@ -16,9 +16,11 @@
 #'    \item{ @@data: Starting tag of the data}
 #' }
 #'    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
-#' ARFF file format is a well-know dataset format from WEKA data mining tool.
+#'    ARFF file format is a well-know dataset format from WEKA data mining tool.
+#'    CSV is a format which means comma-separated values. Where each examples is on a line and each value of the variables of the examples
+#'    are separated by commas.
 #' 
-#' @author Angel M. Garcia <amgv0009@@red.ujaen.es> 
+#' @author Angel M. Garcia <agvico@@ujaen.es> 
 #'    
 #' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
 #' 
@@ -170,7 +172,9 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
 #
 #
 #  Reads a parameter file for an implemented algorithm
-#
+# @param file The path to the parameters file
+# 
+# @return a list with the parsed parameters
 #
 .read.parametersFile2 <- function(file) {
   data <- .readFile(file)
@@ -475,10 +479,14 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
   
 }
 
-#---------------------------------------------------------------------------
-# Shows information about parameters
-# --------------------------------------------------------------------------
 
+
+#' @title Shows in console information about the parameters used in an execution of an SDEFSR algorithm
+#' 
+#' @param params A list with the parameters used
+#' @param train A \code{SDEFSR_Dataset} object used as training
+#' @param test A \code{SDEFSR_Dataset} object used as test
+#' @noRd
 .show_parameters <- function(params, train, test) {
   #Show parameters in the console
   algo <- params$algorithm
@@ -612,9 +620,7 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
 #' If the variable is categorical, it return the number of categories.
 #' 
 #' @return A vector with the specified information
-#' 
-
-
+#' @noRd
 .giveMeSets <- function(data_types, max, n_labels) {
   data_types <- data_types[-length(data_types)] # The last is the class, we don't use it
   # Split into categorical attributes and real ones. They have a different processing
@@ -793,7 +799,7 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
 #
 #
 .preprocessHeader <- function(line) {
-  #The regular expression eliminate eliminate the "{}" , "[]", symbols and commas that separate every element inside them
+  #The regular expression eliminate the "{}" , "[]", symbols and commas that separate every element inside them
   regex <-  "[[:blank:]]*\\{|[[:blank:]]*\\}|[[:blank:]]*\\[|[[:blank:]]*\\]|,[[:blank:]]*" 
   line <- gsub(pattern = regex, replacement = " ", x = line)
   
@@ -816,9 +822,11 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
     line <- gsub(pattern = ",[[:blank:]]*", replacement = " ", x = line) 
     line <- strsplit(x = line, split = " ",fixed = TRUE)[[1]]
   }
-  cat <- which(types == 'c')
+  cat <- which(types == 'c') #Determine which variables are categorical
   lc <- line[cat]
-  cv <- categoricalValues[cat]
+  cv <- categoricalValues[cat]  #Get the values of the categoricals variables
+  
+  #Code the categorical values of each variable as the position of this value in categoricalValues minus 1.
   for (i in seq_len(length(lc))) {
     pos <- which(cv[[i]] == lc[i])
     if (length(pos) > 0) {
@@ -835,6 +843,7 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
 }
 
 
+#
 # Return a list with the following values:
 # - Attribute name
 # - Type
@@ -916,7 +925,7 @@ read.dataset <- function(file, sep = ",", quote = "\"", dec = ".", na.strings = 
 #' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #' 
-#' 
+#' @noRd
 save.SDEFSR_Dataset <- function(dataset, file) {
   #First, we need to ask the user if he want to save the file
   
@@ -1064,7 +1073,7 @@ save.SDEFSR_Dataset <- function(dataset, file) {
 #' @references J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.
 #' @seealso KEEL Dataset Repository (Standard Classification): \url{http://sci2s.ugr.es/keel/category.php?cat=clas}
 #'
-#' 
+#' @noRd
 addSDEFSR_DatasetRegister <- function(items, dataset) {
   if (class(dataset) != "SDEFSR_Dataset") {
     stop("Provided dataset is not of class 'SDEFSR_Dataset'.")
@@ -1190,6 +1199,9 @@ addSDEFSR_DatasetRegister <- function(items, dataset) {
 #' 
 #' 
 #' @return a 'SDEFSR_Dataset' object ready to use with the algorithms that are in the package
+#' @references  The read_arff function code has been taken from package \code{mldr} from F. Charte and D. Charte:
+#' F.Charte and D.Charte: Working with Multilabel Datasets in {R}: The mldr Package, The R Journal, vol. 7, num. 2, pp. 149--162. (2015)
+#' @noRd
 #' 
 SDEFSR_DatasetFromARFF <- function(file){
   warnPrevio <- getOption("warn")
@@ -1213,9 +1225,10 @@ SDEFSR_DatasetFromARFF <- function(file){
   if(types[length(types)] != "c")
     stop("Last value of the dataset is not categorical. We cannot create a dataset which class is not categorical.")
   
-  #Get min, max 
-  # It fails when reading values with '' and has spaces, e.g. 'non skilled'
-  categoricalLength <- regmatches(x = set[[2]], gregexpr(pattern = "[[:graph:]]*[^(,/$| */$)]", text = set[[2]]))
+  # Get min, max 
+  set[[2]] <- sub("^\\s+|\\s+$", "", set[[2]]) #Erase initial and final whitespaces
+  #Parse the categorical variables with this regular expression.
+  categoricalLength <- regmatches(x = set[[2]], gregexpr(pattern = "(?<=')([^,]*?)(?=')|(^|(?<=,)|(?<=, ))([^,' ]*?)((?=,)|$)", perl = T, text = set[[2]]))
   len <- unlist(lapply(categoricalLength, length))
   values <- matrix(data = unlist(lapply(set[[3]][,which(!categoricalVariables)], 
                                         function(x){
@@ -1255,8 +1268,11 @@ SDEFSR_DatasetFromARFF <- function(file){
   sets <- NA
   
   
+  # Remove inital and final ' signs for categorical variables with spaces or special on the data section
+  set[[3]] <- sapply(set[[3]], function(x) gsub("^'+|'+$", "", x))
   #DATA
   df_aux <- as.data.frame(t(set[[3]]), stringsAsFactors = FALSE)
+  # The algorithm fails here, values in dataset has '' when in categoricalLength it has not ''.
   if (Sys.info()[1] != "Windows")
     data <-
     parallel::mclapply(
@@ -1310,7 +1326,7 @@ SDEFSR_DatasetFromARFF <- function(file){
 #' @return An \code{SDEFSR_Dataset} object that contains all neccesary information to execute the algorithms
 #' 
 #' @author Angel M. Garcia <agvico@ujaen.es>
-#' 
+#' @noRd
 SDEFSR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", dec = ".", na.strings = "?"){
   #read the csv
   data <- read.csv(file = file, sep = sep, quote = quote, dec = dec, na.strings = na.strings)
@@ -1399,7 +1415,7 @@ SDEFSR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", 
 #' 
 #' Creates a \code{SDEFSR_Dataset} object from a \code{data.frame} and create fuzzy labels for numerical variables too.
 #' 
-#' @param data A data.frame object with all neccesary information. See details.
+#' @param data A \code{data.frame} object with all neccesary information. See details.
 #' @param relation A string that indicate the name of the relation.
 #' @param names An optional character vector indicating the name of the attributes.
 #' @param types An optional character vector indicating 'c' if variable is categorical, 'r' if is real and 'e' if it is an integer
@@ -1422,7 +1438,7 @@ SDEFSR_DatasetFromCSV <- function(file, relation_name, sep = ",", quote = "\"", 
 #' library(SDEFSR)
 #' df <- data.frame(matrix(runif(1000), ncol = 10))
 #' #Add class attribute
-#' df[,11] <- c("0", "1")
+#' df[,11] <- c("0", "1", "2", "3")
 #' SDEFSR_DatasetObject <- SDEFSR_DatasetFromDataFrame(df, "random")
 #' invisible()
 #' 
@@ -1436,7 +1452,7 @@ SDEFSR_DatasetFromDataFrame <- function(data, relation, names = NA, types = NA, 
   if(! is.data.frame(data))
     stop(paste(substitute(data), "must be a data.frame"))
   #Create the data.frame without factors
-  data <- as.data.frame(data, stringsAsFactors = FALSE)
+  data <- as.data.frame(lapply(data, function(x) if(is.factor(x)) as.character(x) else x), stringsAsFactors = F)
   #Check if the last attribute (class attribute) is categorical
   if(! is.character(.subset2(data, NCOL(data))))
     stop("Last attribute of the dataset, that define the class attribute, must be categorical.")
@@ -1454,7 +1470,7 @@ SDEFSR_DatasetFromDataFrame <- function(data, relation, names = NA, types = NA, 
   if(checks[2]){
     #Try to get the type of the attributes.
     types <- vapply(data, function(x){
-                            if(is.character(x)){
+                            if(is.character(x) || is.factor(x)){
                               'c'
                             } else {
                               'r'
@@ -1505,8 +1521,7 @@ SDEFSR_DatasetFromDataFrame <- function(data, relation, names = NA, types = NA, 
   crispSets <- NA
   
   #Sets
-  sets <-
-    .giveMeSets(data_types = types, max = max, n_labels = nLabels)
+  sets <- NA
   
   #DATA
   if(Ns > 150){
