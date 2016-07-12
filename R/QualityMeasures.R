@@ -41,6 +41,9 @@
   }
 }
 
+
+# Fuzzy Support
+
 .Fsupport <- function(x){
   c <- x[[11]] / x[[4]]
   if(is.nan(c)){
@@ -50,6 +53,9 @@
   }
 }
 
+
+#Fuzzy Local Support for SDIGA
+#
 .FLocalSupport <- function(x){
   c <- x[[12]] / x[[9]]
   if(is.nan(c)){
@@ -59,7 +65,8 @@
   }
 }
 
-
+# Confidence
+# 
 .confidence <- function(x){
   
   c <- x[[2]] / x[[1]]
@@ -71,6 +78,8 @@
   
 }
 
+#Fuzzy confidence
+#
 .fuzzyConfidence <- function(x){
   c <- x[[11]] / x[[10]]
   if(is.nan(c)){
@@ -81,17 +90,21 @@
 }
 
 
-
+# Unusualness
+# 
 .unusualness <- function(x){
   .coverage(x) * ( .confidence(x) - (x[[5]] / x[[4]]) )
 }
 
+# Normalized Unusualness
+# 
 .norm_unusualness <- function(x){
   .coverage(x) * .confidence(x)
   
 }
 
-
+# Sensitivity (TPR)
+# 
 .sensitivity <- function(x){
   c <- x[[2]] / x[[5]]
   if(is.nan(c)){
@@ -101,7 +114,8 @@
   }
 }
 
-
+# Accuracy QM
+# 
 .accuracy <- function(x){
   c <-  (x[[2]] + 1) / (x[[1]] + NROW(x[[7]]))
   if(is.nan(c)){
@@ -112,7 +126,8 @@
 }
 
 
-
+# Significance
+# 
 .significance <- function(x){
   cove <- .coverage(x = x)
   if(cove > 0){
@@ -131,7 +146,8 @@
 }
 
 
-
+# Local Support for SDIGA
+# 
 .LocalSupport <- function(x){
   
   c <- x[[8]] / x[[9]]

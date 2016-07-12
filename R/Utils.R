@@ -68,21 +68,18 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 }
 
 
-
-
-
-#
-#
-#   Gets the membership degree of all examples in the dataset over a single rule. (Use with lapply)
-#
-#     ONLY FOR CAN RULES
-# example is a matrix after the use of .separate
-# rule_cat is the categorcal variables that participate in the rule
-# rule_num is the numerical variables that participate in the rule
-# catParticip and numParticip are logical vectors for tell the function which rules of each type participe in the rule
-# xmin, xmax, xmedio and xminCrisp and xmaxCrisp are the vectors with the fuzzy and crisp definition of the variables that participa in the rule
-# max_cat is a vector the maximum value for categorical values and max_num is the same but for numerical variables.
-
+#' @title Gets the membership degree of all examples in the dataset over a single rule. 
+#' @param examples Is a matrix after the use of .separate
+#' @param rule_cat is the categorcal variables that participate in the rule
+#' @param rule_num is the numerical variables that participate in the rule
+#' @param catParticip and numParticip are logical vectors for tell the function which rules of each type participe in the rule
+#' @param xmin, xmax, xmedio and xminCrisp and xmaxCrisp are the vectors with the fuzzy and crisp definition of the variables that participa in the rule
+#' @param max_cat is a vector the maximum value for categorical values and max_num is the same but for numerical variables.
+#'
+#' @details ONLY FOR CAN RULES !
+#' 
+#' @return a list with two vector of length number of examples with the belonging degree for fuzzy and crisp 
+#' @noRd
 .compareCAN <- function(example, rule_cat, rule_num, catParticip, numParticip, xmin, xmedio, xmax, n_matrices, xminCrisp, xmaxCrisp, max_cat){
   dispFuzzy <- numeric(NCOL(example)) + 1
   dispCrisp <- integer(NCOL(example)) + 1L
@@ -117,12 +114,19 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
   
 }
 
-#
-#
-#
-# It works similar to compareCAN but for DNF rules.
-#
-
+#' @title Gets the membership degree of all examples in the dataset over a single rule. 
+#' @param examples Is a matrix after the use of .separate
+#' @param rule The rule
+#' @param rule_num is the numerical variables that participate in the rule
+#' @param cat_particip and num_particip are logical vectors for tell the function which rules of each type participe in the rule
+#' @param max_rule_cat A vector which indicates the number of possible caterigocal values for each variable.
+#' @param nLabels The number of fuzzy labels per variable.
+#' @param fuzzySets is the fuzzy sets definitions for each variable.
+#' @param crispSet The crisp sets definitions
+#' @details ONLY FOR DNF RULES !
+#' 
+#' @return a list with two vector of length number of examples with the belonging degree for fuzzy and crisp 
+#' @noRd
 .compareDNF <- function(example,  rule, rule_num, cat_particip, num_particip, max_rule_cat, max_rule_num, nLabels, fuzzySets, crispSet, valuesFuzzy, valuesCrisp){
   ejemplo_cat <- as.vector( example[cat_particip, ] )
   
@@ -176,8 +180,6 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 # -  [[14]] False positive rate
 # 
 # ---------------------------------------------------------------
-
-
 .getValuesForQualityMeasures <- function(gr_perts, classNames, dataset, targetClass, examples_perClass, cov, Ns, N_vars , to_cover, mark = FALSE, test = FALSE, fuzzy = FALSE, NMEEF = FALSE){
  # This is not the best form, there must be another form to use the list directly
   dataset <- matrix(unlist(dataset), nrow = length(dataset[[1]]), ncol = length(dataset)) #Too much time-consuming
@@ -279,6 +281,11 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 
 
 
+#' @title Gets the variable and the value of a DNF rule
+#' @description Returns the number of the variable and value this variable for a DNF Rules
+#' @param value The index of the value to get in the DNF rule representation
+#' @param maxValues a vector indicating the begining of each variable on the DNF representation
+#' @noRd
 .getVariableAndValue <- function(value, maxValues){
   variable <- which( (value / maxValues) <= 1)[1]  
   vInitVariable <- 1
@@ -381,7 +388,7 @@ Rule.compatibility <- function(example, rule_cat, rule_num, catParticip, numPart
 #'     modifyFuzzyCrispIntervals(habermanTra, 2)
 #'     modifyFuzzyCrispIntervals(habermanTra, 15)
 #'}
-#'
+#' @noRd
 
 modifyFuzzyCrispIntervals <- function(dataset, nLabels){
     if(nLabels < 1)
@@ -418,7 +425,7 @@ modifyFuzzyCrispIntervals <- function(dataset, nLabels){
 #' Throws an error because the variable selected is numerical:
 #' changeTargetVariable(habermanTra, 1)
 #' }
-#' 
+#' @noRd
 #' 
 changeTargetVariable <- function(dataset, variable){
   if(class(dataset) != "SDEFSR_Dataset") stop( paste("'",substitute(dataset),"' is not a SDEFSR_Dataset class", sep = ""))
@@ -484,11 +491,14 @@ changeTargetVariable <- function(dataset, variable){
 
 
 
-#
-#
-# Gets the variables that participate in a rule
-#
-#
+#' @title  Gets the varialbes that participate in a rule
+#' @param rule A rule in CAN or DNF representation.
+#' @param maxRule A vector indicatinf the maximum value for each rule in CAN or a vector indicating the begining
+#'      each variable in a DNF representation.
+#' @param DNF A logical indicating if we are processing DNF rules.
+#' 
+#' @return A logical with the variables that participate in the rule
+#' @noRd
 .getParticipants <- function(rule, maxRule, DNFRules){
   if(!DNFRules){
     participants <- as.logical( (rule < maxRule) ) 
@@ -533,7 +543,6 @@ changeTargetVariable <- function(dataset, variable){
 #
 .join <- function(dataNoClass , classes){
   lapply(X = 1:length(dataNoClass), FUN = function(num, x,y) append(x[[num]],y[[num]]), dataNoClass, classes)
-  
 }
 
 
@@ -671,7 +680,7 @@ changeTargetVariable <- function(dataset, variable){
 #' @param low Lower bound (included)
 #' @param high Upper bound (NOT included)
 #' @return a uniform-distributed integer value in [low, high)
-#' 
+#' @noRd
 .randInt <- function(low, high){
   floor( low + (high - low) * runif(1) )
 }
@@ -684,7 +693,7 @@ changeTargetVariable <- function(dataset, variable){
 #' @param high Upper bound (included)
 #' @return a uniform-distributed integer value in [low, high)
 #' 
-#' 
+#' @noRd
 .randIntClosed <- function(low, high){
   floor( low + ((high + 1) - low) * runif(1) )
 }
@@ -696,7 +705,7 @@ changeTargetVariable <- function(dataset, variable){
 #' @param low Lower bound (NOT included)
 #' @param high Upper bound (NOT included)
 #' @return a uniform-distributed integer value in [low, high)
-#' 
+#' @noRd
 .randIntClosed <- function(low, high){
   floor( (low+1) + (high - (low+1)) * runif(1) )
 }
@@ -707,7 +716,7 @@ changeTargetVariable <- function(dataset, variable){
 #' @param low Lower bound (included)
 #' @param high Upper bound (NOT included)
 #' @return a uniform-distributed integer value in [low, high)
-#' 
+#' @noRd
 .randDouble <- function(low, high){
   low + (high - low) * runif(1) 
 }
@@ -720,7 +729,7 @@ changeTargetVariable <- function(dataset, variable){
 #' @param high Upper bound (NOT included)
 #' @param excluded. The number to exclude, it does not check if it is in the range [low,high]
 #' @return a uniform-distributed integer value in [low, high)
-#' 
+#' @noRd
 .randIntExcluded <- function(low, high, excluded){
   number <- .randIntClosed(low, high)
   while(number == excluded){
@@ -739,7 +748,7 @@ changeTargetVariable <- function(dataset, variable){
 #' @param initial Initial time in Unix format.
 #'
 #' @return A human-readable string with time difference.
-#'
+#' @noRd
 parseTime <- function(actual, initial){
   dif <- actual - initial
   hours <- 0
@@ -776,7 +785,7 @@ parseTime <- function(actual, initial){
 #' @param classNames a vector with the names of the attributes.
 #' 
 #' @return a named vector with the number of instances per class.
-#' 
+#' @noRd
 improvedTable <- function(dataset, classNames){
   tabla <-
     vapply(
@@ -803,7 +812,7 @@ improvedTable <- function(dataset, classNames){
 #' @param FuGePSD Logical value indicatin if rule is in the format of the FuGePS algorithm
 #' 
 #' @return A string with the representation of the rule.
-#' 
+#' @noRd
 createHumanReadableRule <- function(rule, dataset, DNF = FALSE){
   class <- rule[length(rule)]
   antecedent <- as.numeric(rule[- length(rule)])

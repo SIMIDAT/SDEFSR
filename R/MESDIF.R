@@ -26,11 +26,14 @@
 
 
 
-#
-#
-# Mutation operator for MESDIF
-#
-#
+#' @title Mutation operator for MESDIF
+#' @description  The biased mutation operator for MESDIF
+#' @param chromosome The chromosome to mute.
+#' @param variable The variable chosen to mutate.
+#' @param maxVariableValues The maximum possible value for each variable on CAN representation or the beginning of each
+#'     variable for DNF representation
+#' @param DNF_Rule A logical indicating if we are processing a DNF Rule.
+#' @noRd
 .mutateMESDIF <- function(chromosome, variable, maxVariableValues, DNF_Rule){
   
   
@@ -82,10 +85,12 @@
 
 #
 #
-# Truncation operator for the elite population in MESDIF
-# This is called when the number of non-dominated individuals are greater than elite population size.
-#
-#
+#' @title  Truncation operator for the elite population in MESDIF
+#' @description  This is called when the number of non-dominated individuals are greater than elite population size.
+#' @param NonDominatedPop A matrix with non.dominated individuals
+#' @param elitePopSize The size of the elite population
+#' @param FitnessND A matrix with the fitness values of the non-dominated indiciduals.
+#' @noRd
 .truncOperator <- function(NonDominatedPop, elitePopSize, FitnessND ){
   #Calculate distance between individuals
   distance <- as.matrix( dist(x = FitnessND, method = "euclidean") ) ^2
@@ -164,15 +169,15 @@
 
 #' 
 #' @title Multiobjective Evolutionary Subgroup DIscovery Fuzzy rules (MESDIF) Algorithm
-#' @description Performs a subgroup discovery task executing the algorithm MESDIF
+#' @description Performs a subgroup discovery task executing the MESDIF algorithm.
 #' 
 #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{SDEFSR_Dataset} variables
 #' @param training A \code{SDEFSR_Dataset} class variable with training data.
-#' @param test A \code{SDEFSR_Dataset} class variable with test data.
-#' @param output character vector with the paths where store information file, rules file and test quality measures file, respectively.
+#' @param test A \code{SDEFSR_Dataset} class variable with test data. \code{NULL} if you only want to use training data.
+#' @param output character vector with the paths where store information file, rules file and quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
-#' @param nLabels Number of linguistic labels for numerical variables.
-#' @param nEval An integer for set the maximum number of evaluations in the evolutive process.
+#' @param nLabels Number of linguistic labels that represents numerical variables.
+#' @param nEval An integer for set the maximum number of evaluations in the evolutive process. Large values of this parameter increments the computing time.
 #' @param popLength An integer to set the number of individuals in the population.
 #' @param eliteLength An integer to set the number of individuals in the elite population.
 #' @param crossProb Sets the crossover probability. A number in [0,1].
@@ -183,14 +188,16 @@
 #' @param Obj3 Sets the Objective number 3. See \code{Objective values} for more information about the possible values.
 #' @param Obj4 Sets the Objective number 4. See \code{Objective values} for more information about the possible values.
 #' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
-#' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
+#' @param targetClass A string specifing the value of the target variable. \code{null} for search for all possible values.
 #' 
 #' 
-#' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
-#'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-#'     The target variable MUST be categorical, if it is not, throws an error.
+#' @details This function sets as target variable the last one that appear in \code{SDEFSR_Dataset} object. If you want 
+#'     to change the target variable, you can set the \code{targetVariable} to change this target variable.
+#'     The target variable MUST be categorical, if it is not, throws an error. Also, the default behaviour is to find
+#'     rules for all possible values of the target varaible. \code{targetClass} sets a value of the target variable where the
+#'     algorithm only finds rules about this value.
 #'     
-#'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+#'     If you specify in \code{paramFile} something distinct to \code{NULL} the rest of the parameters are
 #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
 #'     if you want to use a parameters file.
 #' 
@@ -199,7 +206,7 @@
 #'   a fixed size and it is filled by non-dominated individuals.
 #'   
 #'   An individual is non-dominated when \code{(! all(ObjI1 <= ObjI2) & any(ObjI1 < ObjI2))} where ObjI1
-#'   is the objetive value for our individual and ObjI2 is the objetive value for another individual.
+#'   is the objective value for our individual and ObjI2 is the objetive value for another individual.
 #'   The number of dominated individuals by each one determine, in addition with a niches technique that considers
 #'   the proximity among values of the objectives a fitness value for the selection.
 #'   
@@ -207,11 +214,11 @@
 #'   MESDIF implements a truncation operator and a fill operator respectively. Then, genetic operators are
 #'   applied.
 #'   
-#'   At the final of the evolutive process it returns the rules stored in elite population.
+#'   At the final of the evolutive process it returns the rules stored in elite population. Therefore, the number of rules is fixed with the \code{eliteLength} parameter.
 #'   
 #' @section Parameters file structure:
 #'   The \code{paramFile} argument points to a file which has the necesary parameters for MESDIF works.
-#'   This file \strong{must} be, at least, those parameters (separated by a carriage return):
+#'   This file \strong{must} have, at least, those parameters (separated by a carriage return):
 #'   \itemize{
 #'     \item \code{algorithm}  Specify the algorithm to execute. In this case. "MESDIF"
 #'     \item \code{inputData}  Specify two paths of KEEL files for training and test. In case of specify only the name of the file, the path will be the working directory.
@@ -222,11 +229,12 @@
 #'     \item \code{eliteLength}  Sets number of individuals of the elite population. Must be less than \code{popLength}  
 #'     \item \code{crossProb}  Crossover probability of the genetic algorithm. Value in [0,1]
 #'     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
-#'     \item \code{Obj1} Sets the objetive number 1. 
-#'     \item \code{Obj2} Sets the objetive number 2. 
-#'     \item \code{Obj3} Sets the objetive number 3. 
-#'     \item \code{Obj4} Sets the objetive number 4.
+#'     \item \code{Obj1} Sets the objective number 1. 
+#'     \item \code{Obj2} Sets the objective number 2. 
+#'     \item \code{Obj3} Sets the objective number 3. 
+#'     \item \code{Obj4} Sets the objective number 4.
 #'     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
+#'     \item \code{targetVariable} The name or index position of the target variable (or class). It must be a categorical one.
 #'     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.} Use \code{null} to search for every value of the target variable
 #'   }
 #'   
@@ -268,13 +276,14 @@
 #' \enumerate{
 #'  \item The parameters used in the algorithm
 #'  \item The rules generated.
-#'  \item The quality measures for test of every rule and the global results.
+#'  \item The quality measures for test of every rule and the global results. This globals results shows the number of 
+#'       rules generated and means results for each quality measure.
 #' }
 #' 
-#'     Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or 
-#'     in the \code{outputData} parameter in the parameters file.
+#' Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or 
+#' in the \code{outputData} parameter in the parameters file.
 #'     
-#' 
+#' Additionally a \code{SDEFSR_Rules} object is returned with this information.
 #' 
 #' 
 #' @references 
@@ -578,21 +587,30 @@ MESDIF <- function(paramFile = NULL,
 
 
 
+
+#
+#
+# This function calls the executeGA method which launch a genetic algorithm of an SDEFSR algorithm to find rules
+# 
+#
 .findRule <- function(targetClass, algorithm, training, parameters, DNF, cate, num, Objectives, porcCob = 0.5, strictDominance = TRUE, reInit = TRUE, minCnf = 0.6){
   #Check if target class is valid
   if(! any(training$class_names == targetClass)) stop("Invalid target class value provided.")
   #cat(" ? Target value:", targetClass ,"\n", file = "", sep = " ", fill = TRUE)
   
+  # Sets the examples to cover (for SDIGA)
   to_cover = training$examplesPerClass[[targetClass]]
+  #Launch the genetic algorithm
   rule <- .executeGA(algorithm = algorithm, dataset = training, targetClass = targetClass, n_vars = training$nVars, to_cover = to_cover, nLabels = parameters$nLabels, N_evals = parameters$nEval,  tam_pob = parameters$popLength, p_cross = parameters$crossProb, p_mut = parameters$mutProb, seed = parameters$seed, Objectives = Objectives, Weights = c(0.7,0.3,0), DNFRules = DNF, cate = cate, num = num, elitism = parameters[["elitePop"]], porcCob = porcCob, strictDominance = strictDominance, reInit = reInit, minCnf = minCnf)     
   
-  
+  #For each finded rule
   rules <- vector(mode = "list", length = NROW(rule))
   if(length(rule > 0)){
-    rule <- cbind(rule, targetClass)
+    rule <- cbind(rule, targetClass) #Add at the end the target class
     for(i in seq_len(length(rules))){
+      #Add it to the list
       rules[[i]] <- rule[i,]
     }
   }
-  rules
+  rules  #Return
 }

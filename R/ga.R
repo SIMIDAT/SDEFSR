@@ -1677,9 +1677,16 @@ methods::setClass(Class = ".ga",
 
 
 
-#
-# Double-point crossover
-#
+#'
+#' @title Double-point crossover operator 
+#' 
+#' @param object A "ga" class object
+#' @param parents A vector of size = 2 with the index of the parents to cross.
+#' @param ... Additional parameters
+#' 
+#' @return a matrix with the two new generated individuals by rows
+#' @noRd
+#' 
 .ga_dpCrossover <- function(object, parents, ...)
 {
 
@@ -1756,8 +1763,16 @@ methods::setClass(Class = ".ga",
 
 
 
-# SDIga Mutation operator
-
+#'
+#' @title Biased mutation operator for SDIGA
+#' 
+#' @param object A "ga" class object
+#' @param parent A vector of size = 1 with the index of the parents to cross.
+#' @param ... Additional parameters
+#' 
+#' @return A new individual.
+#' @noRd
+#' 
 .gaCAN_Mutation <- function(object, parent, ...)
 {
   
@@ -1773,8 +1788,16 @@ methods::setClass(Class = ".ga",
 
 
 
-# MESDIF Mutation operatos
-
+#'
+#' @title Biased mutation operator for MESDIF
+#' 
+#' @param object A "ga" class object
+#' @param parent A vector of size = 1 with the index of the parents to cross.
+#' @param ... Additional parameters
+#' 
+#' @return A new individual.
+#' @noRd
+#' 
 ..gaMESDIF_Mutation <- function(object, parent, ...)
 {
   
@@ -1790,8 +1813,16 @@ methods::setClass(Class = ".ga",
 
 
 
-#NMEEF-SD Mutation operator
-
+#'
+#' @title Biased mutation operator for NMEEF-SD
+#' 
+#' @param object A "ga" class object
+#' @param parent A vector of size = 1 with the index of the parents to cross.
+#' @param ... Additional parameters
+#' 
+#' @return A new individual.
+#' @noRd
+#' 
 ..gaNMEEF_Mutation <- function(object, parent, ...)
 {
   
@@ -1807,9 +1838,13 @@ methods::setClass(Class = ".ga",
 
 
 
-
-#Selection Function of SDIGA
-
+#'
+#' @title Selection operator for SDIGA
+#' 
+#' @param object A "ga" class object
+#' @return A list with the two individuals to add on the population 
+#' @noRd
+#' 
 .ga_SDIgaSelection <- function(object){
   n <- object@popSize 
   object@population[(n + 1):nrow(object@population), ] <- NA
@@ -1826,7 +1861,19 @@ methods::setClass(Class = ".ga",
 
 
 
-# Binary Tournament selection operator for MESDIF
+#'
+#' @title Binary tournament selection operator for MESFID
+#' 
+#' @param elitePop Size of the elite population
+#' @param sizePop Size of the population
+#' @param nvars Number of variables 
+#' @param FitnessElite A matrix with the fitness values of the elite population
+#' @param ObjValues A matrix with the fitness functions for the rest of the individuals of the population
+#' @param ... Additional parameters
+#' @return 
+#' A list with the new population, the elite fitness values and the fitness for the population
+#' @noRd
+#' 
 
 .ga_MESDIFBinTournamentSelection <- function(elitePop, sizePop, nvars, FitnessElite, ObjValues){
   newPop <- matrix(NA, nrow = sizePop, ncol = nvars)
@@ -1970,84 +2017,33 @@ if(DNFRules) {
 
 
 
-#
-# Mark examples of the dataset covered by the rule returned by genetic algorithm
-# ONLY FOR SDIGA
-#
-
-.markExamples <- function(rule, dataset, targetClass, nVars, maxRule, to_cover, nLabels, Objectives = c(.LocalSupport, .confidence, NA, FALSE), Weights = c(0.7,0.3,0), DNFRules = FALSE, cate, num){
-  
-  #Return new covered examples from the objective class
-  cover <- .fitnessFunction(rule = rule, dataset = dataset, noClass = matrix(unlist(.separate(dataset)), nrow = length(dataset[[2]]) - 1, ncol = length(dataset[[7]])), targetClass = targetClass, to_cover = to_cover, n_Vars = nVars,nLabels = nLabels, maxRule = maxRule , mark = TRUE, Objectives = Objectives, Weights = Weights, DNFRules = DNFRules, fuzzy = Objectives[[4]], cate = cate, num = num)
-  
-  sumNews <- sum(cover[[1]]) - sum(dataset[["covered"]])
-  confi <- cover[[2]]
-  to_cover <- to_cover - sumNews
-  
-  return( list(cubreNuevos = sumNews > 0, covered = cover , porCubrir = to_cover, confidence = confi) )
-  
-}
 
 
 
 
-
-
-
-
-
-
-
-
-#
-# Returns de best rule of the genetic algorithm. In case of draw, returns the rule with less atributes.
-# 
-# ONLY FOR SDIGA 
-#
-.getBestRule <- function(result){
-  bestFitness <- result@fitnessValue
-  
-  draws <- which(result@fitness == bestFitness)
-  if(length(draws) > 1){
-    if(!result@DNFRules){
-      lista <- apply(X = result@population[draws, ], MARGIN = 1, FUN = function(x, max) sum(x != max), result@max )
-    } else{
-      
-      lista <- apply(X = result@population[draws, ], MARGIN = 1, FUN = function(x, max){
-        particip <- .getParticipants(rule = x, maxRule = max, DNFRules = TRUE)
-        val <- numeric(0)
-        for(i in 2:length(max)){
-          if(particip[i-1])
-            val <- c(val, (max[i-1]+1):max[i])
-        }
-        sum(x[val] != 0)
-      } , result@max ) 
-      
-    }
-    orden <- order(lista[which(lista > 0)])
-    
-    return(result@population[ orden[1] , ])
-  } else {
-    return(result@population[ draws , ])
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#Return the fitness value(s) of a rule
-
+#' @title Calculates the fitness function of a rule.
+#' 
+#' @param rule The rule in CAN or DNF representation
+#' @param dataset A SDEFSR_Dataset object 
+#' @param noClass The data field of the SDEFSR_Dataset object without the target class
+#' @param targetClass The target variable
+#' @param to_cover The number of examples belonging to the target class that are not covered yet.
+#' @param n_Vars The number of variables in the dataset
+#' @param nLabels The number of fuzzy labels for numeric variables
+#' @param maxRule The maximum value of fuzzy labels or the number of categorical values for each variable
+#' @param mark Indicates if the examples must be marked (only for SDIGA)
+#' @param Objectives A vector with the objective values
+#' @param Weights The weight of each objective
+#' @param DNFRules Indicates is rule are in DNF representation
+#' @param fuzzy Indicates the computation of the fuzzy belonging degree
+#' @param test Indicates if the computation must be done to get test results
+#' @param cate A vector with index for categorical variables
+#' @param num A vector with index for numerical variables
+#' 
+#' @return 
+#' Return the fitness values for each objective or a sets of values to mark examples on SDIGA algorithm
+#' 
+#' @noRd
 .fitnessFunction <- function(rule, dataset, noClass, targetClass, to_cover, n_Vars, nLabels, maxRule, mark = FALSE, Objectives = c(.LocalSupport, .confidence, NULL, FALSE), Weights = c(0.7,0.3,0), DNFRules = FALSE, fuzzy = FALSE ,test = FALSE, cate, num){
 
   
@@ -2161,6 +2157,30 @@ if(DNFRules) {
 }
 
 
+#' @title Calculates the fitness function of a rule (FOR MESDIF and NMEEF-SD)
+#' 
+#' @param rule The rule in CAN or DNF representation
+#' @param dataset A SDEFSR_Dataset object 
+#' @param noClass The data field of the SDEFSR_Dataset object without the target class
+#' @param targetClass The target variable
+#' @param to_cover The number of examples belonging to the target class that are not covered yet.
+#' @param n_Vars The number of variables in the dataset
+#' @param nLabels The number of fuzzy labels for numeric variables
+#' @param maxRule The maximum value of fuzzy labels or the number of categorical values for each variable
+#' @param mark Indicates if the examples must be marked (only for SDIGA)
+#' @param Objectives A vector with the objective values
+#' @param Weights The weight of each objective
+#' @param DNFRules Indicates is rule are in DNF representation
+#' @param fuzzy Indicates the computation of the fuzzy belonging degree
+#' @param test Indicates if the computation must be done to get test results
+#' @param cate A vector with index for categorical variables
+#' @param num A vector with index for numerical variables
+#' @param NMEEF Indicates is the fitness returned is for the NMEEF-SD algorithm or not.
+#' 
+#' @return 
+#' Return the fitness values for each objective or a sets of values to mark examples on SDIGA algorithm
+#' 
+#' @noRd
 .fitnessMESDIF <- function(rule, dataset, noClass, targetClass, to_cover, n_Vars, nLabels, maxRule, mark = FALSE, Objectives = c(.LocalSupport, .confidence, NULL, FALSE), Weights = c(0.7,0.3,0), DNFRules = FALSE, fuzzy = FALSE ,test = FALSE, cate, num, NMEEF = FALSE){
   
   if( ! any(is.na(rule))) {

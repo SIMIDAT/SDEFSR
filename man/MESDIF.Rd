@@ -16,15 +16,15 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
 
 \item{training}{A \code{SDEFSR_Dataset} class variable with training data.}
 
-\item{test}{A \code{SDEFSR_Dataset} class variable with test data.}
+\item{test}{A \code{SDEFSR_Dataset} class variable with test data. \code{NULL} if you only want to use training data.}
 
-\item{output}{character vector with the paths where store information file, rules file and test quality measures file, respectively.}
+\item{output}{character vector with the paths where store information file, rules file and quality measures file, respectively.}
 
 \item{seed}{An integer to set the seed used for generate random numbers.}
 
-\item{nLabels}{Number of linguistic labels for numerical variables.}
+\item{nLabels}{Number of linguistic labels that represents numerical variables.}
 
-\item{nEval}{An integer for set the maximum number of evaluations in the evolutive process.}
+\item{nEval}{An integer for set the maximum number of evaluations in the evolutive process. Large values of this parameter increments the computing time.}
 
 \item{popLength}{An integer to set the number of individuals in the population.}
 
@@ -46,28 +46,33 @@ MESDIF(paramFile = NULL, training = NULL, test = NULL,
 
 \item{targetVariable}{The name or index position of the target variable (or class). It must be a categorical one.}
 
-\item{targetClass}{A string specifing the value the target variable. \code{null} for search for all possible values.}
+\item{targetClass}{A string specifing the value of the target variable. \code{null} for search for all possible values.}
 }
 \value{
 The algorithm shows in the console the following results:
 \enumerate{
  \item The parameters used in the algorithm
  \item The rules generated.
- \item The quality measures for test of every rule and the global results.
+ \item The quality measures for test of every rule and the global results. This globals results shows the number of 
+      rules generated and means results for each quality measure.
 }
 
-    Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or 
-    in the \code{outputData} parameter in the parameters file.
+Also, the algorithms save those results in the files specified in the \code{output} parameter of the algorithm or 
+in the \code{outputData} parameter in the parameters file.
+    
+Additionally a \code{SDEFSR_Rules} object is returned with this information.
 }
 \description{
-Performs a subgroup discovery task executing the algorithm MESDIF
+Performs a subgroup discovery task executing the MESDIF algorithm.
 }
 \details{
 This function sets as target variable the last one that appear in the KEEL file. If you want 
-    to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-    The target variable MUST be categorical, if it is not, throws an error.
+    to change the target variable, you can set the \code{targetVariable} to change this target variable.
+    The target variable MUST be categorical, if it is not, throws an error. Also, the default behaviour is to find
+    rules for all possible values of the target varaible. \code{targetClass} sets a value of the target variable where the
+    algorithm only finds rules about this value.
     
-    If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+    If you specify in \code{paramFile} something distinct to \code{NULL} the rest of the parameters are
     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
     if you want to use a parameters file.
 }
@@ -77,7 +82,7 @@ This function sets as target variable the last one that appear in the KEEL file.
   a fixed size and it is filled by non-dominated individuals.
   
   An individual is non-dominated when \code{(! all(ObjI1 <= ObjI2) & any(ObjI1 < ObjI2))} where ObjI1
-  is the objetive value for our individual and ObjI2 is the objetive value for another individual.
+  is the objective value for our individual and ObjI2 is the objetive value for another individual.
   The number of dominated individuals by each one determine, in addition with a niches technique that considers
   the proximity among values of the objectives a fitness value for the selection.
   
@@ -85,13 +90,13 @@ This function sets as target variable the last one that appear in the KEEL file.
   MESDIF implements a truncation operator and a fill operator respectively. Then, genetic operators are
   applied.
   
-  At the final of the evolutive process it returns the rules stored in elite population.
+  At the final of the evolutive process it returns the rules stored in elite population. Therefore, the number of rules is fixed with the \code{eliteLength} parameter.
 }
 
 \section{Parameters file structure}{
 
   The \code{paramFile} argument points to a file which has the necesary parameters for MESDIF works.
-  This file \strong{must} be, at least, those parameters (separated by a carriage return):
+  This file \strong{must} have, at least, those parameters (separated by a carriage return):
   \itemize{
     \item \code{algorithm}  Specify the algorithm to execute. In this case. "MESDIF"
     \item \code{inputData}  Specify two paths of KEEL files for training and test. In case of specify only the name of the file, the path will be the working directory.
@@ -102,11 +107,12 @@ This function sets as target variable the last one that appear in the KEEL file.
     \item \code{eliteLength}  Sets number of individuals of the elite population. Must be less than \code{popLength}  
     \item \code{crossProb}  Crossover probability of the genetic algorithm. Value in [0,1]
     \item \code{mutProb}  Mutation probability of the genetic algorithm. Value in [0,1]
-    \item \code{Obj1} Sets the objetive number 1. 
-    \item \code{Obj2} Sets the objetive number 2. 
-    \item \code{Obj3} Sets the objetive number 3. 
-    \item \code{Obj4} Sets the objetive number 4.
+    \item \code{Obj1} Sets the objective number 1. 
+    \item \code{Obj2} Sets the objective number 2. 
+    \item \code{Obj3} Sets the objective number 3. 
+    \item \code{Obj4} Sets the objective number 4.
     \item \code{RulesRep}  Representation of each chromosome of the population. "can" for canonical representation. "dnf" for DNF representation.
+    \item \code{targetVariable} The name or index position of the target variable (or class). It must be a categorical one.
     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.} Use \code{null} to search for every value of the target variable
   }
   
@@ -127,6 +133,7 @@ This function sets as target variable the last one that appear in the KEEL file.
  Obj2 = unus
  Obj3 = null
  Obj4 = null
+ targetVariable = Species
  targetClass = Iris-setosa }
 
   @section Objective values:

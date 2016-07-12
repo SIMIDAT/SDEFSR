@@ -1,4 +1,4 @@
-#' SDEFSR: A package for Subgroup Discovery with Evolutionar Fuzzy Systems in R
+#' SDEFSR: A package for Subgroup Discovery with Evolutionary Fuzzy Systems in R
 #'
 #' @description The SDEFSR package provide a tool for read KEEL datasets and four evolutionary fuzzy rule-based 
 #' algorithms for subgroup discovery. 
@@ -26,8 +26,8 @@
 #'   \item{\code{\link{SDEFSR_GUI}}}               Launch the Shiny app in your browser.
 #'   \item{\code{\link{FUGEPSD}}                Fuzzy Genetic Programming-based learning for Subgroup Discovery (FuGePSD) Algorithm.}
 #'   \item{\code{\link{plotRules}}              Plot the discovered rules by a SDEFSR algorithm.}
-#'   \item{\code{\link{orderRules}}             Order the discovered rules by a given quality measure.}
-#'   \item{\code{\link{SDEFSRDatasetFromDataFrame}}   Reads a data.frame and create a \code{SDEFSR_Dataset} object to be execute by an algorithm of this package.}
+#'   \item{\code{\link{sort.SDEFSR_Rules}}             Sort the discovered rules by a given quality measure.}
+#'   \item{\code{\link{SDEFSR_DatasetFromDataFrame}}   Reads a data.frame and create a \code{SDEFSR_Dataset} object to be execute by an algorithm of this package.}
 #' }
 #'
 #' @author Angel M. Garcia-Vico <agvico@@ujaen.es>

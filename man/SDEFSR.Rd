@@ -34,7 +34,7 @@ The algorithms provided works with datasets in KEEL, ARFF or CSV format and also
   \item{\code{\link{FUGEPSD}}                Fuzzy Genetic Programming-based learning for Subgroup Discovery (FuGePSD) Algorithm.}
   \item{\code{\link{plotRules}}              Plot the discovered rules by a SDEFSR algorithm.}
   \item{\code{\link{orderRules}}             Order the discovered rules by a given quality measure.}
-  \item{\code{\link{SDEFSRDatasetFromDataFrame}}   Reads a data.frame and create a \code{SDEFSR_Dataset} object to be execute by an algorithm of this package.}
+  \item{\code{\link{SDEFSR_DatasetFromDataFrame}}   Reads a data.frame and create a \code{SDEFSR_Dataset} object to be execute by an algorithm of this package.}
 }
 }
 \author{

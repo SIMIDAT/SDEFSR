@@ -398,13 +398,16 @@
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 
-#' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
-#'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-#'     The target variable MUST be categorical, if it is not, throws an error.
+#' @details This function sets as target variable the last one that appear in \code{SDEFSR_Dataset} object. If you want 
+#'     to change the target variable, you can set the \code{targetVariable} to change this target variable.
+#'     The target variable MUST be categorical, if it is not, throws an error. Also, the default behaviour is to find
+#'     rules for all possible values of the target varaible. \code{targetClass} sets a value of the target variable where the
+#'     algorithm only finds rules about this value.
 #'     
-#'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+#'     If you specify in \code{paramFile} something distinct to \code{NULL} the rest of the parameters are
 #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
 #'     if you want to use a parameters file.
+#' 
 #' 
 #' @section How does this algorithm work?:
 #'     NMEEF-SD is a multiobjetctive genetic algorithm based on a NSGA-II approach. The algorithm

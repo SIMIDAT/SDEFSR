@@ -2,8 +2,78 @@
 
 
 #
-# Mutation operator for SDIGA
-# It can mutate a variable in two ways: erasing the variable or changing the value randomly
+# Mark examples of the dataset covered by the rule returned by genetic algorithm
+# ONLY FOR SDIGA
+#
+
+.markExamples <- function(rule, dataset, targetClass, nVars, maxRule, to_cover, nLabels, Objectives = c(.LocalSupport, .confidence, NA, FALSE), Weights = c(0.7,0.3,0), DNFRules = FALSE, cate, num){
+  
+  #Return new covered examples from the objective class
+  cover <- .fitnessFunction(rule = rule, dataset = dataset, noClass = matrix(unlist(.separate(dataset)), nrow = length(dataset[[2]]) - 1, ncol = length(dataset[[7]])), targetClass = targetClass, to_cover = to_cover, n_Vars = nVars,nLabels = nLabels, maxRule = maxRule , mark = TRUE, Objectives = Objectives, Weights = Weights, DNFRules = DNFRules, fuzzy = Objectives[[4]], cate = cate, num = num)
+  
+  sumNews <- sum(cover[[1]]) - sum(dataset[["covered"]])
+  confi <- cover[[2]]
+  to_cover <- to_cover - sumNews
+  
+  return( list(cubreNuevos = sumNews > 0, covered = cover , porCubrir = to_cover, confidence = confi) )
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+
+#
+# Returns de best rule of the genetic algorithm. In case of draw, returns the rule with less atributes.
+# 
+# ONLY FOR SDIGA 
+#
+.getBestRule <- function(result){
+  bestFitness <- result@fitnessValue
+  
+  draws <- which(result@fitness == bestFitness)
+  if(length(draws) > 1){
+    if(!result@DNFRules){
+      lista <- apply(X = result@population[draws, ], MARGIN = 1, FUN = function(x, max) sum(x != max), result@max )
+    } else{
+      
+      lista <- apply(X = result@population[draws, ], MARGIN = 1, FUN = function(x, max){
+        particip <- .getParticipants(rule = x, maxRule = max, DNFRules = TRUE)
+        val <- numeric(0)
+        for(i in 2:length(max)){
+          if(particip[i-1])
+            val <- c(val, (max[i-1]+1):max[i])
+        }
+        sum(x[val] != 0)
+      } , result@max ) 
+      
+    }
+    orden <- order(lista[which(lista > 0)])
+    
+    return(result@population[ orden[1] , ])
+  } else {
+    return(result@population[ draws , ])
+  }
+}
+
+
+
+
+
+#
+# @title Mutation operator for SDIGA
+# @description It can mutate a variable in two ways: erasing the variable or changing the value randomly
+# @param chromosome The chromosome to mutate
+# @param variable The variable of the chromosome to mute
+# @param maxVariablesValue The maximum value of each variable or the beginning of a variable in a DNF representation
+# @param DNF_Rule Indicates if we are processing a DNF rule
 # 
 .mutate <- function(chromosome, variable, maxVariablesValue, DNF_Rule){
                                             
@@ -68,7 +138,7 @@
 #' @param test A \code{SDEFSR_Dataset} class variable with training data.
 #' @param output character vector with the paths of where store information file, rules file and test quality measures file, respectively.
 #' @param seed An integer to set the seed used for generate random numbers.
-#' @param nLabels Number of linguistic labels for numerical variables.
+#' @param nLabels Number of linguistic labels that represents numerical variables.
 #' @param nEval An integer for set the maximum number of evaluations in the evolutive process.
 #' @param popLength An integer to set the number of individuals in the population.
 #' @param mutProb Sets the mutation probability. A number in [0,1].
@@ -85,13 +155,16 @@
 #' @param targetClass A string specifing the value the target variable. \code{null} for search for all possible values.
 #' 
 #' 
-#' @details This function sets as target variable the last one that appear in the KEEL file. If you want 
-#'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-#'     The target variable MUST be categorical, if it is not, throws an error.
+#'@details This function sets as target variable the last one that appear in \code{SDEFSR_Dataset} object. If you want 
+#'     to change the target variable, you can set the \code{targetVariable} to change this target variable.
+#'     The target variable MUST be categorical, if it is not, throws an error. Also, the default behaviour is to find
+#'     rules for all possible values of the target varaible. \code{targetClass} sets a value of the target variable where the
+#'     algorithm only finds rules about this value.
 #'     
-#'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+#'     If you specify in \code{paramFile} something distinct to \code{NULL} the rest of the parameters are
 #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
 #'     if you want to use a parameters file.
+#' 
 #'     
 #' @section How does this algorithm work?:
 #'     This algorithm has a genetic algorithm in his core. This genetic algorithm returns only the best
@@ -125,6 +198,7 @@
 #'     \item \code{w3} Sets the weigth assigned to the objective number 3. Value in [0,1]
 #'     \item \code{minConf} Sets the minimum confidence of the rule for checking the stopping criteria of the iterative process
 #'     \item \code{lSearch} Perform the local search algorithm after the execution of the genetic algorithm? Values: "yes" or "no"
+#'     \item \code{targetVariable} The name or index position of the target variable (or class). It must be a categorical one.
 #'     \item \code{targetClass}  Value of the target variable to search for subgroups. The target variable \strong{is always the last variable.}. Use \code{null} to search for every value of the target variable
 #'   }
 #'   
@@ -506,7 +580,7 @@ SDIGA <- function(parameters_file = NULL,
     #Remove the name of the vector for significance
     names(val[["significance"]]) <- NULL
     #Add values to the rulesToReturn Object
-    rulesToReturn[[i]] <- list( rule = createHumanReadableRule(rules[i,], training, DNF),
+    rulesToReturn[[i]] <- list( rule = createHumanReadableRule(rules[[i]], training, DNF),
                                 qualityMeasures = list(nVars = val[["nVars"]],
                                                        Coverage = val[["coverage"]],
                                                        Unusualness = val[["unusualness"]],
@@ -565,8 +639,11 @@ SDIGA <- function(parameters_file = NULL,
 }
 
 
+
 #
-#Evaluate a given rule on a test set.
+#
+# Evaluates a given rule on a test set.
+#
 #
 .proveRule <- function(rule, testSet, targetClass, numRule, parameters, Objectives, Weights, cate, num, DNF = FALSE){
   stopifnot(class(testSet) == "SDEFSR_Dataset")
@@ -689,16 +766,7 @@ SDIGA <- function(parameters_file = NULL,
 
 #--------------------------------------------------------------------------------------------------
 #         Local search as a post-processing stage of SDIGA Algorithm
-#
-# - rule: The rule to optimize
-# - DNF_Rules: -Uso rules DNF-
-# - dataset: el conjunto de ejemplos marcados en caso de est-n cubiertos.
-# - maxVariablesValue: n-mero de sets difusos de cada variable
-# - .minimumConfidence: valor m--nimo de .confidence a dar
-# - Valores devueltos por la funcion ejemplos_cubiertos
-#
-#--------------------------------------------------------------------------------------------------
-
+#-------------------------------------------------------------------------------------------------
 
 .localSearch <- function(att_obj, rule, DNF_Rules, dataset, minimumConfidence, x, maxRule, to_cover, nLabels, Objectives, cate, num){
   #Store the rule as the best rule at the moment

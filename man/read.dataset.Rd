@@ -2,13 +2,13 @@
 % Please edit documentation in R/readData.R
 \name{read.dataset}
 \alias{read.dataset}
-\title{Reads a KEEL data format file or an ARFF data format file.}
+\title{Reads a KEEL, ARFF or CSV data format file.}
 \usage{
 read.dataset(file, sep = ",", quote = "\\"", dec = ".",
   na.strings = "?")
 }
 \arguments{
-\item{file}{The path of the file in KEEL ".dat" or ARFF format}
+\item{file}{The path of the file to read.}
 }
 \description{
 This function reads a KEEL (.dat), ARFF (.arff) or CSV dataset file and store the information
@@ -24,7 +24,9 @@ A KEEL data file must have the following structure:
    \item{ @data: Starting tag of the data}
 }
    The rest of the file contains all the examples belonging to the data set, expressed in comma sepparated values format.
-ARFF file format is a well-know dataset format from WEKA data mining tool.
+   ARFF file format is a well-know dataset format from WEKA data mining tool.
+   CSV is a format which means comma-separated values. Where each examples is on a line and each value of the variables of the examples
+   are separated by commas.
 }
 \examples{
     \dontrun{
@@ -41,7 +43,7 @@ ARFF file format is a well-know dataset format from WEKA data mining tool.
     
 }
 \author{
-Angel M. Garcia <amgv0009@red.ujaen.es>
+Angel M. Garcia <agvico@ujaen.es>
 }
 \references{
 J. Alcala-Fdez, A. Fernandez, J. Luengo, J. Derrac, S. Garcia, L. Sanchez, F. Herrera. KEEL Data-Mining Software Tool: Data Set Repository, Integration of Algorithms and Experimental Analysis Framework. Journal of Multiple-Valued Logic and Soft Computing 17:2-3 (2011) 255-287.

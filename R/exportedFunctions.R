@@ -169,7 +169,7 @@ plotRules <- function(ruleSet){
   s <- lapply(1:length(ruleSet), 
               function(count, x){ 
                 data.frame(Rule = c(paste("Rule", count), paste("Rule", count)),
-                           value = c(x[[count]]$qualityMeasures$Tpr, -x[[count]]$qualityMeasures$Fpr), #Fpr goes in negative to show correctly in the graph
+                           value = c(x[[count]]$qualityMeasures$TPr, -x[[count]]$qualityMeasures$FPr), #Fpr goes in negative to show correctly in the graph
                            qualityMeasure = c("TPR", "FPR") #To show the legend and set colours of the bars
                 )
               }, ruleSet)
@@ -192,21 +192,21 @@ plotRules <- function(ruleSet){
 
 
 
-#'  Return an ordered rule set by a given quality measure
+#'  @title Return an ordered rule set by a given quality measure
 #'  
-#'  This function orders a rule set in descendant order by a given quality measure that are available on the object
+#'  @description This function sorts a rule set in descendant order by a given quality measure that are available on the object
 #'  
 #' @param ruleSet The rule set passed as a \code{SDEFSR_Rules} object 
 #' @param by a String with the name of the quality measure to order by. Valid values are: \code{nVars, Coverage, Unusualness, Significance, FuzzySupport, Support, FuzzyConfidence, Confidence, Tpr, Fpr}.
+#' @param decreasing A logical indicating if the sort should be increasing or decreasing. By default, decreasing.
 #'  
-#' @return another \code{SDEFSR_Rules} object with the rules ordered
+#' @return another \code{SDEFSR_Rules} object with the rules sorted
 #'  
 #' @examples 
-#'  orderRules(habermanRules)
+#'  sort(habermanRules)
 #'  
 #' @export
-
-orderRules <- function(ruleSet, by = "Confidence"){
+sort.SDEFSR_Rules <- function(ruleSet, by = "Confidence", decreasing = TRUE){
   
   if(class(ruleSet) != "SDEFSR_Rules"){
     stop(paste(substitute(ruleSet), "is not a 'SDEFSR_Rules' object"))
@@ -222,7 +222,7 @@ orderRules <- function(ruleSet, by = "Confidence"){
   }
   
   #Get the quality measure and get the order index
-  orden <- order(sapply(ruleSet, function(x, measure) x$qualityMeasures[[measure]], by), decreasing = T)
+  orden <- order(sapply(ruleSet, function(x, measure) x$qualityMeasures[[measure]], by), decreasing = decreasing)
   
   #Return the rule set ordered
   result <- ruleSet[orden]
@@ -253,12 +253,13 @@ orderRules <- function(ruleSet, by = "Confidence"){
 #' #Filter by Unusualness and TPr
 #' habermanRules[Unusualness > 0.05 & TPr > 0.9]
 #' 
+#' 
 #' @export
 "[.SDEFSR_Rules" <- function(SDEFSR_RulesObject, condition = T){
   filter <- substitute(condition)
   #Check if condition is a function call like 'Unusualness > 0.2' or 'c(1:n)' 
   if(is.call(filter)){
-    
+    a <- NULL
     #If condition is something like 'c(1:n)' or other function that can be evaluated in the local 
     #environment of this function, it is evaluated. 
     tryCatch(
@@ -295,3 +296,6 @@ orderRules <- function(ruleSet, by = "Confidence"){
     newRuleSet
   }
 }
+
+
+

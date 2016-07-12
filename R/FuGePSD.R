@@ -634,13 +634,16 @@ Rule.addVariable <- function(rule, dataset){
   #' @param ALL_CLASS if TRUE, the algorithm returns, at least, the best rule for each target class, even if it does not pass the filters. If FALSE, it only returns, at least, the best rule if there are not rules that passes the filters.
   #' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
   #' 
-  #'  @details This function sets as target variable the last one that appear in the KEEL file or object. If you want 
-  #'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-  #'     The target variable MUST be categorical, if it is not, throws an error.
+  #'  @details This function sets as target variable the last one that appear in \code{SDEFSR_Dataset} object. If you want 
+  #'     to change the target variable, you can set the \code{targetVariable} to change this target variable.
+  #'     The target variable MUST be categorical, if it is not, throws an error. Also, the default behaviour is to find
+  #'     rules for all possible values of the target varaible. \code{targetClass} sets a value of the target variable where the
+  #'     algorithm only finds rules about this value.
   #'     
-  #'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+  #'     If you specify in \code{paramFile} something distinct to \code{NULL} the rest of the parameters are
   #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
   #'     if you want to use a parameters file.
+  #' 
   #'     
   #'  @return The algorithm shows in console the following results:
   #'  \enumerate{

@@ -1,20 +1,10 @@
 GENERATED RULE 1
-Variable Age = Label 2 ( 56.5 , 83 , 109.5 )
-Variable Year = Label 0 ( 52.5 , 58 , 63.5 )
-Variable Positive = Label 0 ( -26 , 0 , 26 ) 
-
- THEN positive
+Variable Sepal.Width = Label 1 ( 2 , 3.2 , 4.4 ) 
+ THEN virginica
 
 
 GENERATED RULE 2
-Variable Positive = Label 0 ( -26 , 0 , 26 ) 
- THEN positive
-
-
-GENERATED RULE 3
-Variable Year = Label 0 ( 52.5 , 58 , 63.5 )
-Variable Positive = Label 2 ( 26 , 52 , 78 ) 
-
- THEN positive
+Variable Petal.Width = Label 2 ( 1.3 , 2.5 , 3.7 ) 
+ THEN virginica
 
 
