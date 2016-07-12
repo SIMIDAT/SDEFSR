@@ -17,17 +17,17 @@ install.packages("SDEFSR")
 You can install the package using the function `install_github()` provided by the `devtools` package:  
 
 ```R
-devtools::install_github("aklxao2/SDEFSR")
+devtools::install_github("SIMIDAT/SDEFSR")
 ```
 
 ## Usage and examples
 
 The package provide a web interface to ease the work, this intarface could be accesed by calling the function: 
-`SDR_GUI()`:
+`SDEFSR_GUI()`:
 
 ```R
-library("SDR")
-SDR_GUI()
+library("SDEFSR")
+SDEFSR_GUI()
 ```
 
 This will launch the interface in our predetermined browser. 
