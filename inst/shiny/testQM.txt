@@ -1,0 +1,91 @@
+Rule 1 :
+	 - N_vars: 2
+	 - Coverage: 0.859245
+	 - Significance: 2.700221
+	 - Unusualness: 0.015929
+	 - Accuracy: 0.570018
+	 - CSupport: 0.489811
+	 - FSupport: 0.407807
+	 - CConfidence: 0.570048
+	 - FConfidence: 0.569053
+	 - True Positive Rate: 0.887825
+	 - False Positive Rate: 0.824074 
+
+Rule 2 :
+	 - N_vars: 3
+	 - Coverage: 0.195094
+	 - Significance: 125.946278
+	 - Unusualness: 0.0997
+	 - Accuracy: 0.803089
+	 - CSupport: 0.156792
+	 - FSupport: 0.12838
+	 - CConfidence: 0.803675
+	 - FConfidence: 0.565672
+	 - True Positive Rate: 0.2842
+	 - False Positive Rate: 0.085438 
+
+Rule 3 :
+	 - N_vars: 2
+	 - Coverage: 0.221132
+	 - Significance: 58.557192
+	 - Unusualness: 0.093736
+	 - Accuracy: 0.716354
+	 - CSupport: 0.158491
+	 - FSupport: 0.129524
+	 - CConfidence: 0.716724
+	 - FConfidence: 0.549007
+	 - True Positive Rate: 0.287278
+	 - False Positive Rate: 0.139731 
+
+Rule 4 :
+	 - N_vars: 2
+	 - Coverage: 0.751887
+	 - Significance: 17.799403
+	 - Unusualness: 0.038164
+	 - Accuracy: 0.498871
+	 - CSupport: 0.375094
+	 - FSupport: 0.312033
+	 - CConfidence: 0.498871
+	 - FConfidence: 0.464671
+	 - True Positive Rate: 0.8367
+	 - False Positive Rate: 0.682969 
+
+Rule 5 :
+	 - N_vars: 3
+	 - Coverage: 0.016604
+	 - Significance: 61.32358
+	 - Unusualness: 0.013621
+	 - Accuracy: 0.988889
+	 - CSupport: 0.016604
+	 - FSupport: 0.043849
+	 - CConfidence: 1
+	 - FConfidence: 0.696169
+	 - True Positive Rate: 0.037037
+	 - False Positive Rate: 0 
+
+Rule 6 :
+	 - N_vars: 2
+	 - Coverage: 0.05283
+	 - Significance: 30.504442
+	 - Unusualness: 0.025668
+	 - Accuracy: 0.695035
+	 - CSupport: 0.036792
+	 - FSupport: 0.064115
+	 - CConfidence: 0.696429
+	 - FConfidence: 0.543589
+	 - True Positive Rate: 0.082071
+	 - False Positive Rate: 0.02907 
+
+Global:
+	 - N_rules: 6
+	 - N_vars: 2.333333
+	 - Coverage: 0.349465
+	 - Significance: 49.471853
+	 - Unusualness: 0.047803
+	 - Accuracy: 0.712043
+	 - CSupport: 0.883208
+	 - FSupport: 0.180951
+	 - FConfidence: 0.564694
+	 - CConfidence: 0.714291
+	 - True Positive Rate: 0.402518
+	 - False Positive Rate: 0.293547

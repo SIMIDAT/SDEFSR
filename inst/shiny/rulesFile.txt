@@ -1,0 +1,32 @@
+GENERATED RULE 1
+Variable At1 = Label 1 ( -3.09 , -0.14 , 2.81 ) 
+ THEN -1.0
+
+
+GENERATED RULE 2
+Variable At1 = Label 1 ( -3.09 , -0.14 , 2.81 )
+Variable At2 = Label 0 ( -5.18 , -2.39 , 0.4 ) 
+ THEN -1.0
+
+
+GENERATED RULE 3
+Variable At2 = Label 0 ( -5.18 , -2.39 , 0.4 ) 
+ THEN -1.0
+
+
+GENERATED RULE 4
+Variable At2 = Label 1 ( -2.39 , 0.4 , 3.19 ) 
+ THEN 1.0
+
+
+GENERATED RULE 5
+Variable At1 = Label 0 ( -6.04 , -3.09 , -0.14 )
+Variable At2 = Label 0 ( -5.18 , -2.39 , 0.4 ) 
+ THEN 1.0
+
+
+GENERATED RULE 6
+Variable At1 = Label 0 ( -6.04 , -3.09 , -0.14 ) 
+ THEN 1.0
+
+

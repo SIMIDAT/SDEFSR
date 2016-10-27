@@ -1,0 +1,21 @@
+-------------------------------- 
+ Algorithm: MESDIF 
+ Relation: banana 
+ Training file: 
+ Test file: 
+ Rules Representation:  CAN 
+ Number of evaluations: 10000 
+ Number of fuzzy partitions: 3 
+ Population Length: 100 
+ Elite Population Length: 3 
+ Crossover Probability: 0.6 
+ Mutation Probability: 0.01 
+ Obj1: CSUP   (Weigth:  ) 
+ Obj2: CCNF   (Weigth:  ) 
+ Obj3: null   (Weigth:  ) 
+ Obj4: null 
+ Number of examples in training: 5300 
+ Number of examples in test: 5300 
+ Target Variable: Class 
+ Target Class: All Variables 
+ --------------------------------
