@@ -2,14 +2,15 @@
 
 #------------------------------------------------------------------------
 # 
-#        Devuelve el .coverage ( N(Cond) / Ns )  de la regla
+#        Returns the coverage ( N(Cond) / Ns )  of the rule
 #        
-#        Donde:
-#        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente
-#        ? Ns es el n?mero de ejemplos del dataset
+#        Where:
+#        ? N(Cond) is the number of examples that matches the antecedent part of the rule
+#        ? Ns is the number of examples in the dataset
 #        
 #------------------------------------------------------------------------
 
+# 'x' is a list of values obtained by the .getValuesForQualityMeasures() function
 .coverage <- function(x){
   c <- x[[1]] / x[[4]]
   if(is.nan(c)){
@@ -22,11 +23,11 @@
 
 #------------------------------------------------------------------------
 # 
-#        Devuelve el soporte ( N(TargetValue ? Cond) / Ns )  de la regla
+#        Return the support ( N(TargetValue ? Cond) / Ns )  of the rule
 #        
-#        Donde:
-#        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo
-#        ? Ns es el n?mero de ejemplos del dataset
+#        Where:
+#        ? N(TargetValue ? Cond)  is the number of examples correctly covered
+#        ? Ns is the number of examples in the dataset
 #        
 #------------------------------------------------------------------------
 
@@ -40,6 +41,9 @@
   }
 }
 
+
+# Fuzzy Support
+
 .Fsupport <- function(x){
   c <- x[[11]] / x[[4]]
   if(is.nan(c)){
@@ -49,6 +53,9 @@
   }
 }
 
+
+#Fuzzy Local Support for SDIGA
+#
 .FLocalSupport <- function(x){
   c <- x[[12]] / x[[9]]
   if(is.nan(c)){
@@ -58,17 +65,9 @@
   }
 }
 
-#------------------------------------------------------------------------
+# Confidence
 # 
-#        Devuelve la confianza ( N(TargetValue ? Cond) / N(Cond) )  de la regla
-#        
-#        Donde:
-#        ? N(TargetValue ? Cond) es el n?mero de ejemplos que cumplen el antecedente y tienen como consecuente nuestra clase objetivo
-#        ? N(Cond) es el n?mero de ejemplos que cumplen el antecedente
-#        
-#------------------------------------------------------------------------
-
-.confianza <- function(x){
+.confidence <- function(x){
   
   c <- x[[2]] / x[[1]]
   if(is.nan(c)){
@@ -79,7 +78,9 @@
   
 }
 
-.confianzaDifusa <- function(x){
+#Fuzzy confidence
+#
+.fuzzyConfidence <- function(x){
   c <- x[[11]] / x[[10]]
   if(is.nan(c)){
     0
@@ -89,17 +90,21 @@
 }
 
 
-
+# Unusualness
+# 
 .unusualness <- function(x){
-  .coverage(x) * ( .confianza(x) - (x[[5]] / x[[4]]) )
+  .coverage(x) * ( .confidence(x) - (x[[5]] / x[[4]]) )
 }
 
+# Normalized Unusualness
+# 
 .norm_unusualness <- function(x){
-  .coverage(x) * .confianza(x)
+  .coverage(x) * .confidence(x)
   
 }
 
-
+# Sensitivity (TPR)
+# 
 .sensitivity <- function(x){
   c <- x[[2]] / x[[5]]
   if(is.nan(c)){
@@ -109,7 +114,8 @@
   }
 }
 
-
+# Accuracy QM
+# 
 .accuracy <- function(x){
   c <-  (x[[2]] + 1) / (x[[1]] + NROW(x[[7]]))
   if(is.nan(c)){
@@ -120,7 +126,8 @@
 }
 
 
-
+# Significance
+# 
 .significance <- function(x){
   cove <- .coverage(x = x)
   if(cove > 0){
@@ -139,7 +146,8 @@
 }
 
 
-
+# Local Support for SDIGA
+# 
 .LocalSupport <- function(x){
   
   c <- x[[8]] / x[[9]]

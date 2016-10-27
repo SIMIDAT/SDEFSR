@@ -18,19 +18,19 @@
 #'
 #' Creates a random general rule
 #' 
-#' It creates a random general rule for a provided dataset with, at most, 50 %% of the variables.
+#' @details It creates a random general rule for a provided dataset with, at most, 50 %% of the variables.
 #' 
-#' @param dataset The keel dataset where getting the data
+#' @param dataset The SDEFSR_Dataset dataset where getting the data
 #' @param tnorm The T-norm to use: 0 -> minimum T-norm, 1 -> product T-norm
 #' @param tconorm The T-conorm to use: 0 -> maximum T-conorm, 1 -> Probabilistic sum t-conorm
 #' @param rule_weight The Rule Weighting method: 0 -> Wining Rule, 1 -> Normalized sum, 2 -> Arithmetic mean
-#' @param clase Integer specifying the creation of a rule for the given class number. By default \code{'NULL'}, makes a rule with a random class in the consecuent.
+#' @param class Integer specifying the creation of a rule for the given class number. By default \code{'NULL'}, makes a rule with a random class in the consecuent.
 #' 
 #' @return  A new \code{'Rule'} object
-#' 
-createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
+#' @noRd
+createNewRule <- function(dataset, tnorm, tconorm, rule_weight, class = NULL ){
   
-   regla <- structure( list(antecedent = list(),                 # Antecedent part of the rule
+   rule <- structure( list(antecedent = list(),                 # Antecedent part of the rule
                               clas = integer(1),                 # Consecuent
                               weight = numeric(1),               # Weight associated with the rule
                               raw_fitness = numeric(1),          # Raw Fitness associated to the rule
@@ -51,6 +51,8 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
                               qm_Unus = numeric(1),              # Unusualness
                               qm_Sup = numeric(1),               # Support
                               qm_Cov = numeric(1),               # Coverage
+                              qm_tpr = numeric(1),               # True Positive Rate
+                              qm_fpr = numeric(1),               # False Positive Rate
                               
                               #Variables for ranking NSGA-II
                               rank = integer(1),
@@ -62,24 +64,24 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
    # Select Randomly variables of the dataset to create the antecedent (maximum 50 % of the variables are selected)
   numVarsOfRule <- ceiling(.randIntClosed(1,dataset$nVars) * 0.5)
   variables <- sample(dataset$nVars, numVarsOfRule)
-  regla$antecedent <- lapply(variables, .createNewFuzzyAntecedent, dataset)
+  rule$antecedent <- lapply(variables, .createNewFuzzyAntecedent, dataset)
   
   
   # Fill the rest of the data.
-  regla$t_norm <- tnorm
-  regla$t_conorm <- tconorm
-  regla$ruleWeight <- rule_weight
-  regla$level = 1L
+  rule$t_norm <- tnorm
+  rule$t_conorm <- tconorm
+  rule$ruleWeight <- rule_weight
+  rule$level = 1L
   
-  if(is.null(clase))
-    regla$clas <- sample(0:(length(dataset$class_names) - 1), 1)
+  if(is.null(class))
+    rule$clas <- sample(0:(length(dataset$class_names) - 1), 1)
   else
-    if(length(dataset$class_names) - 1 <= clase & clase >= 0)
-      regla$clas <- clase
+    if(length(dataset$class_names) - 1 <= class & class >= 0)
+      rule$clas <- class
     else
-      stop("Error when creating a new Rule: 'clase' is greater than te number of classes or is less than zero.")
+      stop("Error when creating a new Rule: 'class' is greater than te number of classes or is less than zero.")
   #Return 
-  regla
+  rule
 }
 
 
@@ -90,9 +92,9 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
 #' Creates a random fuzzy antecedent for a specific variable
 #' 
 #' @param  variable The position of the variable to use.
-#' @param dataset The keel dataset where the function takes the data.
+#' @param dataset The SDEFSR_Dataset dataset where the function takes the data.
 #' 
-#' 
+#' @noRd
 #' 
 .createNewFuzzyAntecedent <- function(variable, dataset){
   antecedent <- structure(list(labels = list(), 
@@ -103,17 +105,17 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
   
   antecedent$var <- variable
   
-  if(dataset$atributeTypes[variable] == "c"){
+  if(dataset$attributeTypes[variable] == "c"){
     antecedent$max_label <- dataset$max[variable]
   } else {
-    antecedent$max_label <- dataset$conjuntos[variable]
+    antecedent$max_label <- dataset$sets[variable]
   }
   
   
   #Select the variable randomly
 
     i <- sample(antecedent$max_label, size = 1)
-    antecedent$labels <- list(list(name = dataset$atributeNames[variable], value = i - 1))
+    antecedent$labels <- list(list(name = dataset$attributeNames[variable], value = i - 1))
     antecedent$operator <- round(runif(1), digits = 0)
 
   antecedent
@@ -130,7 +132,7 @@ createNewRule <- function(dataset, tnorm, tconorm, rule_weight, clase = NULL ){
 #' @param rule The rule to work with.
 #' 
 #' @return A new rule with a random variable in the antecedent removed.
-#'
+#' @noRd
 Rule.deleteVariable <- function(rule){
   if(class(rule) == "Rule"){
     #Select the variable to remove in the antecedent
@@ -158,7 +160,7 @@ Rule.deleteVariable <- function(rule){
 #'  @param rule The rule to where we want to remove the antecedent.
 #'  
 #'  @return A new rule with an empty antecedent
-#'  
+#' @noRd
 Rule.clearAntecedent <- function(rule){
   if(class(rule) == "Rule"){
     #Remove antecedent part overwrittin by an empty list.
@@ -183,7 +185,7 @@ Rule.clearAntecedent <- function(rule){
 #' @param rule The rule to work with.
 #' @param dataset The dataset to get the data.
 #' @return A new rule with an added variable.
-#'
+#' @noRd
 Rule.addVariable <- function(rule, dataset){
   if(class(rule) == "Rule"){
     
@@ -226,9 +228,9 @@ Rule.addVariable <- function(rule, dataset){
   #'  @param dataset, the dataset where getting all the data.
   #'  
   #'  @return the same rule but with the params reinitialized and marked as non evaluated.
-  #'  
+  #' @noRd
   Rule.addLabel <- function(rule, variable, dataset){
-    if(class(rule) == "Rule" & class(dataset) == "keel"){
+    if(class(rule) == "Rule" & class(dataset) == "SDEFSR_Dataset"){
       
       if(variable > length(rule$antecedent)){
         stop("Can not add label to this rule. Variable used is grater than antecedent size.")
@@ -246,7 +248,7 @@ Rule.addVariable <- function(rule, dataset){
         #Add the label to the fuzzy Antecedent
       
           if(length(fuzzyAnt$labels) < 1){
-            fuzzyAnt$labels <- list(list(name = dataset$atributeNames[datasetVar], value = labelSelected - 1))
+            fuzzyAnt$labels <- list(list(name = dataset$attributeNames[datasetVar], value = labelSelected - 1))
           }
      
       }
@@ -272,7 +274,7 @@ Rule.addVariable <- function(rule, dataset){
   #' 
   #'  @param rule The rule to work with
   #'  @param variable the selected variable (is the index of the list $antecedent of the rule)
-  #'  
+  #' @noRd
   Rule.changeLabel <- function(rule, variable){
     if(class(rule) == "Rule"){
       if(variable > length(rule$antecedent)){
@@ -313,7 +315,7 @@ Rule.addVariable <- function(rule, dataset){
   #' @param rule2 Another rule
   #' 
   #' @return a list with the antecedents mixed. (This list would be the $antecedent part of another rule)
-  #' 
+  #' @noRd
   Rule.exchangeVariables <- function(rule1, rule2){
     if(class(rule1) == "Rule" & class(rule2) == "Rule"){
       fuzzyAnt1 <- rule1$antecedent
@@ -360,8 +362,8 @@ Rule.addVariable <- function(rule, dataset){
   #'  Evaluate a single rule. 
   #'  
   #'  @param rule The rule we want to evaluate (Class "Rule").
-  #'  @param dataset The keel dataset object with the examples to compare with the rule (Class "keel")
-  #'  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separar for this task and convert the list into a matrix)
+  #'  @param dataset The SDEFSR_Dataset dataset object with the examples to compare with the rule (Class "SDEFSR_Dataset")
+  #'  @param data Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
   #'  @param categoricalValues a logical vector indicating which attributes in the dataset are categorical
   #'  @param numericalValues a logical vector indicating which attributes in the dataset are numerical
   #'  @param t_norm The T-norm to use. 0 for minimum t-norm, 1 for product t-norm (default: 1)
@@ -372,31 +374,32 @@ Rule.addVariable <- function(rule, dataset){
   #'         \item 3 -> No Rule Weight
   #'         }
   #' @return The rule evaluated.
-  #' 
+  #' @noRd
   Rule.evaluate <- function(rule, dataset, data, categoricalValues, numericalValues, t_norm = 1, ruleWeight = 0){
-    if(class(rule) == "Rule" & class(dataset) == "keel"){
+    if(class(rule) == "Rule" & class(dataset) == "SDEFSR_Dataset"){
       if(! rule$evaluated){
-         #De momento probamos esto:
+        
         correctly_matching_examples_by_clas <- integer(length(dataset$class_names)) # For calculate significance
         compatibility_matching_examples_by_clas <- numeric(length(dataset$class_names))
         compatibility_matching_examples <- numeric(1)
         matching_examples <- integer(1)
         compatibility_correctly_matching_examples <- numeric(1)
-        correctly_matching_examples <- integer(1)
+        correctly_matching_examples <- integer(1) #TP
         
         #Get compatibility
-        perts <- .fitnessFuGePSD(regla = Rule.toCANVectorRepresentation(rule, dataset), 
+        perts <- .fitnessFuGePSD(rule = Rule.toCANVectorRepresentation(rule, dataset), 
                                  dataset = dataset, 
                                  noClass = data,
                                  nLabels = dim(dataset$fuzzySets)[1], 
-                                 max_regla = dataset$conjuntos,
+                                 maxRule = dataset$sets,
                                  cate = categoricalValues, 
                                  num = numericalValues,
                                  t_norm = t_norm)
        
         
         #Calculate covered examples.
-        covered <- which(perts > 0)  # Que pasa si no se cubre a ningun ejemplo?
+        covered <- which(perts > 0) 
+        notCovered <- which(perts == 0)
         classes <- unlist(.getClassAttributes(dataset$data[covered]))
         correctly_matching_examples_by_clas[as.integer(names(table(classes + 1)))] <- table(classes + 1)
         matching_examples <- length(covered)
@@ -408,8 +411,16 @@ Rule.addVariable <- function(rule, dataset){
         }
         
         corr_covered <- covered[which(classes == rule$clas)]
+        #False positives: Examples covered with a distinct consecuent
+        fp <- length(covered[which(classes != rule$clas)])
+        #True negatives: Examples not covered with distinc consecuent
+        tn <- length(notCovered[which(classes != rule$clas)])
+        #False negatives: Examples not covered with the same consecuent
+        fn <- length(notCovered[which(classes == rule$clas)])
+        
         compatibility_correctly_matching_examples <- sum(perts[corr_covered])
         correctly_matching_examples <- length(corr_covered)
+        
         rule$ideal <- length(corr_covered)  #Number of ideal covered examples for token competition procedure
         
         #Mark tokens of the rule
@@ -433,7 +444,10 @@ Rule.addVariable <- function(rule, dataset){
         }
         
         rule$qm_Unus <- rule$qm_Cov * (rule$qm_Cnf_n - (dataset$examplesPerClass[[rule$clas + 1]] / dataset$Ns))
-          
+        #TPR and FPR
+        rule$qm_tpr <- correctly_matching_examples / (correctly_matching_examples + fn)
+        rule$qm_fpr <- fp / (fp + tn)
+        
         #Significance computation
         by_class <- which(correctly_matching_examples_by_clas > 0)
         values <- unlist(dataset$examplesPerClass[by_class])
@@ -485,16 +499,16 @@ Rule.addVariable <- function(rule, dataset){
   #' Converts a rule antecedent to a CANONICA vector representation
   #' 
   #' The function converts a rule into a CANONICA vector representation for ease the evaluation.
-  #' The evaluation of a rule with a vetor representation can be evaluated througth functions
-  #' of evaluation of rule (.fit13 or .fitnessMESDIF) that are available inside the package SDR
+  #' The evaluation of a rule with a vector representation can be evaluated througth functions
+  #' of evaluation of rule (.fit13 or .fitnessMESDIF) that are available inside the package SDEFSR
   #' 
   #' @param rule The rule that we want to evaluate.
-  #' @param dataset The keel dataset which rule refers to.
+  #' @param dataset The SDEFSR_Dataset dataset which rule refers to.
   #' 
   #' @return a matrix with one column to use easily with fitness functions of this package
-  #' 
+  #' @noRd
   Rule.toCANVectorRepresentation <- function(rule, dataset){
-    vector <- dataset$conjuntos
+    vector <- dataset$sets
     
     vars <- vapply(rule$antecedent, function(x) x$var, integer(1))
     values <- vapply(rule$antecedent, function(x) x$labels[[1]][[2]], numeric(1))
@@ -527,13 +541,16 @@ Rule.addVariable <- function(rule, dataset){
     individuals[which(rawFitnessIndividuals == max(rawFitnessIndividuals))][1]
   }
   
+  
+  
+  
   #'
   #' Perfom the mutation operator for FuGePSD algorithm.
   #' 
   #' @param rule The rule object to be mutated.
-  #' @param dataset a keel object associated with the rule.
+  #' @param dataset a SDEFSR_Dataset object associated with the rule.
   #' @return a new rule object with the rule mutated.
-  #'
+  #' @noRd
   FuGePSD_Mutation <- function(rule, dataset){
  
     #select a random variable to mute.
@@ -558,7 +575,7 @@ Rule.addVariable <- function(rule, dataset){
   #' @param rule2 another rule object.
   #' @param nvars number of variables in the dataset INCLUDING class variable.
   #' @return a new rule object.
-  #'
+  #' @noRd
   FuGePSD_crossover <- function(rule1, rule2, nvars){
     new_rule <- rule1
     if( .randIntClosed(1, nvars) >= nvars ){
@@ -588,12 +605,12 @@ Rule.addVariable <- function(rule, dataset){
   #' @title Fuzzy Genetic Programming-based learning for Subgroup Discovery (FuGePSD) Algorithm.
   #' @description Make a subgroup discovery task using the FuGePSD algorithm.
   #' 
-  #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{keel} variables
-  #' @param training A \code{keel} class variable with training data.
-  #' @param test A \code{keel} class variable with test data.
+  #' @param paramFile The path of the parameters file. \code{NULL} If you want to use training and test \code{SDEFSR_Dataset} variables
+  #' @param training A \code{SDEFSR_Dataset} class variable with training data.
+  #' @param test A \code{SDEFSR_Dataset} class variable with test data.
   #' @param output Character vector with the paths where store information file, rules file and test quality measures file, respectively. For rules and quality measures files, the algorithm generate 4 files, each one with the results of a given filter of fuzzy confidence.
   #' @param seed An integer to set the seed used for generate random numbers.
-  #' @param nLabels The number of fuzzy labels to use with numeric variables. By default 3. We recommend an odd number between 3 and 9.
+  #' @param nLabels Number of linguistic labels for numerical variables. By default 3. We recommend an odd number between 3 and 9.
   #' @param t_norm A string with the t-norm to use when computing the compatibilty degree of the rules. Use \code{'Minimum/Maximum'} to specify the minimum t-norm, if not, we use product t-norm that is the default method. 
   #' @param ruleWeight String with the method to calculate the rule weight. Possible values are: 
   #' \itemize{
@@ -616,16 +633,20 @@ Rule.addVariable <- function(rule, dataset){
   #' @param dropProb Sets the dropping probability. We recommend a number in [0,1].
   #' @param tournamentSize Sets the number of individuals that will be chosen in the tournament selection procedure. This number must be greater than or equal to 2.
   #' @param globalFitnessWeights A numeric vector of length 4 specifying the weights used in the computation of the Global Fitness Parameter. 
+  #' @param minCnf A value in [0,1] to filter rules with a minimum confidence
   #' @param ALL_CLASS if TRUE, the algorithm returns, at least, the best rule for each target class, even if it does not pass the filters. If FALSE, it only returns, at least, the best rule if there are not rules that passes the filters.
   #' @param targetVariable The name or index position of the target variable (or class). It must be a categorical one.
   #' 
-  #'  @details This function sets as target variable the last one that appear in the KEEL file or object. If you want 
-  #'     to change the target variable, you can use \link{changeTargetVariable} for this objective.  
-  #'     The target variable MUST be categorical, if it is not, throws an error.
+  #'  @details This function sets as target variable the last one that appear in \code{SDEFSR_Dataset} object. If you want 
+  #'     to change the target variable, you can set the \code{targetVariable} to change this target variable.
+  #'     The target variable MUST be categorical, if it is not, throws an error. Also, the default behaviour is to find
+  #'     rules for all possible values of the target varaible. \code{targetClass} sets a value of the target variable where the
+  #'     algorithm only finds rules about this value.
   #'     
-  #'     If you specify in \code{paramFile} something distintc to \code{NULL} the rest of the parameters are
+  #'     If you specify in \code{paramFile} something distinct to \code{NULL} the rest of the parameters are
   #'     ignored and the algorithm tries to read the file specified. See "Parameters file structure" below 
   #'     if you want to use a parameters file.
+  #' 
   #'     
   #'  @return The algorithm shows in console the following results:
   #'  \enumerate{
@@ -752,6 +773,7 @@ Rule.addVariable <- function(rule, dataset){
                       dropProb = 0.15,
                       tournamentSize = 2,
                       globalFitnessWeights = c(0.7, 0.1, 0.05, 0.2),
+                      minCnf = 0.6,
                       ALL_CLASS = TRUE,
                       targetVariable = NA
                       ){
@@ -760,8 +782,13 @@ Rule.addVariable <- function(rule, dataset){
     
     if(is.null(paramFile)){
       #Generate our parameters file
-      if(class(training) != "keel" | class(test) != "keel")
-        stop("Training or test or both object must be 'keel' class.")
+     
+      
+      if(is.null(test))
+        test <- training #To execute only one dataset
+      
+      if(class(training) != "SDEFSR_Dataset" | class(test) != "SDEFSR_Dataset")
+        stop("Training or test or both object must be 'SDEFSR_Dataset' class.")
       if(training[[1]] != test[[1]] )
         stop("datasets ('training' and 'test') does not have the same relation name.")
       if(length(output) != 3 )
@@ -770,7 +797,7 @@ Rule.addVariable <- function(rule, dataset){
         stop("'globalFitnessWeights' must be a length 4 vector.")
       if(tournamentSize < 2)
         stop("'tournamentSize' must be greater than or equal to 2.")
-      parametros <- list(algorithm = "FUGEPSD", 
+      parameters <- list(algorithm = "FUGEPSD", 
                     inputData = c(as.character(substitute(training)), as.character(substitute(test))),
                     outputData = output, 
                     seed = seed, 
@@ -792,95 +819,99 @@ Rule.addVariable <- function(rule, dataset){
                     gfw2 = globalFitnessWeights[2],
                     gfw3 = globalFitnessWeights[3],
                     gfw4 = globalFitnessWeights[1],
-                    targetVariable = if(is.na(targetVariable)) training$atributeNames[length(training$atributeNames)] else targetVariable)
+                    targetVariable = if(is.na(targetVariable)) training$attributeNames[length(training$attributeNames)] else targetVariable)
       
       #Print parameters in console
-      printFuGePSDParameters(parametros, training, FALSE)
+      printFuGePSDParameters(parameters, training, FALSE)
     } else {
-      #Start of the algorithm
-      parametros <- .read.parametersFile2(paramFile)
-      
-      training <- read.keel(parametros$inputData[1])
-      test <- read.keel(parametros$inputData[2])
+      #Read parameters file
+      parameters <- .read.parametersFile2(paramFile)
+      #Read traing/test data
+      training <- read.dataset(parameters$inputData[1])
+      if(is.na(parameters$inputData[2])){
+        test <- training
+      } else {
+        test <- read.dataset(file = parameters$inputData[2])        # test data
+      }
       
       #Print parameters in console
-      printFuGePSDParameters(parametros, training, FALSE)
+      printFuGePSDParameters(parameters, training, FALSE)
     }
-    if(is.na(parametros$targetVariable))
-      parametros$targetVariable <- training$atributeNames[length(training$atributeNames)]
+    if(is.na(parameters$targetVariable))
+      parameters$targetVariable <- training$attributeNames[length(training$attributeNames)]
     #Change target variable if it is neccesary
-    training <- changeTargetVariable(training, parametros$targetVariable)
-    test <- changeTargetVariable(test, parametros$targetVariable)
+    training <- changeTargetVariable(training, parameters$targetVariable)
+    test <- changeTargetVariable(test, parameters$targetVariable)
     #Check if the last variable is categorical.
-    if(training$atributeTypes[length(training$atributeTypes)] != 'c' | test$atributeTypes[length(test$atributeTypes)] != 'c')
+    if(training$attributeTypes[length(training$attributeTypes)] != 'c' | test$attributeTypes[length(test$attributeTypes)] != 'c')
       stop("Target variable is not categorical.")
     
     #Set the number of fuzzy labels
-    training <- modifyFuzzyCrispIntervals(training, parametros$nLabels)
-    training$conjuntos <- .dameConjuntos(data_types = training$atributeTypes, max = training$max, n_labels = parametros$nLabels)
-    test <- modifyFuzzyCrispIntervals(test, parametros$nLabels)
-    test$conjuntos <- .dameConjuntos(data_types = test$atributeTypes, max = test$max, n_labels = parametros$nLabels)
+    training <- modifyFuzzyCrispIntervals(training, parameters$nLabels)
+    training$sets <- .giveMeSets(data_types = training$attributeTypes, max = training$max, n_labels = parameters$nLabels)
+    test <- modifyFuzzyCrispIntervals(test, parameters$nLabels)
+    test$sets <- .giveMeSets(data_types = test$attributeTypes, max = test$max, n_labels = parameters$nLabels)
     #Set Covered
     #training$covered <- logical(training$Ns)
     test$covered <- logical(test$Ns)
     
-    categorical <- training$atributeTypes == "c"
+    categorical <- training$attributeTypes == "c"
     categorical <- categorical[-length(categorical)]
     numerical <- !categorical
     
     #Parse parameters
     
-    if(parametros$tnorm == "minimum/maximum"){
-      parametros$tnorm = 0
+    if(parameters$tnorm == "minimum/maximum"){
+      parameters$tnorm = 0
     } else {
-      parametros$tnorm = 1
+      parameters$tnorm = 1
     }
     
-    if(parametros$ruleWeight == "certainty_factor"){
-      parametros$ruleWeight <- 0
-    } else if(parametros$ruleWeight == "average_penalized_certainty_factor"){
-      parametros$ruleWeight <- 2
-    } else if(parametros$ruleWeight == "no_weights"){
-      parametros$ruleWeight <- 3
+    if(parameters$ruleWeight == "certainty_factor"){
+      parameters$ruleWeight <- 0
+    } else if(parameters$ruleWeight == "average_penalized_certainty_factor"){
+      parameters$ruleWeight <- 2
+    } else if(parameters$ruleWeight == "no_weights"){
+      parameters$ruleWeight <- 3
     } else {
-      parametros$ruleWeight <- 1
+      parameters$ruleWeight <- 1
     }
     
-    if(parametros$frm == "normalized_sum"){
-      parametros$frm <- 1
-    } else if(parametros$frm == "arithmetic_mean") {
-      parametros$frm <- 2
+    if(parameters$frm == "normalized_sum"){
+      parameters$frm <- 1
+    } else if(parameters$frm == "arithmetic_mean") {
+      parameters$frm <- 2
     } else {
-      parametros$frm <- 0
+      parameters$frm <- 0
     }
-    set.seed(parametros$seed)
+    set.seed(parameters$seed)
     
     cat("\n\nSearching Rules for all classes...\n\n")
     
     #Execute the genetic algorithm
-    pop <- .gaFuGePSD(type = parametros[[18]],
+    pop <- .gaFuGePSD(type = parameters[[18]],
                dataset = training,
                selection = tournamentSelection,
                mutation = FuGePSD_Mutation,
                crossover = FuGePSD_crossover,
-               popSize = parametros[[7]],
-               pcrossover = parametros[[8]],
-               pmutation = parametros[[9]],
-               pinsertion = parametros[[10]],
-               pdropping = parametros[[11]],
-               selectionSize = parametros[[15]],
-               AllClass = as.logical(parametros[[16]]),
-               T_norm = parametros[[13]],
-               ruleWeight = parametros[[14]],
-               frm = parametros[[12]],
-               maxiter = parametros[[6]],
-               weightsGlobalFitness = c(parametros[[19]], parametros[[20]], parametros[[21]], parametros[[22]]),
-               seed = parametros[[4]])
+               popSize = parameters[[7]],
+               pcrossover = parameters[[8]],
+               pmutation = parameters[[9]],
+               pinsertion = parameters[[10]],
+               pdropping = parameters[[11]],
+               selectionSize = parameters[[15]],
+               AllClass = as.logical(parameters[[16]]),
+               T_norm = parameters[[13]],
+               ruleWeight = parameters[[14]],
+               frm = parameters[[12]],
+               maxiter = parameters[[6]],
+               weightsGlobalFitness = c(parameters[[19]], parameters[[20]], parameters[[21]], parameters[[22]]),
+               seed = parameters[[4]])
     
     
-    AllClass <- as.logical(parametros[[16]])
+    AllClass <- as.logical(parameters[[16]])
     exampleClass <- unlist(.getClassAttributes(test$data))
-    datasetNoClass <- matrix(unlist(.separar(test)), nrow = test$nVars, ncol = test$Ns)
+    datasetNoClass <- matrix(unlist(.separate(test)), nrow = test$nVars, ncol = test$Ns)
     
     ###################
     #  TESTING RULES  #
@@ -892,12 +923,11 @@ Rule.addVariable <- function(rule, dataset){
     bestPop <- pop[[1]]
     lapply(seq_len(length(bestPop)), function(x){bestPop[[x]]$evaluated <<- FALSE; invisible()})
     classes <- vapply(bestPop, function(x){x$clas}, integer(1)) + 1L
-    filtros <- c(0.6, 0.7, 0.8, 0.9)
+   
     
     #SCREENING FUNCTION
-   for(f in filtros){
      examples_class <- logical(length(training$class_names))
-     pasan_filtro <- which(pop[[2]] >= f & pop[[3]] >= 0.6)
+     pasan_filtro <- which(pop[[2]] >= minCnf & pop[[3]] >= 0.6)
      new_pop <- bestPop[pasan_filtro]
      
      if(length(new_pop) > 0){
@@ -935,32 +965,54 @@ Rule.addVariable <- function(rule, dataset){
      new_pop <- new_pop[order(new_classes)]
      
      #Evalute population against test data
-     testGlobalFitness <- Pop.evaluate(pop = bestPop, dataset = test, examplesNoClass = datasetNoClass, exampleClass = exampleClass, frm = parametros[[12]], categorical = categorical, numerical = numerical, t_norm = parametros[[13]], weights = c(parametros[[19]], parametros[[20]], parametros[[21]], parametros[[22]]) )
-     new_pop <- lapply(new_pop, Rule.evaluate, test, datasetNoClass, categorical, numerical, parametros[[13]], parametros[[14]])
+     testGlobalFitness <- Pop.evaluate(pop = bestPop, dataset = test, examplesNoClass = datasetNoClass, exampleClass = exampleClass, frm = parameters[[12]], categorical = categorical, numerical = numerical, t_norm = parameters[[13]], weights = c(parameters[[19]], parameters[[20]], parameters[[21]], parameters[[22]]) )
+     new_pop <- lapply(new_pop, Rule.evaluate, test, datasetNoClass, categorical, numerical, parameters[[13]], parameters[[14]])
      
      #Print results in files.
      contador <- 1
      
      #Change the name of the output file by the following: $fileName$_filtro_AllClass.txt for rules file with filter 'filtro'
      #                                                     $fileName$_filtro_AllClass_QM.txt
-     ruleFileName <- paste(substr(parametros$outputData[2], 1, regexpr("\\.[^\\.]*$", parametros$outputData[2]) - 1),
-                                "_f", paste(substr(as.character(f), 1, 1) , substr(as.character(f), 3, 3) , sep = ""), "_", 
+     ruleFileName <- paste(substr(parameters$outputData[2], 1, regexpr("\\.[^\\.]*$", parameters$outputData[2]) - 1),
+                                "_f", paste(substr(as.character(minCnf), 1, 1) , substr(as.character(minCnf), 3, 3) , sep = ""), "_", 
                                 AllClass, ".txt", sep = "")
      
-     testQMFileName <- paste(substr(parametros$outputData[2], 1, regexpr("\\.[^\\.]*$", parametros$outputData[2]) - 1),
-                           "_f", paste(substr(as.character(f), 1, 1) , substr(as.character(f), 3, 3) , sep = ""), "_", 
+     testQMFileName <- paste(substr(parameters$outputData[2], 1, regexpr("\\.[^\\.]*$", parameters$outputData[2]) - 1),
+                           "_f", paste(substr(as.character(minCnf), 1, 1) , substr(as.character(minCnf), 3, 3) , sep = ""), "_", 
                            AllClass, "_QM", ".txt", sep = "")
       
-      cat("\n\n---- FILTER: ", f, " ----\n\n", sep = "")
+      cat("\n\n---- FILTER: ", minCnf, " ----\n\n", sep = "")
      
       writeRuleFile(new_pop, training, ruleFileName)
       cat("\n QUALITY MEASURES OF THE RULES GENERATED: \n\n")
       writeTestQMFile(new_pop, testQMFileName, test$Ns)
    
-   }
+      #Create the rulesToReturn structure to return the rules
+      ##Add values to the rulesToReturn Object
+      rulesToReturn <- vector(mode = "list", length = length(new_pop))
+      count <- 1
+      for(i in new_pop){
+      #Create the CAN vector representation of the rule with the string of the class to add it to the rule object
+      ruleAsCAN <- c(as.vector(Rule.toCANVectorRepresentation(rule = new_pop[[count]], dataset = training)), training$class_names[new_pop[[count]]$clas + 1])
+      rulesToReturn[[count]] <- list(rule = createHumanReadableRule(ruleAsCAN, training, FALSE), #FuGePSD does not have DNF representation !
+                                qualityMeasures = list(nVars = length(i$antecedent),
+                                                       Coverage = i$qm_Cov,
+                                                       Unusualness = i$qm_Unus,
+                                                       Significance = i$qm_Sig,
+                                                       FuzzySupport = i$qm_Sup,
+                                                       Support = sum(i$tokens) / length(i$tokens),
+                                                       FuzzyConfidence = i$qm_Cnf_f,
+                                                       Confidence = i$qm_Cnf_n,
+                                                       TPr = i$qm_tpr,
+                                                       FPr = i$qm_fpr))
+      count <- count + 1
+      }
    
    cat("\n\nAlgorithm finished. \nExecution time: ", parseTime(as.numeric(Sys.time()), init_time),  "\n\n", sep = "")
     
+   #return
+   class(rulesToReturn) <- "SDEFSR_Rules"
+   rulesToReturn
   }
   
   
@@ -968,7 +1020,7 @@ Rule.addVariable <- function(rule, dataset){
 #' Calcultes the Fuzzy Reasoning Method for all examples for a given rule population
 #' 
 #' @param pop A list with all rule object that define the population
-#' @param dataset the keel object with the dataset information.
+#' @param dataset the SDEFSR_Dataset object with the dataset information.
 #' @param examplesNoClass matrix with all examples of the dataset without the class attribute. One examples per column.
 #' @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
 #' @param categorical Logical vector indicating which attributes of the dataset are categorical.
@@ -976,30 +1028,30 @@ Rule.addVariable <- function(rule, dataset){
 #' @param t_norm The t_norm to use. 0 for minimum t-norm. 1 for product t-norm.
 #' 
 #' @return a vector indicating the class predicted for each example.
-#'
+#' @noRd
 Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categorical, numerical, t_norm){
-  reglas <- lapply(X = pop, Rule.toCANVectorRepresentation, dataset)
+  rules <- lapply(X = pop, Rule.toCANVectorRepresentation, dataset)
   
   #Calculate compatibility of all examples with all rules.
-  perts <- lapply(X = reglas,FUN = .fitnessFuGePSD, dataset, examplesNoClass, dim(dataset$fuzzySets)[1], dataset$conjuntos, categorical, numerical, t_norm)
+  perts <- lapply(X = rules,FUN = .fitnessFuGePSD, dataset, examplesNoClass, dim(dataset$fuzzySets)[1], dataset$sets, categorical, numerical, t_norm)
   #Multiply this compatibilty with the ruleWeight
-  pesos <- vapply(X = pop, function(x){x$ruleWeight}, numeric(1))
-  perts <- lapply(X = seq_len(length(pop)), FUN = function(x, lista, weights){lista[[x]] * weights[x]}, perts, pesos)
+  weight <- vapply(X = pop, function(x){x$ruleWeight}, numeric(1))
+  perts <- lapply(X = seq_len(length(pop)), FUN = function(x, lista, weights){lista[[x]] * weights[x]}, perts, weight)
   
   df <- as.data.frame(matrix(unlist(perts), nrow = length(pop)))
   
   if(frm == 1){ #Normalized Sum
     class_degrees <- numeric(length(dataset$class_names))
     classes <- integer(dim(df)[2])
-    ejemplo <- 1
+    example <- 1
     for(i in df){ #For each example
       cont <- 1
       for(j in i){ #For each rule
-        class_degrees[pop[[cont]]$clas + 1] <-  class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(ejemplo, cont))
+        class_degrees[pop[[cont]]$clas + 1] <-  class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(example, cont))
         cont <- cont + 1
       }
-      classes[ejemplo] <- which(class_degrees == max(class_degrees))[1] - 1
-      ejemplo <- ejemplo + 1
+      classes[example] <- which(class_degrees == max(class_degrees))[1] - 1
+      example <- example + 1
     }
     
     #Return
@@ -1017,16 +1069,16 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
     
     #Count the sumatory of rules.
     classes <- integer(dim(df)[2])
-    ejemplo <- 1
+    example <- 1
     for(i in df){ #For each example
       cont <- 1
       for(j in i){ #For each rule
-        class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(ejemplo, cont))
+        class_degrees[pop[[cont]]$clas + 1] <- class_degrees[pop[[cont]]$clas + 1] + .subset2(df, c(example, cont))
         cont <- cont + 1
       }
       class_degrees <- class_degrees / class_cont
-      classes[ejemplo] <- which(class_degrees == max(class_degrees))[1] - 1
-      ejemplo <- ejemplo + 1
+      classes[example] <- which(class_degrees == max(class_degrees))[1] - 1
+      example <- example + 1
       class_degrees[] <- 0
     }
     
@@ -1047,25 +1099,26 @@ Pop.fuzzyReasoningMethod <- function(pop, dataset, examplesNoClass, frm, categor
 #'
 #'  Evaluates the entire population for the Global Fitness computation procedure.
 #'  
-#'  @param pop A list of 'Rule' objects.
-#'  @param dataset A 'keel' object with all the information of the dataset we are working
-#'  @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separar for this task and convert the list into a matrix)
-#'  @param exampleClass Vector with the classes of all examples of the dataset
-#'  @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
-#'  @param categorical A logical vector indicating which attributes of the dataset are categorical.
-#'  @param numerical A logical vector indicating which attributes of the dataset are numerical.
-#'  @param t_norm An integer specifying the t-norm to use. 0 for minimum t_norm, other value for product t-norm.
-#'  @param weights A numeric vector of length 4 indicating the weights used to calculate the global fitness of this population.
+#' @param pop A list of 'Rule' objects.
+#' @param dataset A 'SDEFSR_Dataset' object with all the information of the dataset we are working
+#' @param examplesNoClass Matrix with the data of the dataset, one colum per rule. The data must not contain the last column, the class. (use .separate for this task and convert the list into a matrix)
+#' @param exampleClass Vector with the classes of all examples of the dataset
+#' @param frm An integer specifing the tipo of fuzzy reasoning method to use. 0 for Winning Rule, 1 for Normalized Sum and 2 for Arithmetic Mean.
+#' @param categorical A logical vector indicating which attributes of the dataset are categorical.
+#' @param numerical A logical vector indicating which attributes of the dataset are numerical.
+#' @param t_norm An integer specifying the t-norm to use. 0 for minimum t_norm, other value for product t-norm.
+#' @param weights A numeric vector of length 4 indicating the weights used to calculate the global fitness of this population.
 #'  
-#'  @return A number which indicate the global fitness for this population.
+#' @return A number which indicate the global fitness for this population.
 #'  
+#' @noRd
 Pop.evaluate <- function(pop, dataset, examplesNoClass, exampleClass, frm, categorical, numerical, t_norm, weights){
   nLabels <- dim(dataset$fuzzySets)[1]
   
-  prediccion <- Pop.fuzzyReasoningMethod(pop, dataset, examplesNoClass, frm, categorical, numerical, t_norm)
+  prediction <- Pop.fuzzyReasoningMethod(pop, dataset, examplesNoClass, frm, categorical, numerical, t_norm)
   
   hits <- integer(1)
-  hitsPerClass <- vapply(X = seq_len(length(dataset$class_names)) - 1, FUN = function(x, prediccion, exampleClass){sum(exampleClass == prediccion & exampleClass == x)}, numeric(1), prediccion, exampleClass)
+  hitsPerClass <- vapply(X = seq_len(length(dataset$class_names)) - 1, FUN = function(x, prediction, exampleClass){sum(exampleClass == prediction & exampleClass == x)}, numeric(1), prediction, exampleClass)
   #Compute accuracy
   accuracy <- sum(hitsPerClass / unlist(dataset$examplesPerClass))
   accuracy <- accuracy / length(dataset$class_names)
@@ -1092,10 +1145,10 @@ Pop.evaluate <- function(pop, dataset, examplesNoClass, exampleClass, frm, categ
 #' Runs a token competition procedure.
 #' 
 #' @param pop A list of 'Rule' objects.
-#' @param dataset A 'keel' object with all the information about the dataset we are working.
+#' @param dataset A 'SDEFSR_Dataset' object with all the information about the dataset we are working.
 #' 
 #' @return A list of 'Rule' objects with that rules that pass this token competition procedure.
-#' 
+#' @noRd
 tokenCompetition <- function(pop, dataset){
   
   #Order pop by raw fitness
@@ -1112,9 +1165,9 @@ tokenCompetition <- function(pop, dataset){
     if(i$ideal == 0){
         i$penalize_fitness <- 0
     } else {
-      cubre <- i$tokens & !tokens
-      tokens[which(cubre)] <- TRUE
-      count <- sum(cubre)
+      cover <- i$tokens & !tokens
+      tokens[which(cover)] <- TRUE
+      count <- sum(cover)
       
       i$penalized_fitness <- i$raw_fitness * (count / i$ideal)
     }
@@ -1137,24 +1190,24 @@ tokenCompetition <- function(pop, dataset){
 #' Writes rules into a human-readable format into a file.
 #'
 #' @param pop A list of 'Rule' objects with the population we want to save.
-#' @param dataset A 'keel' object with all the information about the dataset the rules are pointing.
+#' @param dataset A 'SDEFSR_Dataset' object with all the information about the dataset the rules are pointing.
 #' @param fileName String with the path to store the rules.
 #' 
 #' @details 
 #' This function overwrites if the file specified by \code{fileName} exists. Be careful!
-#' 
+#' @noRd
 writeRuleFile <- function(pop, dataset, fileName){
   contador <- 1
   RulesLine <- ""
   sumVars <- 0
   numRules <- length(pop)
   
-  for(regla in pop){
+  for(rule in pop){
      #Make the human-readable rule representation
-     ruleRep <- sapply(regla$antecedent, function(x){paste(x$labels[[1]]$name, " IS L_", x$labels[[1]]$value, sep = "")})
+     ruleRep <- sapply(rule$antecedent, function(x){paste(x$labels[[1]]$name, " IS L_", x$labels[[1]]$value, sep = "")})
      ruleRep <- paste(ruleRep, collapse = " AND ")
-     RulesLine <- paste(RulesLine, contador,": IF ", ruleRep, " THEN ", dataset$class_names[regla$clas + 1], " with Rule Weight: ", regla$ruleWeight, "\n", sep = "")
-     sumVars <- sumVars + length(regla$antecedent)
+     RulesLine <- paste(RulesLine, contador,": IF ", ruleRep, " THEN ", dataset$class_names[rule$clas + 1], " with Rule Weight: ", rule$ruleWeight, "\n", sep = "")
+     sumVars <- sumVars + length(rule$antecedent)
      contador <- contador + 1
   }
   
@@ -1175,7 +1228,7 @@ writeRuleFile <- function(pop, dataset, fileName){
 #' 
 #' @details 
 #' This function overwrites if the file specified by \code{fileName} exists. Be careful!
-#' 
+#' @noRd
 writeTestQMFile <- function(pop, fileName, numExamples){
   #Get classes of the rules.
   sum_nVars <- numeric(1)
@@ -1190,27 +1243,27 @@ writeTestQMFile <- function(pop, fileName, numExamples){
   nRules <- length(pop)
   contador <- 1
   Salida <- ""
-  for(regla in pop){
-    sum_nVars <- sum_nVars + length(regla$antecedent)
-    sum_Cov <- sum_Cov + regla$qm_Cov
-    sum_Sig <- sum_Sig + regla$qm_Sig
-    sum_Unus <- sum_Unus + regla$qm_Unus
-    sum_Sens <- sum_Sens + regla$qm_Sens
-    sum_ConfN <- sum_ConfN + regla$qm_Cnf_n
-    sum_ConfF <- sum_ConfF + regla$qm_Cnf_f
+  for(rule in pop){
+    sum_nVars <- sum_nVars + length(rule$antecedent)
+    sum_Cov <- sum_Cov + rule$qm_Cov
+    sum_Sig <- sum_Sig + rule$qm_Sig
+    sum_Unus <- sum_Unus + rule$qm_Unus
+    sum_Sens <- sum_Sens + rule$qm_Sens
+    sum_ConfN <- sum_ConfN + rule$qm_Cnf_n
+    sum_ConfF <- sum_ConfF + rule$qm_Cnf_f
     
-    tokens[which(regla$tokens)] <- TRUE
+    tokens[which(rule$tokens)] <- TRUE
     
    #Rule QM
    Salida <-  paste(Salida, paste("Rule ", contador, ":", sep = ""),
-         paste("\t - N_vars:", length(regla$antecedent), sep = " "),
-         paste("\t - Coverage:", round(regla$qm_Cov, 6), sep = " "),
-         paste("\t - Significance:", round(regla$qm_Sig, 6), sep = " "),
-         paste("\t - Unusualness:", round(regla$qm_Unus, 6), sep = " "),
-         paste("\t - Sensitivity:", round(regla$qm_Sens, 6), sep = " "),
-         paste("\t - Support:", round(regla$qm_Sup, 6), sep = " "),
-         paste("\t - FConfidence:", round(regla$qm_Cnf_f,6), sep = " "),
-         paste("\t - CConfidence:", round(regla$qm_Cnf_n, 6), sep = " "),
+         paste("\t - N_vars:", length(rule$antecedent), sep = " "),
+         paste("\t - Coverage:", round(rule$qm_Cov, 6), sep = " "),
+         paste("\t - Significance:", round(rule$qm_Sig, 6), sep = " "),
+         paste("\t - Unusualness:", round(rule$qm_Unus, 6), sep = " "),
+         paste("\t - Sensitivity:", round(rule$qm_Sens, 6), sep = " "),
+         paste("\t - Support:", round(rule$qm_Sup, 6), sep = " "),
+         paste("\t - FConfidence:", round(rule$qm_Cnf_f,6), sep = " "),
+         paste("\t - CConfidence:", round(rule$qm_Cnf_n, 6), sep = " "),
          sep = "\n"
     )
    contador <- contador + 1
@@ -1244,9 +1297,9 @@ writeTestQMFile <- function(pop, fileName, numExamples){
 #' specified by this parameters.
 #' 
 #' @param parameters A list with all neccesary parameters.
-#' @param dataset A \code{keel} object with all the information about the dataset.
+#' @param dataset A \code{SDEFSR_Dataset} object with all the information about the dataset.
 #' @param inputFromFiles A logical indicating if the input datasets are given from a file or from an object in the R environment.
-#' 
+#' @noRd
 printFuGePSDParameters <- function(parameters, dataset, inputFromFiles = TRUE){
   line <- paste("\n------------------------------------------------------\n", 
       "Algorithm: FuGePSD\n",
